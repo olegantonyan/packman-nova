@@ -1,0 +1,4 @@
+<servicedata>
+<service name="tar_scm">
+                <param name="url">https://github.com/psi-plus/resources</param>
+              <param name="changesrevision">cfaca633eee45123c58869348fd80f6c11d03764</param></service></servicedata>

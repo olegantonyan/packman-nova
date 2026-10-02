@@ -1,0 +1,75 @@
+plugins:
+- rubocop-rake
+- rubocop-minitest
+
+AllCops:
+  TargetRubyVersion: 3.2
+  NewCops: enable
+
+  Exclude:
+  - 'exe/packman-nova'
+  - 'vendor/**/*'
+  - '.cache/**/*'
+  - 'out/**/*'
+  - 'tmp/**/*'
+  - 'reference/**/*'
+  - 'packages/**/*'
+  - 'test/fixtures/**/*'
+
+Gemspec/RequireMFA:
+  Enabled: false
+
+Layout/LineLength:
+  Max: 180
+
+Style/Documentation:
+  Enabled: false
+
+Layout/HashAlignment:
+  Enabled: false
+
+Style/ModuleFunction:
+  Enabled: false
+
+Style/RedundantConstantBase:
+  Enabled: false
+
+Style/CommentedKeyword:
+  Enabled: false
+
+Style/EmptyMethod:
+  Enabled: false
+
+Style/AccessorGrouping:
+  Enabled: false
+
+Style/FormatStringToken:
+  Enabled: false
+
+Layout/LeadingCommentSpace:
+  Enabled: false
+
+Style/NumericPredicate:
+  Enabled: false
+
+Naming/AccessorMethodName:
+  Enabled: false
+
+Style/ClassVars:
+  Enabled: false
+
+Lint/SuppressedException:
+  Enabled: false
+
+Metrics/BlockLength:
+  Enabled: false
+
+Naming/PredicateMethod:
+  Enabled: false
+
+Metrics/ParameterLists:
+  CountKeywordArgs: false
+
+Style/ClassMethodsDefinitions:
+  Enabled: true
+  EnforcedStyle: self_class

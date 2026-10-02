@@ -1,0 +1,50 @@
+-------------------------------------------------------------------
+Sat Nov 15 14:37:42 UTC 2014 - meissner@suse.com
+
+- removed --pgp2 as the gpg 2.1 does not support it.
+
+-------------------------------------------------------------------
+Wed Jun  4 18:42:30 UTC 2014 - meissner@suse.com
+
+- Use --pgp2 for newer gpg2 that don't like older MD5 using keys.
+
+-------------------------------------------------------------------
+Wed Sep 11 20:09:18 CEST 2013 - sbrabec@suse.cz
+
+- Do not attempt to parse gpg --verify arguments.
+  It breaks verification from stdin.
+
+-------------------------------------------------------------------
+Wed Dec 19 20:44:18 CET 2012 - sbrabec@suse.cz
+
+- Add --trust-model=always where appropriate.
+- Manpage fix.
+
+-------------------------------------------------------------------
+Tue Dec 18 20:18:40 CET 2012 - sbrabec@suse.cz
+
+- Get rid "Using untrusted key!" warning.
+- Add --keyserver-options=auto-key-retrieve where appropriate.
+
+-------------------------------------------------------------------
+Mon Dec  3 21:31:00 CET 2012 - sbrabec@suse.cz
+
+- PACKAGING.HOWTO improved.
+
+-------------------------------------------------------------------
+Thu Nov 29 19:47:36 CET 2012 - sbrabec@suse.cz
+
+- Fix return code of --verify.
+- Fix invalid concatenation of keyrings in --add.
+- Add --list.
+- Improve verbose output.
+- Do not use %{sources}. It is incompatible with old rpm.
+- Add more options to rpm macros.
+- Add PACKAGING.HOWTO.
+- Improve texts.
+
+-------------------------------------------------------------------
+Mon Nov 19 16:39:11 CET 2012 - sbrabec@suse.cz
+
+- New package.
+

@@ -1,0 +1,78 @@
+apng # libpng
+ass # trivial
+ayuv # trival
+bmp # trivial
+ffv1
+ffvhuff # trivial+zlib
+flac # libFLAC
+gif # libpng
+huffyuv # trivial+zlib
+jpegls
+libgsm
+libmp3lame
+libopenjpeg
+libopus
+libschroedinger
+libspeex
+libtheora
+libtwolame
+libvorbis
+libvpx_vp8
+libvpx_vp9
+libwebp
+libwebp_anim
+mjpeg # mjpegtools
+mpeg1video
+mpeg2video
+mp2 # twolame
+mp2fixed # twolame
+opus
+pam
+pbm
+pcm_alaw
+pcm_f32be
+pcm_f32le
+pcm_f64be
+pcm_f64le
+pcm_mulaw
+pcm_s16be
+pcm_s16be_planar
+pcm_s16le
+pcm_s16le_planar
+pcm_s24be
+pcm_s24le
+pcm_s24le_planar
+pcm_s32be
+pcm_s32le
+pcm_s32le_planar
+pcm_s8
+pcm_s8_planar
+pcm_u16be
+pcm_u16le
+pcm_u24be
+pcm_u24le
+pcm_u32be
+pcm_u32le
+pcm_u8
+pcx
+pgm
+pgmyuv
+png
+ppm
+sgi
+srt
+ssa
+sunrast
+targa
+text
+tiff
+v210
+v308
+v408
+v410
+vorbis
+xbm
+xwd
+y41p
+yuv4
+zlib

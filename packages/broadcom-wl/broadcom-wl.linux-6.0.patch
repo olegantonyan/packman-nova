@@ -1,0 +1,17 @@
+diff -rup broadcom-wl-6.30.223.271.orig/src/wl/sys/wl_cfg80211_hybrid.c broadcom-wl-6.30.223.271/src/wl/sys/wl_cfg80211_hybrid.c
+--- broadcom-wl-6.30.223.271.orig/src/wl/sys/wl_cfg80211_hybrid.c	2022-08-17 11:49:55.841743721 +0200
++++ broadcom-wl-6.30.223.271/src/wl/sys/wl_cfg80211_hybrid.c	2022-08-17 11:54:23.729750995 +0200
+@@ -2360,8 +2360,13 @@ wl_bss_roaming_done(struct wl_cfg80211_p
+ #else
+ 	{
+ 		struct cfg80211_roam_info r = {
++#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0)
+ 			.channel = &wl->conf->channel,
+ 			.bssid = (u8 *)&wl->bssid,
++#else
++			.links[0].channel = &wl->conf->channel,
++			.links[0].bssid = (u8 *)&wl->bssid,
++#endif
+ 			.req_ie = conn_info->req_ie,
+ 			.req_ie_len = conn_info->req_ie_len,
+ 			.resp_ie = conn_info->resp_ie,

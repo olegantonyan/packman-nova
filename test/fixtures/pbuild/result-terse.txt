@@ -1,0 +1,8 @@
+succeeded: 2
+    fdk-aac
+    libx264:x264
+failed:    1
+    vlc
+unresolvable: 1
+    ffmpeg-6
+excluded:  3

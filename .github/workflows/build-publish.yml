@@ -1,0 +1,60 @@
+name: build-publish (draft, disabled)
+
+on:
+  workflow_dispatch:
+#  schedule:
+#    - cron: '17 */6 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: packman-nova-tumbleweed-x86_64
+  cancel-in-progress: false
+
+jobs:
+  build-publish:
+    if: vars.PACKMAN_NOVA_BUILD_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    env:
+      PACKMAN_NOVA_WORKDIR: ${{ github.workspace }}/../workdir
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+      - name: Install podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman zstd
+          podman --version
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h "$GITHUB_WORKSPACE"
+      - name: Write .env
+        env:
+          PACKMAN_NOVA_DOTENV: ${{ secrets.PACKMAN_NOVA_DOTENV }}
+        run: |
+          umask 077
+          printf '%s\n' "$PACKMAN_NOVA_DOTENV" > .env
+      - name: Write runner config
+        run: |
+          printf 'pbuild:\n  buildjobs: 1\n  jobs: 4\n' > packman-nova.yml
+      - run: bundle exec exe/packman-nova image build
+      - run: bundle exec exe/packman-nova check
+      - run: bundle exec exe/packman-nova state pull --allow-missing
+      - id: run
+        run: bundle exec exe/packman-nova run --provider s3
+      - if: always() && steps.run.outcome != 'skipped'
+        run: bundle exec exe/packman-nova state push
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs
+          path: ${{ env.PACKMAN_NOVA_WORKDIR }}/logs/
+          retention-days: 14
+      - if: always()
+        run: rm -f .env

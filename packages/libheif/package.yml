@@ -1,0 +1,12 @@
+name: libheif
+kind: obs-link
+enabled: true
+tier: 2
+tags: [codec, image]
+origin:
+  project: openSUSE:Factory
+  package: libheif
+  pin: null
+link:
+  delete: [_multibuild]
+notes: "_multibuild only holds the test flavor (PMBS builds libheif:test, we skip it). libheif-HEIF plugins need our libde265 and x265."

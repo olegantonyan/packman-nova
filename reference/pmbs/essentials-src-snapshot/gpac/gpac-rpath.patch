@@ -1,0 +1,26 @@
+Index: gpac-2.4.0/applications/gpac/Makefile
+===================================================================
+--- gpac-2.4.0.orig/applications/gpac/Makefile
++++ gpac-2.4.0/applications/gpac/Makefile
+@@ -58,7 +58,7 @@ ifeq ($(CONFIG_EMSCRIPTEN),yes)
+ else ifeq ($(CONFIG_DARWIN),yes)
+ #LINKFLAGS+= -Wl,-rpath,'@loader_path'
+ else
+-LINKFLAGS+= -Wl,-rpath,'$$ORIGIN' -Wl,-rpath-link,../../bin/gcc
++#LINKFLAGS+= -Wl,-rpath,'$$ORIGIN' -Wl,-rpath-link,../../bin/gcc
+ endif
+ endif
+ 
+Index: gpac-2.4.0/applications/mp4box/Makefile
+===================================================================
+--- gpac-2.4.0.orig/applications/mp4box/Makefile
++++ gpac-2.4.0/applications/mp4box/Makefile
+@@ -24,7 +24,7 @@ ifeq ($(CONFIG_EMSCRIPTEN),yes)
+ else ifeq ($(CONFIG_DARWIN),yes)
+ #LINKFLAGS+= -Wl,-rpath,'@loader_path'
+ else
+-LINKFLAGS+= -Wl,-rpath,'$$ORIGIN' -Wl,-rpath-link,../../bin/gcc
++#LINKFLAGS+= -Wl,-rpath,'$$ORIGIN' -Wl,-rpath-link,../../bin/gcc
+ endif
+ 
+ ifeq ($(STATIC_BUILD),yes)

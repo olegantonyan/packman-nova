@@ -1,0 +1,291 @@
+Packaging with gpg-offline
+==========================
+
+gpg-offline allows packager to use and verify signatures independently
+on network access. It makes possible to verify signatures in a
+network-less sandboxes.
+
+Contents:
+First time adding to the spec file
+ Prepare if I have only a trusted signature
+ Prepare if I already have a trusted keyring
+ Common step: create spec file
+Version upgrade in the spec file
+Signing key was changed in upstream
+Package review
+Automatic check
+Build Service use
+ Use %if in spec file
+ Use aggregate package
+ Use prjconf trick
+
+
+
+First time adding to the spec file
+----------------------------------
+
+GPG signature verification expects presence of signer in the web of
+trust. It is often not true for packaging upstream packages. So you have
+to trust them using inferior methods.
+
+The first time step is very security-sensitive: You define your package
+keyring - a list of trusted keys, that can be used by the upstream to
+sign the source of your package. Check carefully that you are not adding
+a malicious keys there.
+
+Be paranoid! The %gpg_verify is able to detect hacked source on the
+upstream servers (and such bad thing really already happened, see
+http://scarybeastsecurity.blogspot.cz/2011/07/alert-vsftpd-download-backdoored.html !),
+but it is not able to detect maliciously uploaded false signature on the
+key servers.
+
+If the upstream author is in your web of trust, you are on a safe side.
+But if he/she is not in your web of trust, you have to use alternative
+ways to trust the key:
+- If you can mail to the author and verify the key, it is very probably
+  an authorized signature.
+- If the signing key is the same as the one used a year ago, it is
+  probably an authorized signature.
+- If the signing key was used in mailing list many times to sign
+  developer mails, or at least it was announced there, it is probably an
+  authorized signature.
+- If you can find the public key or footprint on more servers on
+  different hostings, it is probably an authorized signature.
+
+
+Prepare if I have only a trusted signature
+- - - - - - - - - - - - - - - - - - - - -
+
+If you have a trusted signature and you want to create keyring:
+
+gpg --keyserver-options=auto-key-retrieve --verify mypackage.tar.gz.sig
+
+Online GPG verification will be performed. You will get a text
+containing description and ID of the signing key. Pick the key ID from
+the output and and call:
+
+gpg-offline --package={my_package} --add {key_id}
+
+Example:
+
+~/OSC/openSUSE:Factory/libnetfilter_acct> gpg --keyserver-options=auto-key-retrieve --verify *.sig
+gpg: Signature made Tue Oct  9 00:42:06 2012 CEST using RSA key ID BB5F58CC
+gpg: Good signature from "Netfilter Core Team <coreteam@netfilter.org>"
+gpg: WARNING: This key is not certified with a trusted signature!
+gpg:          There is no indication that the signature belongs to the owner.
+Primary key fingerprint: 57FF 5E9C 9AA6 7A86 0B55  7AF7 A411 1F89 BB5F 58CC
+~/OSC/openSUSE:Factory/libnetfilter_acct> gpg-offline --package=${PWD##*/} --add BB5F58CC
+gpg: key BB5F58CC: "Netfilter Core Team <coreteam@netfilter.org>" not changed
+gpg: Total number processed: 1
+gpg:              unchanged: 1
+
+
+Prepare if I already have a trusted keyring
+- - - - - - - - - - - - - - - - - - - - - -
+
+gpg-offline keyrings are standard armored GPG keyrings that contains
+text header that must exactly match to the keyring contents.
+
+If you already have a trusted keyring in another format (e. g. plain or
+armored keyring without a header), it is easy to convert it to
+gpg-offline format. Rename it to {my_package}.keyring, and the use
+gpg-offline --refresh command. The command will present an error to you,
+but you can silently ignore it: Yes, you are aware that text header does
+not match (or does not exist). (You can use --offline option to perform
+only the refresh and don't search keyservers.)
+
+Example:
+
+~/OSC/openSUSE:Factory/apache2> gpg-offline --package=${PWD##*/} --refresh
+...
+ERROR: apache2.keyring is a valid armored GPG keyring,
+but the the human readable description does not correspond to its contents.
+It could be only a cosmetic change, but it may also indicate malicious keyring.
+...
+If you really want to accept these changes, please finish it by call:
+mv apache2.keyring.new apache2.keyring
+~/OSC/openSUSE:Factory/apache2> mv apache2.keyring.new apache2.keyring
+~/OSC/openSUSE:Factory/apache2> 
+
+
+Common step: create spec file
+- - - - - - - - - - - - - - -
+
+Suppose that you have a signature and {my_package}.keyring.
+
+You are ready to edit the spec file.
+
+Spec file preamble should contain the tarball, the signature and the
+keyring and require the gpg-offline package:
+
+ Source:         http://{url_path_to_your_project}/%{name}-%{version}.tar.bz2
++Source1:        http://{url_path_to_your_project}/%{name}-%{version}.tar.bz2.sig
++Source2:        %{name}.keyring
++BuildRequires:  gpg-offline
+
+And %prep section should perform the verification step:
+
+ %prep
++%gpg_verify %{S:1}
+ %setup -q
+
+(See /etc/rpm/gpg-offline.macros comments for all available options of
+%gpg_verify.)
+
+You are done!
+
+
+Version upgrade in the spec file
+--------------------------------
+
+If you are upgrading the version, you have to upgrade the signature as
+well. If the signing key did not change, you are done.
+
+If the signing key changed, please do additional steps to verify, that
+the new signing key is valid. There is a risk of a malicious signature
+using malicious signing key! Do not blindly trust the sigining key
+header!
+
+Using gpg-offline --add and gpg-offline --delete commands upgrade your
+keyring.
+
+Submit the package and describe signing key change to the reviewer.
+
+
+Signing key was changed in upstream
+-----------------------------------
+
+If the signing key changed in upstream (new signature, expiration change
+etc., please use gpg-offline --refresh command.
+
+Submit the package and describe signing key change to the reviewer.
+
+
+Package review
+--------------
+
+Verify that %gpg_verify is properly called in the %prep or %build stage.
+
+If you are unsure about the signing key, you can verify the keyring
+online by gpg-offline --review. You should always see OK message:
+
+{my_package}.keyring is a valid armored GPG keyring
+and the human readable description corresponds to its contents.
+
+Take special care if the public key is not present on upstream servers.
+(But it is generally OK to not upload their public keys to keyserver and
+publish trusted public key in an another way.)
+
+Example:
+
+~/OSC/openSUSE:Factory/libnetfilter_acct> gpg-offline --package=${PWD##*/} --review
+gpg: refreshing 1 key from hkp://subkeys.pgp.net
+gpg: requesting key BB5F58CC from hkp server subkeys.pgp.net
+gpg: key BB5F58CC: "Netfilter Core Team <coreteam@netfilter.org>" 3 new signatures
+gpg: Total number processed: 1
+gpg:         new signatures: 3
+gpg: no ultimately trusted keys found
+pub   4096R/BB5F58CC 2010-10-21 [expires: 2015-10-20]
+uid                  Netfilter Core Team <coreteam@netfilter.org>
+sub   4096R/04B92F5C 2010-10-21 [expires: 2015-10-20]
+
+libnetfilter_acct.keyring is a valid armored GPG keyring
+and the human readable description corresponds to its contents.
+
+
+Automatic check
+---------------
+
+You can also perform automatic check by gpg-offline --review --offline.
+If will only check, that packager did not falsified keyring header, and
+nothing else. This check can be performed offline and you can use return
+code to fail.
+
+Example:
+
+~/OSC/openSUSE:Factory/libnetfilter_acct> gpg-offline --package=${PWD##*/} --review --offline
+pub   4096R/BB5F58CC 2010-10-21 [expires: 2015-10-20]
+uid                  Netfilter Core Team <coreteam@netfilter.org>
+sub   4096R/04B92F5C 2010-10-21 [expires: 2015-10-20]
+
+libnetfilter_acct.keyring is a valid armored GPG keyring
+and the human readable description corresponds to its contents.
+
+
+Build Service use
+-----------------
+
+If you need to build your package for older products, you have three ways to do it:
+
+Use %if in spec file
+- - - - - - - - - -
+
+The simplest straightforward way is the use conditional BuildRequires.
+
+Source1:        http://{url_path_to_your_project}/%{name}-%{version}.tar.bz2.sig
+Source2:        %{name}.keyring
+%if 0%{?suse_version} > 1220
+BuildRequires:  gpg-offline
+%endif
+
+And %prep section should perform the verification step if the macro is defined:
+
+%prep
+%if 0%{?gpg_verify:1}
+%gpg_verify %{S:1}
+%endif
+%setup -q
+
+
+Use aggregate package
+- - - - - - - - - - -
+
+Aggregate package 
+
+osc aggregatepac devel:tools:building gpg-offline {my_project}
+
+It is recommended to disable publishing of this helpers, either in the
+web interface, or by calling of:
+
+osc meta pkg {my_project} gpg-offline -e
+
+and adding publish disabling XML code:
+
++   <publish>
++    <disable/>
++  </publish>
+ </package>
+
+
+If you are using obscure build targets, you may want to use linkpac
+instead of aggregatepac. In this case you need to disable the package
+build by default and enabling it for all repositories older or equal to
+12.2. You should disable publishing as above as well.
+
+
+Use prjconf trick
+- - - - - - - - -
+
+If you don't want to mess spec file with %ifs and don't want to link or
+aggregate gpg-offline from devel:tools:building, you can use following
+trick. Call following command:
+
+osc meta prjconf {my_project} -e
+
+And add to it following code:
+
+--- Cut here ----
+%if 0%{?suse_version} <= 1220
+Substitute: gpg-offline
+%endif
+
+Macros:
+%gpg_verify(dnf) \
+%if 0%{?suse_version} > 1220\
+echo "WARNING: Using %%gpg_verify macro from prjconf, not from gpg-offline package."\
+gpg-offline --directory="%{-d:%{-d*}}%{!-d:%{_sourcedir}}" --package="%{-n:%{-n*}}%{!-n:%{name}}""%{-f: %{-f*}}" --verify %{**}\
+%else\
+echo "WARNING: Dummy prjconf macro. gpg-offline is not available, skipping %{**} GPG signature verification!"\
+%endif\
+%nil
+-----------------

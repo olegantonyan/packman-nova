@@ -1,0 +1,7 @@
+<directory name="demo" rev="17" vrev="5" srcmd5="fac92e8502a9b282a0616cfba699d9d2">
+  <linkinfo project="openSUSE:Factory" package="demo" srcmd5="2968e7c32c10d6dd13530505f7dd8cf5" lsrcmd5="f50f7575be17808462ddbaa3a61ec168"/>
+  <entry name="demo.spec" md5="8c4149dd80a775a79230a697db8b0626" size="2325" mtime="1776325755"/>
+  <entry name="_multibuild" md5="32e90cbdcc72caab9b452a23c1627c69" size="52" mtime="1788686699"/>
+  <entry name="demo-1.0.tar.gz" md5="034956cbb1e3629e7cade3d311ffd06a" size="5004148" mtime="1674810704"/>
+  <entry name="demo.changes" md5="ff031a86118ae4d09f3f69f12698cda1" size="7191" mtime="1776325755"/>
+</directory>

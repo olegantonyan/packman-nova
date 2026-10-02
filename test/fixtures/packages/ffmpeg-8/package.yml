@@ -1,0 +1,11 @@
+name: ffmpeg-8
+kind: obs-link
+enabled: true
+tier: 2
+tags: [codec]
+origin:
+  project: openSUSE:Factory
+  pin: null
+link:
+  delete: [_multibuild, ffmpeg-8.changes]
+notes: "link deletes Factory's mini flavor"

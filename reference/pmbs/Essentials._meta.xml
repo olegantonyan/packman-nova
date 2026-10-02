@@ -1,0 +1,63 @@
+<project name="Essentials">
+  <title>Essential multimedia packages</title>
+  <description>PackMan essential multimedia packages.</description>
+  <person userid="detrei" role="bugowner"/>
+  <person userid="Aloysius" role="maintainer"/>
+  <person userid="axekoe" role="maintainer"/>
+  <person userid="crrodriguez" role="maintainer"/>
+  <person userid="detrei" role="maintainer"/>
+  <person userid="enzokiel" role="maintainer"/>
+  <person userid="guillaume" role="maintainer"/>
+  <person userid="hillwood" role="maintainer"/>
+  <person userid="ismail" role="maintainer"/>
+  <person userid="jobermayr" role="maintainer"/>
+  <person userid="jsjhb" role="maintainer"/>
+  <person userid="manfred-h" role="maintainer"/>
+  <person userid="mantre" role="maintainer"/>
+  <person userid="pbleser" role="maintainer"/>
+  <person userid="pluskalm" role="maintainer"/>
+  <person userid="sagiben" role="maintainer"/>
+  <person userid="scarabeus" role="maintainer"/>
+  <person userid="seife" role="maintainer"/>
+  <group groupid="maintainers" role="maintainer"/>
+  <build>
+    <disable repository="r"/>
+  </build>
+  <debuginfo>
+    <enable/>
+  </debuginfo>
+  <repository name="openSUSE_Tumbleweed">
+    <path project="build-compare" repository="bc"/>
+    <path project="openSUSE.org:openSUSE:Tumbleweed" repository="standard"/>
+    <arch>x86_64</arch>
+    <arch>i586</arch>
+    <arch>aarch64</arch>
+    <arch>armv7l</arch>
+  </repository>
+  <repository name="openSUSE_Slowroll">
+    <path project="build-compare" repository="bc"/>
+    <path project="openSUSE.org:openSUSE:Slowroll" repository="standard"/>
+    <arch>x86_64</arch>
+    <arch>i586</arch>
+  </repository>
+  <repository name="openSUSE_Leap_16.1">
+    <path project="build-compare" repository="bc"/>
+    <path project="openSUSE.org:openSUSE:Leap:16.1" repository="standard"/>
+    <arch>aarch64</arch>
+    <arch>x86_64</arch>
+  </repository>
+  <repository name="openSUSE_Leap_16.0">
+    <path project="build-compare" repository="bc"/>
+    <path project="openSUSE.org:openSUSE:Leap:16.0" repository="standard"/>
+    <arch>x86_64</arch>
+    <arch>aarch64</arch>
+  </repository>
+  <repository name="SLE_15" rebuild="direct">
+    <path project="openSUSE.org:SUSE:SLE-15-SP7:Update" repository="standard"/>
+    <arch>x86_64</arch>
+  </repository>
+  <repository name="Factory" rebuild="direct">
+    <path project="openSUSE.org:Kernel:stable" repository="standard"/>
+    <arch>x86_64</arch>
+  </repository>
+</project>

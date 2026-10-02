@@ -1,0 +1,481 @@
+-------------------------------------------------------------------
+Wed Sep 17 16:30:44 UTC 2025 - Luigi Baldoni <aloisio@gmx.com>
+
+- Update to version 2.3.2
+  Fixes:
+  * Several fixes to 10 bit encoding
+  * Fix SATD calculation
+  * Ensure proper stack size
+  * Fix typing for threadwrapper
+  * Separate .pdb files for exe and library
+  * Fix y4m reading
+  * Update minimum CMake version
+  * Fix --no-early-skip
+  * Fix lossless incorrectly selecting skip
+  * Rate control improvements
+  * Fix bit cost calculation for tr splits and smp
+  * Update the default configuration to match the medium preset
+  External contributions:
+  * add missing files in distribution for compilation with cmake
+  * ax_pthread/clang: move -pthread to LIBS
+  * Fix emscripten build
+  * Avoid double free of roi.file_path
+  * Fix passing too many arguments to "init_test_strategies".
+- Rebased kvazaar.patch
+
+-------------------------------------------------------------------
+Wed Apr 10 11:16:02 UTC 2024 - Luigi Baldoni <aloisio@gmx.com>
+
+- Update to version 2.3.1
+  Features:
+  * --(no-)enable-logging to enable/disable logging of normal
+    encoder perfomance into stderr, errors are still outputted
+    to stderr.
+  * AVX2 optimisations for finding last non zero coefficient in
+    RDOQ
+  * Remove YASM to make compilation with visual studio easier
+  * Experimental support for CMake, in the future we would like
+    to get rid of automake and visual studio so if there are any
+    issues with the CMakeLists.txt please report them
+  Fixes:
+  * Fix a bug when requesting encoder_headers before any frame
+    has been pushed in
+  * Fix a problem with win+gcc (mingw, msys, cygwin) causing
+    some optimized functions to segfault
+  * Fix GCC detection for automake
+  External contributions:
+  * add config option to turn off logging output
+  * Don't export MD5 byteReverse symbol on big-endian
+  Performance:
+  * The RD performance should be exactly the same as in v2.2.0
+    and configurations using RDOQ should be around 1-3% faster
+    with the AVX2 optimizations
+- Drop kvazaar-fix_libm_underlinking.patch,
+  kvazaar-add_soversion.patch, kvazaar-fix_install_libdir.patch
+  and kvazaar-fix_install_mandir.patch (merged upstream)
+
+-------------------------------------------------------------------
+Wed Jan 17 18:39:21 UTC 2024 - Luigi Baldoni <aloisio@gmx.com>
+
+- Update to version 2.3.0
+  Too many changes to list, see
+  https://github.com/ultravideo/kvazaar/compare/v2.2.0...v2.3.0
+- Drop kvazaar.memset.patch (no longer necessary with gcc11)
+- Add kvazaar_fix_libm_underlinking.patch,
+  kvazaar-add_soversion.patch, kvazaar-fix_install_libdir.patch
+  and kvazaar-fix_install_mandir.patch
+- Use gcc11 on Leap
+
+-------------------------------------------------------------------
+Wed Jan  4 11:29:30 UTC 2023 - Luigi Baldoni <aloisio@gmx.com>
+
+- Update to version 2.2.0
+  Features:
+  * Updated Region of Interest (ROI) functionality to allow
+    separate ROI map for each frame
+  * Improve inter search
+  * Update cabac context during search to improve the accuracy
+    of bit cost estimation
+  * Move intra chroma search option from --rd 3 to its own
+    option --(no-)intra-chroma-search and fast bipred to
+    --(no-)fast-bipred
+  * Change maximum rd level to 4, where 3 performs more rd
+    search for inter and 4 performs full intra search
+  * Add --(no-)combine-intra-cus for controlling whether the
+    larger intra blocks are tried even when search at current
+    depth is disabled
+  * Add --force-inter for debugging purposes to force all PUs in
+    inter slices to use best inter mode
+  Optimizations:
+  * AVX2 implementations of bidirectional blending
+  Fixes:
+  * Make sure the dpb is more than max_num_reorder_pics 899c672
+  * Compute proper count of buffered frames for vps and sps. Use
+    common function d4880be
+  * Fix some strategy function pointer signatures a400504
+  External contributors:
+  * build: fix automake warning by @bradh
+  * cli: add missing newlines in usage by @bradh
+  * refactor SEI by @bradh
+  * cli: minor api doc fix by @bradh
+  * add sudo ldconfig by @binbinzhm
+  * Enable -mpopcnt and -mlzcnt on AVX2 by @klondi
+- Bump sover to 7
+
+-------------------------------------------------------------------
+Wed Oct 13 15:32:42 UTC 2021 - Luigi Baldoni <aloisio@gmx.com>
+
+- Update to version 2.1.0
+  * With this release, the license was changed from LGPL2.1 to
+    3-Clause BSD, allowing more liberties in using Kvazaar.
+  Features:
+  * Option to use a custom table for fast bitrate estimation
+    weights (--fast-coeff-table <file>)
+  * Tools to create new weight sets for fast bitrate estimation
+    (--fast-rd-sampling, --fastrd-accuracy-check,
+    --fastrd-outdir), documented in rdcost-weight-tool/README.txt
+  * Added support for Y4M input in addition to YUV (Autodetected,
+    manually enable using --input-file-format=y4m)
+  * Allow writing out block statistics for debugging
+    (--stats-file-prefix)
+  Optimizations:
+  *  New AVX2 implementations for interpolation filters
+  Fixes:
+  * DTS offset was incorrect at the beginning of the sequence
+    when using GOP
+  * Added VPS information about reordering and buffering, fixes
+    VLC playback
+  * Removed pthread_exit() on mingw to fix media-autobuild suite
+  * Renamed truncate function to not overlap with POSIX one.
+
+-------------------------------------------------------------------
+Wed Apr 22 16:16:28 UTC 2020 - Luigi Baldoni <aloisio@gmx.com>
+
+- Update to version 2.0.0
+  * Several unmentioned improvements and fixes
+  Highlights:
+  * Updated presets
+  * Updated GOP definitions using QP offset model.
+    + There is now even longer hierarchical GOP --gop=16
+  * Much faster and improved bipred
+  * Alternative and better rate control algorithm, optimal bit
+    allocation (--rc-algorithm oba)
+  * Variance adaptive quantization (--vaq)
+  Features:
+  * Option to set QP offset for intra frames (--intra-qp-offset,
+    automatical by default)
+  * Zero-coeff-rdo is now configurable (--zero-coeff-rdo)
+  * Optional intra frame analysis for rate control (--intra-bits)
+  * Optional machine learning based depth constraints for intra
+    search (--ml-pu-depth-intra)
+  * PU depths are now separately configurable for each GOP layer
+  User Interface:
+  * Report bitrate and some kind of (cumulative) average QP
+  Optimizations:
+  * More AVX2 opimizations for SAO
+  * More AVX2 opimizations for transforms
+  * More AVX2 opimizations for intra prediction
+  * AVX2 strategy for variance calculation
+- Bump sover to 6
+
+-------------------------------------------------------------------
+Tue Jul  9 20:15:25 UTC 2019 - Luigi Baldoni <aloisio@gmx.com>
+
+- Update to version 1.3.0
+  Features:
+  * Add release notes like this (#159, cf85d52)
+  * Changed --rd=2 to use SSD metric for CU mode decision
+    (662430d)
+  * Changed inter search to check the cost of flushing residual
+    to zero (75a8700)
+  * Changed rectangular and asymmetric blocks to use a transform
+    split (774c666)
+  * Added diamond search ME algorithm (4e13608)
+  * Enabled low delay B GOP structure with --bipred
+    --gop=lp-g4d3t1 (7155dd0)
+  * Added termination of intra search at zero residual with
+    --intra-rdo-et (4fb1c16)
+  Optimization:
+  * Made TZ search faster and slightly better (c136044)
+  * Optimized bi-prediction (69756e2)
+  Fixes:
+  * Fixed transform skip with rectangular inter blocks (fb462b2)
+  * Fixed accidental inter search for 4x4 blocks (649113a)
+  User Interface:
+  * Changed options for all preset levels (f033ad0)
+  * Added an option for limiting the number of steps in motion
+    estimation with --me-steps (39ed368)
+  * Added --me=dia (4e13608)
+  * Added --level, --force-level and --high-tier for setting
+    bitstream level and tier (bac0745)
+  Building:
+  * Fixed issue with struct timespec redefinition with Visual
+    Studio 2015 and later (713e694)
+  * Fixed building .asm files in Visual Studio 2017 (6be8195)
+  * Fixed compatibility with crypto++ 6.0 (4b24cd0)
+  * Added support for crypto++ with the name libcryptopp
+    (411276d)
+  * Dockerfile base image was updated to Ubuntu 18.04 (8380b6c)
+  * Enabled -Wextra by default (ff17e0b)
+  Refactoring:
+  * Inter motion vector cost functions (c73cce3)
+  * Dockerfile (0164291)
+
+-------------------------------------------------------------------
+Fri Nov 17 14:01:40 UTC 2017 - aloisio@gmx.com
+
+- Update to version 1.2.0
+  Features:
+  * Intra prediction mode encryption with
+    --crypto=intra_pred_modes (2b8ce5e)
+  * Adaptive QP for 360° video with --erp-aqp (26adef4)
+  * New selection algorithm for --owf=auto and --threads=auto
+    (8c4a347)
+  * Added an option to set the encryption key using --key (2e13091)
+  * Added an option to limit SAO to band offset or edge offset
+  only with --sao=band and --sao=edge (8674c0f)
+  Optimization:
+  * Reduced number of intra modes checked when using --rd=2
+    (2cad317)
+  * Reduced inter-frame CTU dependencies caused by SAO (050e90d)
+  * Changed to a faster calculation for coefficient costs when
+    using --rd=0 (1ead9c0)
+  Fixes:
+  * Fixed long motion vectors not getting clipped (#158, 85e2a40)
+  * Fixed order of pictures in reconstruction debug output when
+    --gop=8 is used (#101, aae141f)
+  * Fixed a use-after-free when encoding very few frames with
+    --gop=8 (#161, 2991962)
+  * Fixed a crash when video size is not a multiple of the
+    smallest CU size (2f2405d)
+  * Fixed invalid bitstream when QP is too large (382636d)
+  * Fixed a race condition causing a deadlock (5f8e17d)
+  * Fixed a memory leak in encryption (8654b48)
+  * Fixed I-frames not being IRAP frames when using GOP (00c9f52,
+    841597e)
+  * Fixed computing inter and intra costs with different metrics
+    (afc13f1)
+  * Fixed reliance on undefined behavior (b41f0fa, 924cf85)
+  * Fixed --mv-constraint=frametilemargin constraining motion
+    vectors too much (409d211)
+  * Fixed using --bipred with --tmvp (#160, 9974380)
+  User Interface:
+  * Changed type of kvz_config.roi.dqps from uint8_t* to int8_t.
+    Delta QP values for --roi may now be negative. (79cb3a2)
+  * Changed PSNR display format (20d6444)
+  Building:
+  * Default to no -Werror. Run configure with --enable-werror to
+    enable it. (033bc6b)
+  * make check now runs valgrind tests that used to only run on
+    Travis. Programs ffmpeg, valgrind and TAppDecoderStatic should
+    be found from $PATH (6bbe5e1)
+  Refactoring:
+  * Removed duplicate code in inter MVP and merge candidate
+    selection (4fb0783)
+  * Removed duplicate code in intra reconstruction for luma and
+    chroma (e944416)
+  * Changed functions for writing the CU tree bitstream to use
+    luma pixel coordinates (610c91b, f5eef7f)
+  * Removed duplicate code in functions for writing intra CU
+    bitstream with and without encryption (525a518)
+  * Removed duplicate code in helper functions in search.c
+    (2c73476)
+  * Gathered function parameters for inter search functions into a
+    single struct (2fa3d82)
+
+- Refreshed kvazaar.memset.patch
+
+- Bumped library version to 4
+
+-------------------------------------------------------------------
+Wed Feb 22 12:34:40 UTC 2017 - scarabeus@opensuse.org
+
+- Bit of spec cleanup
+
+-------------------------------------------------------------------
+Thu Feb 16 19:50:40 UTC 2017 - aloisio@gmx.com
+
+- Update to version 1.1.0
+  * Both BDRate and speed improved slightly.
+  Features:
+  * Bitrate control now works at LCU level, giving more 
+    consistent results. (2318bd7)
+  * Added --roi parameter for LCU level delta-QP control. 
+    (4a0121a)
+  * Added --slices parameter for encapsulating tiles and 
+    WPP-rows into slice NAL's instead of using bitstream 
+    offsets. (1e6463c)
+  * Temporal motion vector prediction now works with B-frames. 
+    (d892be5)
+  Optimization:
+  * Added AVX2 version of SSD. (778e46d)
+  * Optimized intra reference building. (c31207e)
+  * Optimized bitstream writes. (a9e45ef)
+  * Optimized CU-split decision. (2c069a3)
+  * Fix main-thread busy-looping on Linux. (a5a925f)
+  * Avoid initializing memory needlessly during RDOQ. 
+    (acd12cb, b021d22)
+  Fixes:
+  * Pass DTS and PTS timestamps correctly through the API. 
+    (d18de19)
+  * Fixed bug with subpixel motion estimation within tiles. 
+    (2c005cd)
+  * Improved 10-bit RD-performance. (70a52f0)
+  * Fixed for stupendously large bitstreams when 
+    --mv-constraint was used with --subme. (937a764)
+  * Fixed bug with --smp and --amp. (46c9a48)
+  * Fix problem with --bipred. (1e6463c)
+  * Fixed hang with threading on OSX. (d893474)
+  * Fix crash when frame is less than 65 pixels high and WPP 
+    is used. (b8e3513)
+  User Interface:
+  * Disabled WPP with tiles enabled. (cb6672b)
+  * Improved --help. (5bf7454, 78a28e0)
+  * Made it possible to disable the gop-structure that was 
+    enabled by default in v.1.0.0. (deb63f7)
+  * Have --threads=auto enable threading instead of disabling 
+    it. (db5e750)
+  * Give errors on failures and handle them better. (97863cd, 
+    6a178de)
+  * Use reference picture number of medium preset by default. 
+    (7ff33e1)
+  Building:
+  * Include optimizations on 32-bit. (1dcc993)
+  * Added appveyor CI tests for MSYS2. (e269b86)
+  * Add pkg-config macros, so pkg-config doesn't need to be 
+    installed anymore. (2d7daa1)
+  * Travis CI OSX tests work again. (c32f5fa)
+  Refactoring:
+  * Refactored deblocking and sign hiding. (7ec5f78)
+  * Removed Exp-Golomb lookup table. (ed3bd89)
+  * Copy kvz_config to encoder_control_t and remove duplicate 
+    fields. (e78a8df)
+
+-------------------------------------------------------------------
+Tue Oct  4 07:43:42 UTC 2016 - aloisio@gmx.com
+
+- Update to version 1.0.0
+  New Features
+  * --version
+  * --help
+  * --loop-input
+  * --mv-constraint to constrain motion vectors
+  * --tiles=2x2 as an alternative syntax for uniform tiles
+  * --hash=md5
+  * Print information about what SIMD optimizations are in 
+    use
+  * --mv=full8 --mv=full16 --mv=full32 --mv=full64
+  * --cu-split-termination=zero/off
+  * --crypto for selective encryption of bitstream (for 
+    OpenHEVC)
+  * --me-early-termination=sensitive/on/off for early 
+    termination of motion vector search
+  * Added 4x8 SMP and 4x12 AMP motion partitions
+  * --subme=0/1/2/3/4 for control over complexity of 
+    fractional pixel motion prediction
+  * --lossless for lossless coding
+  * Monochrome coding
+  * --input-format=420/400
+  * --input-bitdepth=8/10
+  * --tmpv for temporal motion vector predictor
+  * --rdoq-skip for not using rdoq for situations where it's 
+    unlikely to improve BDRate
+  * Modified --gop=lp-g4d3r1t1 syntax to not take the 
+    reference frames as a parameter, it's now --gop=lp-g4d3t1.
+  * Enable WPP and multithreading by default, with detection 
+    for number of cores
+  * Update all presets to ratedistortion-complexity 
+    optimized versions. These are based on a search of all 
+    (~ish) possible encoding parameters and bring a huge boost 
+    to both speed and BDRate when encoding with the presets (10x 
+    speed for veryslow, ~1.1x-4x for others, up to 30% improved 
+    BDRate for some presets).
+  * Set default options to match medium with intra period of 
+    64, QP 22 and --gop=lp-g4d3t1
+  * --implicit-rdpcm RExt feature
+  Optimizations
+  * AVX2 version for Sample Adaptive Offset (SAO)
+  * Optimized memory copying
+  * AVX2 versions of filters for fractional pixel motion 
+    estimation
+  * AVX2 version for half pixel chroma sampling for SMP/AMP
+  * AVX2 versions for calculating two or four SATD values at 
+    once for small blocks
+  * Rewrote AVX2 version of fractional pixel motion 
+    compensation
+  * Rewrote motion vector cost calculation. It only got 
+    slightly faster, but BDRate improved a bunch due to the new 
+    implementation being more correct.
+  * Made AVX2 SAD use SSE4.1 for cases where there isn't an 
+    AVX2 implementation, speeding up SMP/AMP.
+  Bugfixes
+  * Fixed a bug in rate control where an int overflowed 
+    after coding 2^31 bits (2Gb)
+  * Fixed non-determinism intiles
+  * Fixed chroma reconstruction bug in tiles
+  * Fixed a bug with calculating the number of bits used for 
+    intra mode on 4x4 CUs
+  * Stopped checking zero motion vector multiple times in 
+    motion compensation
+  * Fixed possible segfault in motion compensation
+  * Fixed a race condition with OWF and SMP/AMP
+  * Gave pthread_cond_timedwait time in correctly, such that 
+    main thread now sleeps instead of busylooping when it has 
+    nothing to do
+  * Fixed rate control with lp-gop
+  * Fixed full search not taking temporal motion vector into 
+    account
+  * Allow non-gop-length intra period for lp-gop
+  Code / Building / Testing
+  * Moved SAO to it's own file
+  * Removed a ton of unnecessary includes
+  * Updated autotools ax_pthread
+  * Added build test for OS-X for Travis
+  * Made tests check for bitstream correctness
+  * Refactored some of the copypasta in motion vector search 
+    starting point selection
+  * Refactored the cu_info_t datastructures to hold 
+    information at a 4x4 resolution needed for AMP and SMP
+  * Changed cu_info_t to use bitfields to negate the effect 
+    of increasing the cu_info_t array by a factor of 4
+  * Moved bitstream generation from encoderstate.c to 
+    encode_coding_tree.c
+  * Renamed encoder_state_t.global to frame, which makes 
+    sense since it hold frame level data, not global data
+  * Rewrote integer vector inter prediction, because it was 
+    so bad
+  * Refactored init_lcu_t
+  * Added more tests for inter SAD
+  * Added speed tests for dual intra SAD functions
+  * Added more realistic speed tests for inter SAD
+  Other
+  * Added a manpage
+  * Added scripts for updating manpage and README based on 
+    --usage.
+  * Added a Dockerfile. Just because.
+  * Added commit date to --version
+
+-------------------------------------------------------------------
+Thu Jan 28 20:07:47 UTC 2016 - aloisio@gmx.com
+
+- Update to version 0.8.3 
+
+-------------------------------------------------------------------
+Sat Jan 16 19:25:59 UTC 2016 - aloisio@gmx.com
+
+- Update to version 0.8.2 
+- Bumped library version to 3
+
+-------------------------------------------------------------------
+Fri Jan 15 12:40:35 UTC 2016 - aloisio@gmx.com
+
+- Update to version 0.8.1 
+- Removed static library
+
+-------------------------------------------------------------------
+Mon Nov  2 16:48:30 UTC 2015 - aloisio@gmx.com
+
+- Update to version 0.7.2 
+
+-------------------------------------------------------------------
+Sun Oct 25 06:12:37 UTC 2015 - aloisio@gmx.com
+
+- Update to version 0.7.1
+  * bumped library version to 2
+
+-------------------------------------------------------------------
+Sat Oct 10 06:21:46 UTC 2015 - aloisio@gmx.com
+
+- Update to version 0.7.0
+  * bumped library version to 1
+- Removed kvazaar-arm.patch because it's now fixed upstream
+
+-------------------------------------------------------------------
+Fri Sep 18 05:41:13 UTC 2015 - aloisio@gmx.com
+
+- Update to version 0.6.1 
+
+-------------------------------------------------------------------
+Tue Sep 15 13:28:55 UTC 2015 - aloisio@gmx.com
+
+- Initial version 0.6.0

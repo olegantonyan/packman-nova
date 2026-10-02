@@ -1,0 +1,36 @@
+-------------------------------------------------------------------
+Sat Jul 11 09:55:30 UTC 2020 - Luigi Baldoni <aloisio@gmx.com>
+
+- Drop l-smash-DATE_TIME.patch (no longer necessary)
+- Add l-smash-PIE.patch
+- Use correct license
+- Spec cleanup
+
+-------------------------------------------------------------------
+Thu Oct 11 06:25:45 UTC 2018 - aloisio@gmx.com
+
+- Update to version 2.14.5 (no changelog supplied)
+- Use stable tarball
+- Refreshed l-smash-DATE_TIME.patch
+- Spec cleanup
+
+-------------------------------------------------------------------
+Tue Feb 09 05:41:18 UTC 2016 - i@marguerite.su
+
+- Update to version 2.9.1+git20151003.3408947:
+  + description: Make description setup functions more encapsulated.
+  + read: Select description reader by sane procedure.
+  + mp4a: Fix failure of bitrate update and QTFF output.
+  + read: Select description allocator by sane procedure.
+  + write: Select description writer by sane procedure.
+  + print: Select description printer by sane procedure.
+  + read: Read sample entry immediately as unknown if media 'hdlr' is not found.
+  + write: Don't write sample entry if media 'hdlr' is not found.
+  + MSVC: add missing source files.
+  + cli/muxer: Add 'par' track option, which specifies pixel aspect ratio.
+
+-------------------------------------------------------------------
+Mon Apr 21 15:39:34 UTC 2014 - i@margueirte.su
+
+- initial version 20140421
+

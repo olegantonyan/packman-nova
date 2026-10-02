@@ -1,0 +1,8 @@
+[packman-nova-essentials]
+name=packman-nova Essentials (openSUSE Tumbleweed)
+type=rpm-md
+baseurl=https://packman.omnipackage.org/opensuse_tumbleweed/essentials/$basearch
+gpgcheck=1
+gpgkey=https://packman.omnipackage.org/packman-nova.key
+enabled=1
+autorefresh=1

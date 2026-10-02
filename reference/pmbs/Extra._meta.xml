@@ -1,0 +1,42 @@
+<project name="Extra">
+  <title>PackMan extra packages.</title>
+  <description>PackMan extra packages.</description>
+  <person userid="detrei" role="bugowner"/>
+  <person userid="Aloysius" role="maintainer"/>
+  <person userid="anubisg1" role="maintainer"/>
+  <person userid="axekoe" role="maintainer"/>
+  <person userid="detrei" role="maintainer"/>
+  <person userid="enzokiel" role="maintainer"/>
+  <person userid="guillaume" role="maintainer"/>
+  <person userid="jsjhb" role="maintainer"/>
+  <person userid="pbleser" role="maintainer"/>
+  <person userid="phils3r" role="maintainer"/>
+  <person userid="seife" role="maintainer"/>
+  <group groupid="maintainers" role="maintainer"/>
+  <build>
+    <disable repository="R"/>
+  </build>
+  <debuginfo>
+    <enable/>
+  </debuginfo>
+  <repository name="openSUSE_Tumbleweed">
+    <path project="Multimedia" repository="openSUSE_Tumbleweed"/>
+    <arch>x86_64</arch>
+    <arch>i586</arch>
+    <arch>armv7l</arch>
+    <arch>aarch64</arch>
+  </repository>
+  <repository name="openSUSE_Slowroll">
+    <path project="Multimedia" repository="openSUSE_Slowroll"/>
+    <arch>x86_64</arch>
+    <arch>i586</arch>
+  </repository>
+  <repository name="openSUSE_Leap_16.1" rebuild="direct">
+    <path project="Multimedia" repository="openSUSE_Leap_16.1"/>
+    <arch>x86_64</arch>
+  </repository>
+  <repository name="openSUSE_Leap_16.0" rebuild="direct">
+    <path project="Multimedia" repository="openSUSE_Leap_16.0"/>
+    <arch>x86_64</arch>
+  </repository>
+</project>

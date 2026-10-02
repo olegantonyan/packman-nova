@@ -1,0 +1,13 @@
+name: x265
+kind: native
+enabled: true
+tier: 1
+tags: [codec]
+sources:
+  - file: x265-4.1.tar
+    urls:
+      - pmbs:x265/x265-4.1.tar
+      - mirror-src:x265
+    sha256: 04eb472297a1235b29f11322a21fd8694722d2e7e42ace8d19cc1da325efa8c8
+    size: 11888640
+notes: "tar_scm (mode manual, update.sh) of bitbucket.org/multicoreware/x265_git rev 32e25ffc with excludes; no upstream URL."

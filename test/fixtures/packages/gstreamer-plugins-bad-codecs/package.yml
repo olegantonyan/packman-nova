@@ -1,0 +1,16 @@
+name: gstreamer-plugins-bad-codecs
+kind: native
+enabled: false
+tier: 3
+tags: [codec, proprietary]
+sources:
+  - file: _service:download_files:gst-plugins-bad-1.28.7.tar.xz
+    urls:
+      - https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-1.28.7.tar.xz
+      - pmbs:gstreamer-plugins-bad-codecs
+      - pmbs:gstreamer-plugins-bad-codecs/gst-plugins-bad-1.28.7.tar.xz
+      - mirror-src:gstreamer-plugins-bad-codecs
+    sha256: 9C4A5B0E7A1F3C2D4B6E8F0A1C3E5B7D9F1A3C5E7B9D1F3A5C7E9B1D3F5A7C9E
+    size: 8347976
+  - file: packman-nova.key
+    path: keys/packman-nova.key

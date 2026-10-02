@@ -1,0 +1,63 @@
+From: Sebastian Ramacher <sramacher@debian.org>
+Date: Sun, 21 Jun 2020 17:54:56 +0200
+Subject: Fix arm* flags
+
+---
+ source/CMakeLists.txt               |    3 ---
+ source/cmake/FindNEON_DOTPROD.cmake |    2 +-
+ source/cmake/FindNEON_I8MM.cmake    |    2 +-
+ source/cmake/FindSVE.cmake          |    2 +-
+ source/cmake/FindSVE2.cmake         |    4 ++--
+ 5 files changed, 5 insertions(+), 8 deletions(-)
+
+--- a/source/CMakeLists.txt
++++ b/source/CMakeLists.txt
+@@ -274,10 +274,7 @@
+     elseif(ARM)
+         find_package(Neon)
+         if(CPU_HAS_NEON)
+-            set(ARM_ARGS -mcpu=native -mfloat-abi=hard -mfpu=neon -marm -fPIC)
+             add_definitions(-DHAVE_NEON)
+-        else()
+-            set(ARM_ARGS -mcpu=native -mfloat-abi=hard -mfpu=vfp -marm)
+         endif()
+     endif()
+     if(ARM64)
+--- a/source/cmake/FindNEON_DOTPROD.cmake
++++ b/source/cmake/FindNEON_DOTPROD.cmake
+@@ -17,5 +17,5 @@
+ endif()
+ 
+ if(has_dot_product)
+-    set(CPU_HAS_NEON_DOTPROD 1)
++    set(CPU_HAS_NEON_DOTPROD 0)
+ endif()
+--- a/source/cmake/FindNEON_I8MM.cmake
++++ b/source/cmake/FindNEON_I8MM.cmake
+@@ -17,5 +17,5 @@
+ endif()
+ 
+ if(has_i8mm)
+-    set(CPU_HAS_NEON_I8MM 1)
++    set(CPU_HAS_NEON_I8MM 0)
+ endif()
+--- a/source/cmake/FindSVE.cmake
++++ b/source/cmake/FindSVE.cmake
+@@ -17,5 +17,5 @@
+ endif()
+ 
+ if(sve_version)
+-    set(CPU_HAS_SVE 1)
++    set(CPU_HAS_SVE 0)
+ endif()
+--- a/source/cmake/FindSVE2.cmake
++++ b/source/cmake/FindSVE2.cmake
+@@ -17,6 +17,6 @@
+ endif()
+ 
+ if(sve2_version)
+-    set(CPU_HAS_SVE 1)
+-    set(CPU_HAS_SVE2 1)
++    set(CPU_HAS_SVE 0)
++    set(CPU_HAS_SVE2 0)
+ endif()

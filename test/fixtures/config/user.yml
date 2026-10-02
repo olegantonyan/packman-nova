@@ -1,0 +1,5 @@
+project_name: custom-project
+pbuild:
+  buildjobs: 4
+distro:
+  arches: [x86_64, aarch64]

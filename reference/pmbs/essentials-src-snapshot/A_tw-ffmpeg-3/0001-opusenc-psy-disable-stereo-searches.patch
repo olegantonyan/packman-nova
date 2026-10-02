@@ -1,0 +1,40 @@
+From f141b353e60f1081185927a1e74a9ab46cae8bef Mon Sep 17 00:00:00 2001
+From: Rostislav Pehlivanov <atomnuker@gmail.com>
+Date: Thu, 4 Jan 2018 02:52:40 +0000
+Subject: [PATCH] opusenc_psy: disable stereo searches for mono streams
+
+Fixes a crash which happened when someone tried to encode mono.
+
+Signed-off-by: Rostislav Pehlivanov <atomnuker@gmail.com>
+---
+ libavcodec/opusenc_psy.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/libavcodec/opusenc_psy.c b/libavcodec/opusenc_psy.c
+index 50890c65d6..b712603344 100644
+--- a/libavcodec/opusenc_psy.c
++++ b/libavcodec/opusenc_psy.c
+@@ -383,6 +383,10 @@ static void celt_search_for_dual_stereo(OpusPsyContext *s, CeltFrame *f)
+ {
+     float td1, td2;
+     f->dual_stereo = 0;
++
++    if (s->avctx->channels < 2)
++        return;
++
+     bands_dist(s, f, &td1);
+     f->dual_stereo = 1;
+     bands_dist(s, f, &td2);
+@@ -396,6 +400,9 @@ static void celt_search_for_intensity(OpusPsyContext *s, CeltFrame *f)
+     int i, best_band = CELT_MAX_BANDS - 1;
+     float dist, best_dist = FLT_MAX;
+ 
++    if (s->avctx->channels < 2)
++        return;
++
+     /* TODO: fix, make some heuristic up here using the lambda value */
+     float end_band = 0;
+ 
+-- 
+2.11.0
+

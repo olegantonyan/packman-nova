@@ -1,0 +1,15 @@
+name: libfprint-tod-goodix
+kind: native
+enabled: true
+tier: 0
+tags: [fingerprint, proprietary]
+spec: libfprint-2-tod1-goodix.spec
+sources:
+  - file: _service:download_url:libfprint-2-tod1-goodix_0.0.6.orig.tar.gz
+    urls:
+      - http://dell.archive.canonical.com/updates/pool/public/libf/libfprint-2-tod1-goodix/libfprint-2-tod1-goodix_0.0.6.orig.tar.gz
+      - pmbs:libfprint-tod-goodix/_service:download_url:libfprint-2-tod1-goodix_0.0.6.orig.tar.gz
+      - mirror-src:libfprint-2-tod1-goodix
+    sha256: 95e3b333709089f974106058cdd88aca4366e3f9cb3ab04940b44d4cebb6007d
+    size: 654776
+notes: "Spec and rpm are named libfprint-2-tod1-goodix. _service download_url + verify_file (same sha256) run on the server only; pbuild needs the file present. Dell archive is plain http."

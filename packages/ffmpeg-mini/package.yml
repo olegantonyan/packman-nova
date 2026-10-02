@@ -1,0 +1,6 @@
+name: ffmpeg-mini
+kind: native
+enabled: true
+tier: 0
+tags: [stub]
+notes: "Authored. Empty ffmpeg-N-mini-devel/-libs (N=5..9) whose Requires on the never-built ffmpeg-mini main package makes them uninstallable. As local-first binaries they shadow Factory's restricted ffmpeg-N-mini flavors, which Factory's prjconf prefers, so build roots fall through to the full ffmpeg-N libraries. Version %suse_version (1699) outranks 8.x/9.x."

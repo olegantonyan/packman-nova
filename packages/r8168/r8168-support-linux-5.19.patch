@@ -1,0 +1,22 @@
+---
+ r8168-8.053.00/src/r8168_n.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+--- r8168-8.053.00/src/r8168_n.c
++++ r8168-8.053.00/src/r8168_n.c	2024-05-21 09:57:57.192604776 +0000
+@@ -126,6 +126,15 @@
+ #define FIRMWARE_8168FP_3   "rtl_nic/rtl8168fp-3.fw"
+ #define FIRMWARE_8168FP_4   "rtl_nic/rtl8168fp-4.fw"
+ 
++#if LINUX_VERSION_CODE > KERNEL_VERSION(5, 18, 0)
++static inline void netif_set_gso_max_size(struct net_device *dev,
++                                          unsigned int size)
++{
++        /* dev->gso_max_size is read locklessly from sk_setup_caps() */
++        WRITE_ONCE(dev->gso_max_size, size);
++}
++#endif
++
+ static const struct {
+         const char *name;
+         const char *fw_name;

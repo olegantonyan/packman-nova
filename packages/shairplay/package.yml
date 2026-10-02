@@ -1,0 +1,10 @@
+name: shairplay
+kind: obs-link
+enabled: true
+tier: 3
+tags: [audio]
+origin:
+  project: multimedia:libs
+  package: shairplay
+  pin: null
+notes: "PMBS links openSUSE.org:multimedia:libs/shairplay (cicount=copy); origin is a real package there, not a link."

@@ -1,0 +1,61 @@
+# frozen_string_literal: true
+
+require 'test_helper'
+require_relative 'site_test_support'
+
+describe ::PackmanNova::Site::Generator do
+  include ::SiteTestSupport
+
+  let(:state) { site_state }
+  let(:generator) { ::PackmanNova::Site::Generator.new(config: site_config, state: state, logger: null_logger) }
+  let(:html) { generator.render_index }
+
+  it 'renders the install commands' do
+    assert_includes html, 'sudo zypper ar -f https://packman.example.org/opensuse_tumbleweed/essentials/packman-nova.repo'
+    assert_includes html, 'sudo zypper --gpg-auto-import-keys ref'
+    assert_includes html, 'sudo zypper dup --from packman-nova-essentials --allow-vendor-change'
+  end
+
+  it 'renders the key and repository facts' do
+    assert_includes html, '0A1B 2C3D 4E5F 6071 8293 A4B5 C6D7 E8F9 3F1C 2A9B'
+    assert_includes html, 'C6D7 E8F9 3F1C 2A9B'
+    assert_includes html, 'https://packman.example.org/packman-nova.key'
+    assert_includes html, '20260927'
+    assert_includes html, '<title>packman-nova Essentials for openSUSE Tumbleweed</title>'
+  end
+
+  it 'renders every package with its version' do
+    state.fetch('packages').each do |name, entry|
+      assert_includes html, ">#{name}</a>"
+      assert_includes html, "#{entry.fetch('version')}-#{entry.fetch('release')}"
+    end
+    assert_includes html, 'https://build.opensuse.org/package/show/openSUSE:Factory/vlc'
+  end
+
+  it 'escapes state values' do
+    assert_includes html, 'meta change: ffmpeg-8-libavcodec-devel &lt;8.1.3&gt;'
+    refute_includes html, '<8.1.3>'
+  end
+
+  it 'is self-contained' do
+    assert_includes html, 'prefers-color-scheme: dark'
+    refute_match(/<link |<script src/, html)
+    refute_match(/<!--/, html)
+  end
+
+  it 'renders without a key' do
+    html = ::PackmanNova::Site::Generator.new(config: site_config, state: state.except('key'), logger: null_logger).render_index
+
+    assert_includes html, 'No signing key is recorded'
+  end
+
+  it 'writes index.html and packages.json' do
+    with_tmpdir do |dir|
+      paths = generator.write(dir)
+
+      assert_equal [::File.join(dir, 'index.html'), ::File.join(dir, 'packages.json')], paths
+      assert_equal html, ::File.read(paths.first)
+      assert_equal({ 'generated_at' => state.fetch('generated_at'), 'packages' => state.fetch('packages') }, ::JSON.parse(::File.read(paths.last)))
+    end
+  end
+end

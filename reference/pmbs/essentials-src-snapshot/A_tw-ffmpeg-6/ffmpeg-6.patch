@@ -1,0 +1,74 @@
+---
+ Makefile                      |    3 +--
+ libpostproc/postprocess.c     |    1 -
+ libswscale/swscale_internal.h |    1 -
+ libswscale/utils.c            |    5 +++--
+ 4 files changed, 4 insertions(+), 6 deletions(-)
+
+--- a/Makefile
++++ b/Makefile
+@@ -17,6 +17,7 @@
+ vpath %/fate_config.sh.template $(SRC_PATH)
+ 
+ TESTTOOLS   = audiogen videogen rotozoom tiny_psnr tiny_ssim base64 audiomatch
++TESTTOOLS  :=
+ HOSTPROGS  := $(TESTTOOLS:%=tests/%) doc/print_options
+ 
+ ALLFFLIBS = avcodec avdevice avfilter avformat avutil postproc swscale swresample
+@@ -116,7 +117,6 @@
+ 
+ include $(SRC_PATH)/fftools/Makefile
+ include $(SRC_PATH)/doc/Makefile
+-include $(SRC_PATH)/doc/examples/Makefile
+ 
+ $(ALLFFLIBS:%=lib%/version.o): libavutil/ffversion.h
+ 
+@@ -183,7 +183,6 @@
+ build: all alltools examples testprogs
+ check: all alltools examples testprogs fate
+ 
+-include $(SRC_PATH)/tests/Makefile
+ 
+ $(sort $(OUTDIRS)):
+ 	$(Q)mkdir -p $@
+--- a/libpostproc/postprocess.c
++++ b/libpostproc/postprocess.c
+@@ -88,7 +88,6 @@
+ #include "postprocess.h"
+ #include "postprocess_internal.h"
+ #include "libavutil/avstring.h"
+-#include "libavutil/ppc/util_altivec.h"
+ 
+ #define GET_MODE_BUFFER_SIZE 500
+ #define OPTIONS_ARRAY_SIZE 10
+--- a/libswscale/swscale_internal.h
++++ b/libswscale/swscale_internal.h
+@@ -34,7 +34,6 @@
+ #include "libavutil/pixfmt.h"
+ #include "libavutil/pixdesc.h"
+ #include "libavutil/slicethread.h"
+-#include "libavutil/ppc/util_altivec.h"
+ #include "libavutil/half2float.h"
+ 
+ #define STR(s) AV_TOSTRING(s) // AV_STRINGIFY is too long
+--- a/libswscale/utils.c
++++ b/libswscale/utils.c
+@@ -50,15 +50,16 @@
+ #include "libavutil/slicethread.h"
+ #include "libavutil/thread.h"
+ #include "libavutil/aarch64/cpu.h"
+-#include "libavutil/ppc/cpu.h"
+ #include "libavutil/x86/asm.h"
+ #include "libavutil/x86/cpu.h"
+-#include "libavutil/loongarch/cpu.h"
+ 
+ #include "rgb2rgb.h"
+ #include "swscale.h"
+ #include "swscale_internal.h"
+ 
++#define PPC_ALTIVEC(x) (0)
++#define have_lasx(x) (0)
++#define have_lsx(x) (0)
+ typedef struct FormatEntry {
+     uint8_t is_supported_in         :1;
+     uint8_t is_supported_out        :1;

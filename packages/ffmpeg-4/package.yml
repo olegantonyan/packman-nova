@@ -1,0 +1,12 @@
+name: ffmpeg-4
+kind: obs-link
+enabled: true
+tier: 2
+tags: [codec]
+origin:
+  project: openSUSE:Factory
+  package: ffmpeg-4
+  pin: null
+link:
+  delete: [_multibuild, ffmpeg-4.changes]
+notes: "Legacy API for old consumers. Factory has no _multibuild for ffmpeg-4 today, so that delete is a no-op kept for symmetry; PMBS keeps ffmpeg-4.changes, we drop it like 7/8/9."

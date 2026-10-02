@@ -1,0 +1,21 @@
+name: r8168
+kind: native
+enabled: true
+tier: 0
+tags: [kmp]
+sources:
+  - file: r8168-8.053.00.tar.gz
+    urls:
+      - https://github.com/mtorromeo/r8168/archive/8.053.00.tar.gz
+      - pmbs:r8168/r8168-8.053.00.tar.gz
+      - mirror-src:r8168
+    sha256: 7c00cc13f17c45e1d1002e4c390f118204b04d42caba9d04d8ae95e953770857
+    size: 169102
+  - file: r8168-8.053.00.tar.gz.asc
+    urls:
+      - https://github.com/mtorromeo/r8168/releases/download/8.053.00/r8168-8.053.00.tar.gz.asc
+      - pmbs:r8168/r8168-8.053.00.tar.gz.asc
+      - mirror-src:r8168
+    sha256: c15201873ffb6b216a4fb24a990b13df85b4164756c10b3625077cedf5519460
+    size: 228
+notes: "KMP built against TW kernel-syms/kernel-source from oss; must rebuild on every kernel update (PMBS is at pm.518). Tarball signature checked with r8168.keyring."

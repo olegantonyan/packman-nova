@@ -1,0 +1,19 @@
+name: broadcom-wl
+kind: native
+enabled: false
+tier: 0
+tags: [kmp, proprietary]
+sources:
+  - file: hybrid-v35_64-nodebug-pcoem-6_30_223_271.tar.gz
+    urls:
+      - https://docs.broadcom.com/docs-and-downloads/docs/linux_sta/hybrid-v35_64-nodebug-pcoem-6_30_223_271.tar.gz
+      - pmbs:broadcom-wl/hybrid-v35_64-nodebug-pcoem-6_30_223_271.tar.gz
+    sha256: 5f79774d5beec8f7636b59c0fb07a03108eef1e3fd3245638b20858c714144be
+    size: 2928541
+  - file: hybrid-v35-nodebug-pcoem-6_30_223_271.tar.gz
+    urls:
+      - https://docs.broadcom.com/docs-and-downloads/docs/linux_sta/hybrid-v35-nodebug-pcoem-6_30_223_271.tar.gz
+      - pmbs:broadcom-wl/hybrid-v35-nodebug-pcoem-6_30_223_271.tar.gz
+    sha256: 4f8b70b293ac8cc5c70e571ad5d1878d0f29d133a46fe7869868d9c19b5058cd
+    size: 2869247
+notes: "Phase 2. Proprietary wl blob with ~35 kernel patches (up to linux 7.2); on TW needs kernel-syms-longterm. x86_64 uses the _64 tarball, the other is i586. %kernel_module_package -c %_sourcedir/_projectcert.crt expects the OBS project certificate, which pbuild does not provide. No src.rpm on the Essentials mirror."

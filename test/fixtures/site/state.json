@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "generated_at": "2026-09-29T08:15:42Z",
+  "run": 7,
+  "release": "1699.7.nova.1",
+  "tumbleweed_snapshot": "20260927",
+  "key": {
+    "id": "C6D7E8F93F1C2A9B",
+    "fingerprint": "0A1B2C3D4E5F60718293A4B5C6D7E8F93F1C2A9B"
+  },
+  "files": {
+    "x86_64/ffmpeg-8-8.1.2-1699.7.nova.1.x86_64.rpm": { "sha256": "1111111111111111111111111111111111111111111111111111111111111111", "size": 2310144, "package": "ffmpeg-8" },
+    "x86_64/libavcodec62-8.1.2-1699.7.nova.1.x86_64.rpm": { "sha256": "2222222222222222222222222222222222222222222222222222222222222222", "size": 9542033, "package": "ffmpeg-8" },
+    "src/ffmpeg-8-8.1.2-1699.7.nova.1.src.rpm": { "sha256": "3333333333333333333333333333333333333333333333333333333333333333", "size": 11534336, "package": "ffmpeg-8" },
+    "x86_64/x264-0.165.3222-1699.7.nova.1.x86_64.rpm": { "sha256": "4444444444444444444444444444444444444444444444444444444444444444", "size": 204800, "package": "libx264:x264" },
+    "src/libx264-0.165.3222-1699.7.nova.1.src.rpm": { "sha256": "5555555555555555555555555555555555555555555555555555555555555555", "size": 1048576, "package": "libx264:x264" },
+    "x86_64/vlc-3.0.21-1699.6.nova.1.x86_64.rpm": { "sha256": "6666666666666666666666666666666666666666666666666666666666666666", "size": 1536000, "package": "vlc" },
+    "x86_64/vlc-codecs-3.0.21-1699.6.nova.1.x86_64.rpm": { "sha256": "7777777777777777777777777777777777777777777777777777777777777777", "size": 734003, "package": "vlc" },
+    "src/vlc-3.0.21-1699.6.nova.1.src.rpm": { "sha256": "8888888888888888888888888888888888888888888888888888888888888888", "size": 29360128, "package": "vlc" }
+  },
+  "packages": {
+    "vlc": {
+      "kind": "obs-link",
+      "origin": "openSUSE:Factory/vlc",
+      "srcmd5": "9f8e7d6c5b4a39281706f5e4d3c2b1a0",
+      "version": "3.0.21",
+      "release": "1699.6.nova.1",
+      "status": "failed",
+      "last_run": 7,
+      "built_at": "2026-09-22T03:40:11Z",
+      "reason": "meta change: ffmpeg-8-libavcodec-devel <8.1.3>",
+      "rpms": [
+        "vlc-3.0.21-1699.6.nova.1.x86_64.rpm",
+        "vlc-codecs-3.0.21-1699.6.nova.1.x86_64.rpm"
+      ],
+      "srpm": "vlc-3.0.21-1699.6.nova.1.src.rpm"
+    },
+    "ffmpeg-8": {
+      "kind": "obs-link",
+      "origin": "openSUSE:Factory/ffmpeg-8",
+      "srcmd5": "0123456789abcdef0123456789abcdef",
+      "version": "8.1.2",
+      "release": "1699.7.nova.1",
+      "status": "succeeded",
+      "last_run": 7,
+      "built_at": "2026-09-29T07:58:03Z",
+      "reason": "source change",
+      "rpms": [
+        "ffmpeg-8-8.1.2-1699.7.nova.1.x86_64.rpm",
+        "libavcodec62-8.1.2-1699.7.nova.1.x86_64.rpm"
+      ],
+      "srpm": "ffmpeg-8-8.1.2-1699.7.nova.1.src.rpm"
+    },
+    "libx264:x264": {
+      "kind": "native",
+      "origin": null,
+      "srcmd5": "fedcba9876543210fedcba9876543210",
+      "version": "0.165.3222",
+      "release": "1699.7.nova.1",
+      "status": "succeeded",
+      "last_run": 7,
+      "built_at": "2026-09-29T07:31:47Z",
+      "reason": "new build",
+      "rpms": [
+        "x264-0.165.3222-1699.7.nova.1.x86_64.rpm"
+      ],
+      "srpm": "libx264-0.165.3222-1699.7.nova.1.src.rpm"
+    }
+  }
+}

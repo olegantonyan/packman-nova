@@ -1,0 +1,292 @@
+# vim: syntax=spec
+
+# bug#1205456
+# env -i /usr/bin/zypper versioncmp 1 1a
+# 1 is older than 1a
+# env -i /usr/bin/zypper versioncmp 1.0 1a.0
+# 1.0 is newer than 1a.0
+%if 0%{?suse_version} > 0
+Release: %{suse_version}.<CI_CNT>.pm.<B_CNT>
+%endif
+#
+%if 0%{?sle_version} > 0
+Release: %{sle_version}.<CI_CNT>.pm.<B_CNT>
+%endif
+%if 0%{?suse_version} == 1620
+Release: <CI_CNT>.<B_CNT> spec:160199.<CI_CNT>.<B_CNT>
+%endif
+%if 0%{?suse_version} == 1610
+Release: <CI_CNT>.<B_CNT> spec:160100.<CI_CNT>.<B_CNT>
+%endif
+%if 0%{?suse_version} == 1600
+Release: <CI_CNT>.<B_CNT> spec:160000.<CI_CNT>.<B_CNT>
+%endif
+
+%if "%_repository" == "Factory"
+BuildFlags: onlybuild:A_KMP
+%endif
+%if "%_repository" == "SLE_15"
+BuildFlags: onlybuild:A_sle15-aggregate
+%endif
+%if "%_repository" == "openSUSE_Slowroll"
+%ifarch i586 i686
+BuildFlags: onlybuild:A_sr-Mesa
+BuildFlags: onlybuild:A_sr-Mesa:drivers
+BuildFlags: onlybuild:A_sr-ffmpeg-4
+BuildFlags: onlybuild:A_sr-ffmpeg-7
+BuildFlags: onlybuild:A_sr-ffmpeg-8
+BuildFlags: onlybuild:A_sr-libquicktime
+BuildFlags: onlybuild:A_sr-vlc
+BuildFlags: onlybuild:amrnb
+BuildFlags: onlybuild:amrwb
+BuildFlags: onlybuild:dcadec
+BuildFlags: onlybuild:faac
+BuildFlags: onlybuild:faad2
+BuildFlags: onlybuild:fdk-aac
+BuildFlags: onlybuild:flash-player
+BuildFlags: onlybuild:kvazaar
+BuildFlags: onlybuild:l-smash
+BuildFlags: onlybuild:libaacs
+BuildFlags: onlybuild:libbdplus
+BuildFlags: onlybuild:libde265
+BuildFlags: onlybuild:libdvdcss2
+BuildFlags: onlybuild:libheif
+BuildFlags: onlybuild:libopenaptx
+BuildFlags: onlybuild:libx264
+BuildFlags: onlybuild:libx264:x264
+BuildFlags: onlybuild:psi+-iconsets
+BuildFlags: onlybuild:rtmpdump
+BuildFlags: onlybuild:vo-aacenc
+BuildFlags: onlybuild:x265
+BuildFlags: onlybuild:xine-lib-12
+BuildFlags: onlybuild:xvid
+%endif
+%endif
+
+%ifarch armv7l armv7hl
+BuildFlags: logidlelimit:1234567
+# raspberrypi 2 is armv7l, so prefer Mesa here
+Prefer: Mesa-libEGL-devel
+Prefer: -raspberrypi-gfx-devel -raspberrypi-userland-devel
+%endif
+
+%ifarch aarch64
+# default factory is 5400 (1.5h), quadruple because (some of) our workers are slow
+# --seife 2022-03-25
+BuildFlags: logidlelimit:21600
+# raspberrypi 3 is aarch64, so prefer Mesa on raspberrypi-userland here
+Prefer: -raspberrypi-userland-devel
+%endif
+
+# have choice for pkgconfig(fdk-aac): fdk-aac-devel libfdk-aac-devel
+Prefer: -libfdk-aac-devel
+Prefer: opencv-devel
+Prefer: vlc-devel
+
+%if 0%{?suse_version} > 1610
+%define _without_amf_sdk 1
+Macros:
+%_without_amf_sdk 1
+:Macros
+%ifarch x86_64
+# rpmlint results (in the rare case they have any meaning) are only relevant for Factory
+%else
+Substitute: clamav bash
+Substitute: clamav-database bash
+Substitute: bug1231701 post-build-checks
+Substitute: post-build-checks-malwarescan bash
+Substitute: rpmlint-Factory bash
+Substitute: rpmlint-mini bash
+%endif
+%ifarch i586
+Constraint: hardware:cpu:flag fpu
+%endif
+%endif
+
+%if 0%{?suse_version} == 1610
+# rpmlint results (in the rare case they have any meaning) are only relevant for Factory
+Substitute: clamav bash
+Substitute: clamav-database bash
+Substitute: bug1231701 post-build-checks
+Substitute: post-build-checks-malwarescan bash
+Substitute: rpmlint-Factory bash
+Substitute: rpmlint-mini bash
+#
+%define _without_amf_sdk 1
+Macros:
+%_without_amf_sdk 1
+:Macros
+# bug#1220540
+Macros:
+%source_date_epoch_from_changelog N
+:Macros
+%endif
+
+%if 0%{?suse_version} == 1600
+# rpmlint results (in the rare case they have any meaning) are only relevant for Factory
+Substitute: clamav bash
+Substitute: clamav-database bash
+Substitute: bug1231701 post-build-checks
+Substitute: post-build-checks-malwarescan bash
+Substitute: rpmlint-Factory bash
+Substitute: rpmlint-mini bash
+#
+%define _without_amf_sdk 1
+Macros:
+%_without_amf_sdk 1
+:Macros
+# bug#1220540
+Macros:
+%source_date_epoch_from_changelog N
+:Macros
+%endif
+
+
+# fdk_aac is not compatible with GPL
+%define BUILD_ORIG 1
+%define BUILD_ORIG_ADDON 1
+%define _with_aac 1
+%define _with_aptx 1
+%define _with_amrnb 1
+%define _with_amrwb 1
+%define _with_faac 1
+%define _with_faad 1
+%define _without_fdk_aac 1
+%define _with_fdk_aac_dlopen 1
+%define _with_librtmp 1
+%define _with_smbclient 1
+%define _with_vo_aacenc 1
+%define _with_vidstab 1
+%define _with_x264 1
+%define _with_x265 1
+%define _with_xvid 1
+%define _without_distributable 1
+%define _without_onlynondistributable 1
+
+Macros:
+%vendor http://packman.links2linux.de
+%packager packman@links2linux.de
+%packman_bs 1
+%BUILD_ORIG 1
+%BUILD_ORIG_ADDON 1
+%_with_aac 1
+%_with_aptx 1
+%_with_amrnb 1
+%_with_amrwb 1
+%_with_faac 1
+%_with_faad 1
+%_without_fdk_aac 1
+%_with_fdk_aac_dlopen 1
+%_with_librtmp 1
+%_with_smbclient 1
+%_with_vo_aacenc 1
+%_with_vidstab 1
+%_with_x264 1
+%_with_x265 1
+%_with_xvid 1
+%_without_distributable 1
+%_without_onlynondistributable 1
+:Macros
+
+# ffmpeg pkgconfig API versions
+#                2    3   4   5   6  7  8
+# libavcodec    56   57  58  59  60 61 62
+# libavdevice   56   57  58  59  60 61 62
+# libavfilter    5    6   7   8   9 10 11
+# libavformat   56   57  58  59  60 61 62
+# libavresample  2    3   4
+# libavutil     54   55  56  57  58 59 60
+# libpostproc   53   54  55  56  57 58
+# libswresample  1    2   3   4   4  5  6
+# libswscale     3    4   5   6   7  8  9
+
+
+# Factory
+%if 0%{?suse_version} > 1610
+# Handle ffmpeg variants
+# In case several versions of a given 'pkgconfig(x)' exist,
+# the solver needs assistance. Without such assistance, every pkg which
+# uses unversioned 'pkgconfig(x)' will fail to build with:
+# unresolvable: have choice for x: rpm-n rpm-N
+# There are several ways to assist the resolver:
+# - use a fixed versioned pkgconfig(x) in case only an old version of the API variants is supported
+# - use a version range for pkgconfig(x), preferably as 'less than N'
+# - use a global, inclusive Prefer: to select a specific version
+# Even if a global Prefer is in place, a version range in a pkg may still resolve to several API variants
+# In this case global, exclusive Prefer: needs to be added as well.
+# But, this list can not exclude every other API variant.
+# That list may exclude also a valid API variant for pkgs which use a version range.
+#
+
+%if 0
+# No -mini package must be used. They will cause link errors due to lack of symbols.
+# But this Prefer is not enough, the solver may choose it anyway, hence the need for ffmpeg-mini.
+Prefer: -ffmpeg-8-mini-devel -ffmpeg-8-mini-libs
+Prefer: -ffmpeg-7-mini-devel -ffmpeg-7-mini-libs
+Prefer: -ffmpeg-6-mini-devel -ffmpeg-6-mini-libs
+Prefer: -ffmpeg-5-mini-devel -ffmpeg-5-mini-libs
+
+# Fix errors in OBS: each and every subpackage must be listed, not just a subset
+# Otherwise the solver is undecided about the missing subpackages.
+Prefer: -ffmpeg-7-libavcodec-devel -ffmpeg-7-libavdevice-devel -ffmpeg-7-libavfilter-devel -ffmpeg-7-libavformat-devel -ffmpeg-7-libavutil-devel -ffmpeg-7-libpostproc-devel -ffmpeg-7-libswresample-devel -ffmpeg-7-libswscale-devel -ffmpeg-7-private-devel
+Prefer: -ffmpeg-6-libavcodec-devel -ffmpeg-6-libavdevice-devel -ffmpeg-6-libavfilter-devel -ffmpeg-6-libavformat-devel -ffmpeg-6-libavutil-devel -ffmpeg-6-libpostproc-devel -ffmpeg-6-libswresample-devel -ffmpeg-6-libswscale-devel -ffmpeg-6-private-devel
+Prefer: -ffmpeg-5-libavcodec-devel -ffmpeg-5-libavdevice-devel -ffmpeg-5-libavfilter-devel -ffmpeg-5-libavformat-devel -ffmpeg-5-libavutil-devel -ffmpeg-5-libpostproc-devel -ffmpeg-5-libswresample-devel -ffmpeg-5-libswscale-devel -ffmpeg-5-private-devel
+#refer: -ffmpeg-4-libavcodec-devel -ffmpeg-4-libavdevice-devel -ffmpeg-4-libavfilter-devel -ffmpeg-4-libavformat-devel -ffmpeg-4-libavutil-devel -ffmpeg-4-libpostproc-devel -ffmpeg-4-libswresample-devel -ffmpeg-4-libswscale-devel -ffmpeg-4-private-devel -ffmpeg-4-libavresample-devel
+%endif
+Prefer: -ffmpeg-3-libavcodec-devel -ffmpeg-3-libavdevice-devel -ffmpeg-3-libavfilter-devel -ffmpeg-3-libavformat-devel -ffmpeg-3-libavutil-devel -ffmpeg-3-libpostproc-devel -ffmpeg-3-libswresample-devel -ffmpeg-3-libswscale-devel -ffmpeg-3-private-devel -ffmpeg-3-libavresample-devel
+%if 0
+# We empower ourselve, and decide what the default in this environment is supposed to be.
+# However, in practice unversioned BuildRequires need to match Tumbleweed to avoid different ffmpeg variants in the same executable
+%define ffAPI ffmpeg-8
+Prefer:  %{ffAPI}-libavcodec-devel  %{ffAPI}-libavdevice-devel  %{ffAPI}-libavfilter-devel  %{ffAPI}-libavformat-devel  %{ffAPI}-libavutil-devel  %{ffAPI}-libpostproc-devel  %{ffAPI}-libswresample-devel  %{ffAPI}-libswscale-devel  %{ffAPI}-private-devel  %{ffAPI}-libavresample-devel
+%endif
+
+#
+%define _without_freerdp 1
+%define _without_imagemagick 1
+Macros:
+%_without_freerdp 1
+%_without_imagemagick 1
+:Macros
+%endif
+#
+%if 0%{?suse_version} == 1610
+# The base distribution must configure the primary "Prefer"
+%if 0
+# But due to additional ffmpeg variants in PMBS, these additional variants need to be handled.
+# In case the solver is undecided, assist the solver with an un-Prefer
+# In case a pkg in PMBS needs a specific variant, and in case the solver needs assistance for this pkg, the pkg must require a specific variant in BuildRequires.
+%endif
+Prefer: -ffmpeg-3-libavcodec-devel -ffmpeg-3-libavdevice-devel -ffmpeg-3-libavfilter-devel -ffmpeg-3-libavformat-devel -ffmpeg-3-libavutil-devel -ffmpeg-3-libpostproc-devel -ffmpeg-3-libswresample-devel -ffmpeg-3-libswscale-devel -ffmpeg-3-private-devel -ffmpeg-3-libavresample-devel
+%endif
+#
+%if 0%{?suse_version} == 1600
+# The base distribution must configure the primary "Prefer"
+%if 0
+# But due to additional ffmpeg variants in PMBS, these additional variants need to be handled.
+# In case the solver is undecided, assist the solver with an un-Prefer
+# In case a pkg in PMBS needs a specific variant, and in case the solver needs assistance for this pkg, the pkg must require a specific variant in BuildRequires.
+Prefer: -ffmpeg-8-libavcodec-devel -ffmpeg-8-libavdevice-devel -ffmpeg-8-libavfilter-devel -ffmpeg-8-libavformat-devel -ffmpeg-8-libavutil-devel                             -ffmpeg-8-libswresample-devel -ffmpeg-8-libswscale-devel -ffmpeg-8-private-devel
+#refer: -ffmpeg-7-libavcodec-devel -ffmpeg-7-libavdevice-devel -ffmpeg-7-libavfilter-devel -ffmpeg-7-libavformat-devel -ffmpeg-7-libavutil-devel -ffmpeg-7-libpostproc-devel -ffmpeg-7-libswresample-devel -ffmpeg-7-libswscale-devel -ffmpeg-7-private-devel
+Prefer: -ffmpeg-6-libavcodec-devel -ffmpeg-6-libavdevice-devel -ffmpeg-6-libavfilter-devel -ffmpeg-6-libavformat-devel -ffmpeg-6-libavutil-devel -ffmpeg-6-libpostproc-devel -ffmpeg-6-libswresample-devel -ffmpeg-6-libswscale-devel -ffmpeg-6-private-devel
+Prefer: -ffmpeg-5-libavcodec-devel -ffmpeg-5-libavdevice-devel -ffmpeg-5-libavfilter-devel -ffmpeg-5-libavformat-devel -ffmpeg-5-libavutil-devel -ffmpeg-5-libpostproc-devel -ffmpeg-5-libswresample-devel -ffmpeg-5-libswscale-devel -ffmpeg-5-private-devel
+#refer: -ffmpeg-4-libavcodec-devel -ffmpeg-4-libavdevice-devel -ffmpeg-4-libavfilter-devel -ffmpeg-4-libavformat-devel -ffmpeg-4-libavutil-devel -ffmpeg-4-libpostproc-devel -ffmpeg-4-libswresample-devel -ffmpeg-4-libswscale-devel -ffmpeg-4-private-devel -ffmpeg-4-libavresample-devel
+%endif
+Prefer: -ffmpeg-3-libavcodec-devel -ffmpeg-3-libavdevice-devel -ffmpeg-3-libavfilter-devel -ffmpeg-3-libavformat-devel -ffmpeg-3-libavutil-devel -ffmpeg-3-libpostproc-devel -ffmpeg-3-libswresample-devel -ffmpeg-3-libswscale-devel -ffmpeg-3-private-devel -ffmpeg-3-libavresample-devel
+%endif
+#
+
+
+#### seife 20230315 #####
+#### try to exclude "obs-kamionche" worker from building armv7l packages
+#### (it is broken apparently)
+#### obs-kamionche has (currently...)
+##  <linux>
+##    <version>5.4.17</version>
+##    <flavor>2136.306.1.3.el8uek.aarch64</flavor>
+##  </linux>
+#### "my" raspis all have at least Leap 15.4's 5.14.21
+%ifarch armv7l
+Constraint: linux:version:min 5.14
+%endif
+######################### end 20230315

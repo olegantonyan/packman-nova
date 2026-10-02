@@ -1,0 +1,13 @@
+name: chromium-plugin-widevinecdm
+kind: native
+enabled: true
+tier: 0
+tags: [drm, proprietary]
+sources:
+  - file: google-chrome-stable-134.0.6998.165-1.x86_64.rpm
+    urls:
+      - pmbs:chromium-plugin-widevinecdm/google-chrome-stable-134.0.6998.165-1.x86_64.rpm
+      - mirror-src:chromium-plugin-widevinecdm
+    sha256: 11a1297b052b912f1b25d0325f253f8543f1cf774fcc58700160f3a6319eb043
+    size: 116856129
+notes: "Repackages WidevineCdm from Google Chrome 134.0.6998.165 (117 MB). The spec Source on dl.google.com returns 404 (Google keeps only current builds): PMBS/mirror only. A bump needs a new _chrome_version and Version from the CDM manifest."

@@ -1,0 +1,14 @@
+name: fdk-aac
+kind: native
+enabled: true
+tier: 0
+tags: [codec]
+sources:
+  - file: fdk-aac-2.0.3.tar.gz
+    urls:
+      - https://github.com/mstorsjo/fdk-aac/archive/v2.0.3.tar.gz
+      - pmbs:fdk-aac/fdk-aac-2.0.3.tar.gz
+      - mirror-src:fdk-aac
+    sha256: e25671cd96b10bad896aa42ab91a695a9e573395262baed4e4a2ff178d6a3a78
+    size: 2518649
+notes: "Factory also ships libfdk-aac2; local-first precedence makes ours win in build roots (docs/11 open question)."

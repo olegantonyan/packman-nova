@@ -1,0 +1,13 @@
+--- shairplay-20140422/src/Makefile.orig.am	2014-10-29 16:37:49.205668759 +0100
++++ shairplay-20140422/src/Makefile.am	2014-10-30 17:05:47.182884079 +0100
+@@ -6,9 +6,7 @@
+   bin_PROGRAMS = shairplay
+   shairplay_SOURCES = shairplay.c
+   shairplay_LDADD = lib/libshairplay.la
+-  shairplay_CFLAGS =
+-  shairplay_LDFLAGS = -static-libtool-libs
+ 
+-  shairplay_CFLAGS += $(libao_CFLAGS)
++  shairplay_CFLAGS = $(libao_CFLAGS)
+   shairplay_LDADD += $(libao_LIBS)
+ endif

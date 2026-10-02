@@ -1,0 +1,62 @@
+<services>
+	<service name="tar_scm" mode="disabled">
+		<param name="exclude">.git*</param>
+		<param name="exclude">compat/aix</param>
+		<param name="exclude">compat/atomics</param>
+		<param name="exclude">compat/dispatch_semaphore</param>
+		<param name="exclude">compat/djgpp</param>
+		<param name="exclude">compat/float</param>
+		<param name="exclude">compat/getopt.c</param>
+		<param name="exclude">compat/msvcrt</param>
+		<param name="exclude">compat/os2threads.h</param>
+		<param name="exclude">compat/solaris</param>
+		<param name="exclude">compat/strtod.c</param>
+		<param name="exclude">compat/w32pthreads.h</param>
+		<param name="exclude">compat/windows</param>
+		<param name="exclude">doc/doxy</param>
+		<param name="exclude">doc/examples</param>
+		<param name="exclude">libavcodec/alpha</param>
+		<param name="exclude">libavcodec/avr32</param>
+		<param name="exclude">libavcodec/bfin</param>
+		<param name="exclude">libavcodec/loongarch</param>
+		<param name="exclude">libavcodec/mips</param>
+		<param name="exclude">libavcodec/ppc</param>
+		<param name="exclude">libavcodec/riscv</param>
+		<param name="exclude">libavcodec/sh4</param>
+		<param name="exclude">libavcodec/sparc</param>
+		<param name="exclude">libavcodec/tests</param>
+		<param name="exclude">libavdevice/tests</param>
+		<param name="exclude">libavfilter/cuda</param>
+		<param name="exclude">libavfilter/metal</param>
+		<param name="exclude">libavfilter/opencl</param>
+		<param name="exclude">libavfilter/tests</param>
+		<param name="exclude">libavformat/tests</param>
+		<param name="exclude">libavutil/avr32</param>
+		<param name="exclude">libavutil/loongarch</param>
+		<param name="exclude">libavutil/mips</param>
+		<param name="exclude">libavutil/ppc</param>
+		<param name="exclude">libavutil/riscv</param>
+		<param name="exclude">libavutil/sh4</param>
+		<param name="exclude">libavutil/tests</param>
+		<param name="exclude">libswresample/tests</param>
+		<param name="exclude">libswscale/loongarch</param>
+		<param name="exclude">libswscale/ppc</param>
+		<param name="exclude">libswscale/riscv</param>
+		<param name="exclude">libswscale/tests</param>
+		<param name="exclude">tests</param>
+		<param name="exclude">tools/python</param>
+		<param name="filename">ffmpeg-6</param>
+		<param name="revision">01d3f764f79b2f571174a4cec855e651258f20ec</param>
+		<param name="scm">git</param>
+		<param name="submodules">disable</param>
+		<param name="url">https://git.ffmpeg.org/ffmpeg.git</param>
+		<param name="versionformat">@PARENT_TAG@</param>
+		<param name="versionrewrite-pattern">[nv]?([^+]+)(.*)</param>
+		<param name="versionrewrite-replacement">\1</param>
+	</service>
+	<service name="recompress" mode="disabled">
+		<param name="file">*.tar</param>
+		<param name="compression">xz</param>
+	</service>
+	<service name="set_version" mode="disabled"/>
+</services>

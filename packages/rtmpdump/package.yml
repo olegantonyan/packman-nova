@@ -1,0 +1,13 @@
+name: rtmpdump
+kind: native
+enabled: true
+tier: 0
+tags: [codec]
+sources:
+  - file: rtmpdump-2.4.20151223.fa8646d.tar.xz
+    urls:
+      - pmbs:rtmpdump/rtmpdump-2.4.20151223.fa8646d.tar.xz
+      - mirror-src:rtmpdump
+    sha256: 0a1e2e786bf25c325a786f82fd0d97d97e8d6163988e47cc863dd63c4b81e72c
+    size: 104144
+notes: "tar_scm (mode disabled) of git://git.ffmpeg.org/rtmpdump, revision master (unpinned); no upstream URL."

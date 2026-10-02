@@ -1,0 +1,10 @@
+[packman-essentials]
+name=Packman Essentials repository (openSUSE_Tumbleweed)
+enabled=1
+autorefresh=0
+baseurl=http://packman.inode.at/suse/openSUSE_Tumbleweed/Essentials
+type=rpm-md
+gpgcheck=1
+gpgkey=http://packman.inode.at/suse/openSUSE_Tumbleweed/Essentials/repodata/repomd.xml.key
+keeppackages=0
+

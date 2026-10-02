@@ -1,0 +1,10 @@
+name: xine-lib
+kind: obs-link
+enabled: true
+tier: 3
+tags: [player, codec]
+origin:
+  project: multimedia:xine
+  package: xine-lib
+  pin: null
+notes: "PMBS xine-lib-12 links openSUSE.org:multimedia:xine/xine-lib, which is itself a plain _link to openSUSE:Factory/xine-lib; sync must expand links."

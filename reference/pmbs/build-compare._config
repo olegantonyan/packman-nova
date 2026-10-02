@@ -1,0 +1,6 @@
+Keep: build-compare
+Support: build-compare
+%if "%_project" == "build-compare"
+Type: spec
+ExportFilter: ^build-compare.*\.noarch\.rpm$ . i586 armv6l armv7l aarch64 ppc ppc64 ppc64le s390x x86_64
+%endif

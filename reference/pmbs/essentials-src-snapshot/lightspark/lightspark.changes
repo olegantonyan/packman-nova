@@ -1,0 +1,2202 @@
+-------------------------------------------------------------------
+Wed Oct  8 19:12:01 UTC 2025 - Bjørn Lie <bjorn.lie@gmail.com>
+
+- Drop conditional libboost_filesystem-devel and
+  libboost_system-devel BuildRequires, just use boost-devel
+  following changes in boost.
+
+-------------------------------------------------------------------
+Mon May 19 20:05:25 UTC 2025 - Bjørn Lie <bjorn.lie@gmail.com>
+
+- Update to version 0.9.0:
+  * improved support for html code in TextFields
+  * implement support for PlaceObjectTag/RemoveObjectTag (needed
+    for SWF version 1 and 2)
+  * remove command line flag --avmplus
+  * implement support for nellymoser audio codec
+  * use user data directory instead of cache directory to store
+    user data (like savegames or settings)
+  * implement command line argument to spoof the OS lightspark is
+    reporting to the swf
+  * add simple launch dialog that is displayed on startup if no swf
+    file is specified
+  * add stub for flash.profiler.showRedrawRegions
+  * improved support for AIR native extensions lightspark
+  * automatically loads available native extensions if the --air
+    option is set
+  * improved support of system mouse cursors
+  * improved support for GraphicsPath
+  * big rework of the rendering engine for better handling of masks
+    and filters
+  * improved Stage3D support
+  * partially implement flash.net.LocalConnection
+  * implement filters as glsl shaders
+  * implement rendering with extended Blendmodes OVERLAY and
+    HARDLIGHT
+  * improved support for flash.text.textengine package
+- Drop optional pkgconfig(libpcre) BuildRequires, no longer
+  available in Tumbleweed.
+
+-------------------------------------------------------------------
+Wed Oct 25 11:20:59 UTC 2023 - bjorn.lie@gmail.com
+
+- Update to version 0.8.7:
+  * implement DefineScalingGrid tag
+  * switch to 32bit float audio sampling for standalone player and
+    remove SDL2_mixer dependency
+  * improved support for AVM1 swf files
+  * implement "erase" blendmode
+  * use nanoVG for bitmaps in fillstyles
+  * improved support for morphshapes
+  * improved support for adpcm encoded sounds
+  * add garbage collection mechanism for less memory usage
+  * better overall compatibility for many swf files
+  * several performance improvements
+- Drop pkgconfig(SDL2_mixer) BuildRequires: No longer needed.
+
+-------------------------------------------------------------------
+Sun Oct 22 18:25:25 UTC 2023 - Bjørn Lie <bjorn.lie@gmail.com>
+
+- Explicitly limit libavcodec, libavformat and libavutil to
+  ffmpeg-4 and older versions, as that is the last ffmpeg version
+  that have libavresample.
+
+-------------------------------------------------------------------
+Thu Apr 27 19:17:19 UTC 2023 - bjorn.lie@gmail.com
+
+- Update to version 0.8.6:
+  * fix refcounting for events in background thread
+  * really fix refcounting if function already has closure_this
+  * fix refcounting of LoaderInfo objects
+  * [Graphics] fix alpha computation in createGradientFill
+  * fix refcounting if function already has closure_this
+  * [Shape] ensure tokens are filled when requesting invalidation
+  * small refcounting fix
+  * [GLRenderContext] fix default blend mode
+  * detect cyclic references in Sound/SoundChannel
+  * fix reference counting in background worker
+  * implement cyclic reference detection for DisplayObjectContainer
+  * [AVM1] fix some refcounting issues
+  * treat number strings as numbers in gotoAndPlay/Stop
+  * fix playing audio from SoundStreamHeadTag
+  * [AVM1] several refcounting fixes
+  * implement support for GIF images (single image GIFs only)
+  * more refcounting fixes
+  * add commandline parameters for scaled and fullscreen display
+  * don't recompute cached bitmaps if it isn't neccessary
+  * [ABCVm] fix handling of methods in callproplex
+  * fix rendering of multiline texts with pango
+  * [ABCVm] don't skip coerce if null will be coerced to numeric
+    value
+  * [SystemState] fix getUniqueStringId
+  * implement detection of cyclic references in ASObjects
+  * fix more refcounting issues
+  * gfx: make window resize redraw cached bitmaps
+  * [ABCVm] don't optimize function calls of inherited classes if
+    the root movie is not completely loaded
+  * fix several issues when using OpenGL ES
+  * [Context3D] handle null parameter in setScissorRectangle
+  * fix several rendering issues when using Stage3D
+  * use subpixel antialiasing when rendering text to bitmap
+  * ensure DisplayObject is redrawn if it is cached as bitmap and
+    one of its descendants was invalidated
+  * use subpixel antialiasing when rendering text
+  * fix several issues regarding filters
+  * [MovieClip] don't execute framescript if the clip was marked as
+    deleted
+  * fix computing of bounding box for root
+  * rework AudioDecoder to use less memory
+  * fix reference counting when removing DisplayObjects from stage
+  * add prepareShutdown methods to filter classes where neccessary
+  * [AVM1] fix ActionGotoLabel
+  * [DisplayObject] fix possible crash on shutdown
+  * [ABCVm] more optimization for coerce opcode
+  * ASan catches, 'missing override' warnings
+  * ensure that AVM2 framescripts are not executed if frame hasn't
+    changed
+  * [ABCVm] fix handling of coerce optimization in obfuscated files
+  * don't render DisplayObjects that haven't initialized their
+    surface
+  * [AVM1] dont' execute scripts on root if playhead was changed in
+    event
+  * ensure DisplayObjects are updated if filters change
+  * [AVM1] don't throw exceptions when setting dynamic values on
+    primitives
+  * [AVM1] fix cloning of movieclips
+  * [Graphics] fix refcounting in beginGradientFill
+  * [ABCVm] really don't flush invalidation queue between initFrame
+    and executeFrameScript events
+  * group audio channels by Sound ID and reuse them if neccessary
+  * [AVM1] next try to fix order of script execution...
+  * fix possible crash when playing sound
+  * [SyntheticFunction] fix resolving parameter/return types
+  * [flash.system.System] add stubs for pause/resume
+  * [ABCVm] add optimization for sxi1/sxi8/sxi16 opcodes
+  * fix some warnings and set some method return types
+  * fix several sound issues
+  * [TextField] guard all text altering by mutex
+  * [ABCVm] fix "coerce" opcode optimization (again...)
+  * [MovieClip] execute framescript even if clip is not on stage
+  * [DisplayObject] fix rendering to bitmap
+  * [AVM1] rework handling of local variables
+  * fix several issues when streaming video
+  * fix dispatching of mouse rollOver/rollOut events
+  * add forgotten patch
+  * [AVM1] ensure that MovieClip constructor is called before use
+  * [AVM1] fix loading XML documents by url
+  * [ABCVm] fix refcounting in "add" optimization
+  * gfx: bitmap smoothing only introduced in SWF 8
+  * [TextField] fix possible crash when editing
+  * [ABCVm] fix optimizing findpropstrict opcode for static
+    variables
+  * [AVM1LoadVars] properly parse text answers from server
+  * fix multiple issues when executing AVM1 scripts
+  * fix possible deadlock when streaming video
+  * [AVM1] make class hierarchy actually work
+  * [MovieClip] fix refcounting in addFrameScript
+  * [CairoTokenRenderer] fix rendering of hairlines
+  * [MovieClip] fix frame navigation from actionscript
+  * don't advance frame after rootMovieClip construction
+  * fix nanovg rendering when main window is resized
+  * fix refcounting on increment/decrement
+  * [ABCVm] improve coerce opcode optimization
+  * implement flash.filesystem.File.url getter/setter
+  * rework rendering of flash.display.Graphics
+  * avoid unneccessary copying of texture data
+  * fix more refcounting issues
+  * [Timer] fix restarting of timer without reset
+  * fix computation of colorTransformation
+  * [DisplayObject] don't refcount cachedAsBitmapOf
+  * fix warning
+  * fix more refcounting issues
+  * fix compilation
+  * [AVM1] fix several issues when loading bitmaps/videos by URL
+  * [RenderThread] handle multiple window size changes
+  * remove unneccessary constant setting
+  * implement optimization for "call" opcode
+  * rework freeing of ASObjects on shutdown/fix several refcounting
+    issues
+  * fix some issues detected by valgrind
+  * fix warnings in jpegxr and (hopefully) compiling on Ubuntu
+    18.04
+  * [AVM1] add setters for width/height in Stage
+  * add some resulttypes
+  * [AVM1] fix event handling for AVM1MovieClipLoader
+  * [Stage3D] several fixes for reading compressed ATF textures
+  * [ABCVm] more fixes for dup and modulo opcode optimization
+  * [Stage3D] partial support for s3tc compressed textures (not yet
+    working)
+  * implement some methods for FileStream
+  * [Loader] ensure source is not modified during loading
+  * implement partial support for loading AIR extension files
+  * [Mouse] add stub for unregisterCursor
+  * [ASObject] small performance improvement
+  * [MovieClip] exeute framescript for frame 0 directly after
+    construction
+  * add stub AIR classes DatagramSocket and NativeWindow
+  * implement more methods for AIR classes ASFile/FileStream
+  * [Context3D] ensure IndexBuffer3D is initialized before it is
+    used
+  * [ABCVm] fix opcode label optimization
+  * [Stage] add stubs for some methods
+  * [TextField] avoid crash when fontSize is set to invalid values
+  * [asAtomHandler] fix checkArgumentConversion
+  * don't execute enterFrame events for legacy DisplayObjects not
+    on stage
+  * [Stage3D] don't upload all mipmap textures if only one level
+    has changed
+  * remove gettext dependency
+  * [TextField] handle autoSize and alignment seperately
+  * [TextFormat] fix handling of default values
+  * [DisplayObject] don't round the scaling factors to twips
+  * [AVM1] fix overwriting existing member variable for
+    DisplayObjects
+  * [Stage3D] ensure that textures are uploaded to gpu properly
+  * [ABCVm] optimize ifnle/ifngt opcodes
+  * [ABCVm] fix possible crash in optimized syntheticfunction call
+  * [DisplayObjectContainer] fix finding insert position for
+    DisplayObjects added from tags
+  * (hopefully) fix regression when compiling against ffmpeg <5.0
+  * make toDebugString const
+  * [MovieClip] re-add accidentally removed incRef()
+  * [FFMpegAudioDecoder] fix construction/destruction of av_frame
+  * [Array] ensure that the array is properly filled during
+    construction
+  * [Stage3d] reset OpenGL state to default values before rendering
+  * [ABCVm] fix optimization of kill/debug opcodes
+  * ensure inherited classes are properly initialized before access
+  * fix several sound and multithreading issues
+  * ensure DisplayObjects are rendered as soon as possible after
+    upload
+  * [Array] fix serializing
+  * [AVM1] fix script execution when playing movie from code
+  * fix warning
+  * [AVM1] fix adding/removing framelisteners
+  * [AVM1] ensure that MovieClip.play advances the playhead
+  * [AVM1] fix ActionStop opcode when frame was explicitely set
+    before
+  * [MovieClip] declare first frame when automatically restarting
+    clip
+  * [EventDispatcher] don't remove closure when removing event
+    handler
+  * [ABCVm] fix possible deadlock
+  * [AVM1] implement ContextMenuItem.onSelect
+  * [SimpleButton] better handling of ColorTransform
+  * [MovieClip] fix gotoAndStop for AVM1
+  * make ByteArray class reusable
+  * [TextField] fix rendering of System fonts
+  * [Program3D] ensure that shaders are uploaded before they are
+    used
+  * fix possible deadlock/crash when executing idle event
+  * [Context3D] only upload buffers when needed
+  * avoid creation of additional ASObjects during serialization
+  * several small performance improvements
+  * fix 32bit compilation
+  * add forgotten patches for new worker handling
+  * move object caches into ASWorker to fix several multithreading
+    issues
+  * shapes: more robust path reconstruction
+  * remove +500ms in `Sound.position()` (needed to match Adobe’s
+    behaviour)
+  * fix reference counting for mouse events and re-enable
+    enterFrame event handling for DisplayObjects not on stage fixes
+    #889 fixes #914 fixes #918
+  * render: use only matrix for both 'renderTextured'
+  * fix 32bit compilation
+  * fix reference counting during syntheticFunction call
+  * fix hittest for DisplayObjects displayed through Loader
+  * implement dispatching of focus events
+  * [TextField] fix parsing of html text
+  * [ABCVm] convert add_i to inclocal_i if second argument ist
+    constant
+  * [SoundChannel] reduce cpu usage when playing dynamic sound
+  * [ABCVm] optimize for the common case in inlocal_i/declocal_i
+  * Set FontName internally for content
+  * [Stage] set method result types
+  * [ABCVm] fix skipping of convert_<x> opcodes
+  * [ABCVm] add fast path for add_i optimization if arguments are
+    ints and the result doesn't overflow
+  * fix findproperty/findpropstrict optimization
+  * don't dump stacktrace when catching exception
+  * [ABCVm] optimize lookupswitch opcode
+  * fix several harmless warnings
+  * [Event] implement immediatePropagationStopped and
+    propagationStopped
+  * [ABCVm] detect and optimize postfix inclocal_i/declocal_i
+  * avoid sending events from worker to main event loop
+  * set max_recursion to 2048 for AIR apps
+  * [FFMpegStreamDecoder] fix possible crash
+  * [FileStream] handle FileMode when opening filestream
+  * increase default max recursion depth for AIR applications
+  * fix too agressive optimization of findpropstrict
+  * fix possible cras when using optimized path for calling builtin
+    function
+  * work on include hierarchy
+  * [Context3D] fix some memleaks and avoid unneccessary copying of
+    elements
+  * fix refcounting for setVariableByInteger
+  * fix refcounting on optimized call of builtin methods
+  * [TextureBase] implement dispose
+  * [ABCVm] fix detection of unreachable code in iftrue/iffalse
+    opcodes
+  * [AGALConverter] fix m34 opcode
+  * [DisplayObjectContainer] fix possible deadlock
+  * more work on include hierarchy
+  * don't use escape key to quit fullscreen on AIR
+  * [ABCVm] optimize away unneccessary pop opcodes
+  * fix refcounting in exception handler
+  * fix several issues detected by valgrind memorycheck
+  * [ABCVm] optimize multiply_i and subtract_i opcodes
+  * [RectangleTexture] implement uploadFromBitmapData
+  * implement more methods in flash.filesystem
+  * fix possible crash when playing dynamic audio
+  * optimize away unnecessary coerce/convert opcodes
+  * ensure callback is executed as soon as possible when using
+    setInterval with timeout 0
+  * add link to wiki for plugin support
+  * small performance improvement for dynamic sounds
+  * [RectangleTexture] implement uploadFromByteArray
+  * fix warning
+  * [ASString] optimize index access for non-ascii strings
+  * [JSON] optimize parsing
+  * [ABCVm] fix opitimization of findproperty/findpropstrict
+  * typo
+  * more work on flash.filesystem classes
+  * partially implement some classes in flash.filesystem
+  * [AVM1] fix order of execution
+  * add forgotten patch for updateAfterEvent
+  * [DefineTextTag] use copy of shaperecords to modify fillstyle
+  * [AVM1] fix Key.getCode
+  * add forgotten patch for updateAfterEvent
+  * mention libswresample in building instructions
+  * [ColorTransform] ignore alpha on color getter/setter
+  * [AVM1] implement updateAfterEvent
+  * implement DefineButtonSound tag
+  * [SHAPERECORD] fix handling of StateNewStyles
+  * [AVM1] add lowercase methods for MovieClip
+  * [AVM1] add setter for MovieClip._name
+  * [AVM1] Math.random has an argument
+  * cleanup include hierarchy
+  * fix Ubuntu dependencies
+  * Sprite.soundTransform always has to return a valid
+    SoundTransform object
+  * [AVM1] rework action handling to better match adobe execution
+    order
+  * [MovieClip] don't execute framescript before advancing to first
+    frame
+  * [DefineTextTag] fix setting color for each TextRecord
+  * [ABCVm] optimize setproperty for static class variables
+  * move domain memory methods to flashsystem.h
+  * [Texture] better handling of broken jpeg-xr textures
+  * [ASString] handle invalid capture groups in String.replace
+  * fix setcontent for AVM1 loader (2nd try...)
+  * [Loader] fix possible crash when setting content on AVM1
+  * [Textfield] fix rendering of right-aligned text
+  * fix png decoding for images with palette
+  * [multiname] peoperly set hasEmptyNS
+  * use quicksort implementation from avmplus for sorting in
+    Array/Vector
+  * fix possible crash
+  * [Sound] fix several issues regarding endianess in dynamic sound
+  * [Sound] fix playing sound created in actionscript from
+    Resources
+  * add stubs for AIR classes NativeProcess and
+    NativeProcessStartupInfo
+  * [TextField] fix rendering to Bitmap
+  * [XML] add prototype methods for "name" and "attributes"
+  * [Texture] fix byte order in uploadFromBitmapData
+  * properly handle Sounds if audio is not available
+  * [FontTag] ensure that fontname ends with \0
+  * graphics: fix regression regarding 0-scale draws
+  * fix some detection methods
+  * [AVM1} make more classes dynamic
+  * [ABCVm] fix getproperty optimization for integer arguments
+  * fix compilation in debug mode
+  * fix listener comparison
+  * [tiny_string] optimize find for ascii strings
+  * [TextField] include root matrix when rendering text
+  * [Matrix3D] implement decompose, recompose and
+    deltaTransformVector
+  * [TextField] better handling of fonts without advancetable
+  * execute EnterFrame events only for DisplayObjects on stage
+  * fix possible crash on AVM1 fixes #884
+  * rendering: window scaling throught initialMatrix
+  * [ABCVm] fix optimization of "not" opcode
+  * set several result types
+  * [ApplicationDomain] check for classes being defined before
+    checking globalScopes in getVariableByMultinameOpportunistic
+  * small performance improvement
+  * remove dynamic casting in MessageChannel.receive
+  * Improve FontDescriprion
+  * [AVM1] implement LoadVars.load
+  * [AVM1] implement MovieClip.loadMovie
+  * [ImageDecoder] fix skipping in stream during jpeg decoding
+  * add several result types for builtin methods
+  * [AGALConverter] fix m34 opcode
+  * [ABCVm] fix optimization of iftrue/iffalse and getlex
+  * don't automatically play SoundChannel on construction fixes
+    #880
+  * fix some issues in dynamic sound creation
+  * always enable local storage when running standalone executable
+  * fix several issues regarding background workers
+  * remove accidentally committed stuff
+  * [ABCVm] optimize several opcodes
+  * fix several AGAL issues
+  * keep separate dynamic classes variables for each worker
+  * store local shared objects in the same format as adobe does
+  * fix reference counting on Vector.slice
+  * workers have to have their own class prototypes
+  * [ABCVm] optimize access to ByteArray by index
+  * [ABCVm] optimize pushbyte followed by convert_u
+  * [Worker] fix possible crash
+  * set some return types
+  * [BitmapData] notify users in setPixels and setVector fixes #877
+  * fix Sound.extract
+  * fix more issues for background worker
+  * handle blockUntilReceived parameter in MessageChannel.receive
+  * handle multiple issues regarding background workers
+  * implement streaming of dynamically created audio samples
+  * fix several issues in Stage3D
+  * [PlaceObject2Tag] allow CharacterID 0 fixes #874
+  * [SharedObject] implement setProperty
+  * fix possible crash in filters fixes #865
+  * fix optimization of local initializers fixes #868
+  * add declared properties to XML in describeType fixes #866
+  * don't update AVM1 variables when skipping
+  * [AVM1] fix ActionWaitForFrame fixes #870
+  * fix warning fixes #859
+  * implement stacktrace handling in background worker
+  * handle negative length in string.substr
+  * don't handle mainloop events beckground worker
+  * implement LoaderInfo.bytes for main movie clip
+  * allow all socket connections if sandbox is local-trusted
+  * fix possible segfault when rendering text fixes #863
+  * implement flash.system.MessageChannel
+  * add some basic stuff needed for compiling to wasm configuring
+    works, but it still doesn't compile
+  * implement looping from StartSoundTag fixes #842
+  * [SoundChannel] set stopped after playing sound is completed
+    fixes #855
+  * [AVM1] implement Sound.loadSound
+  * implement message handling for XMLSocket in AVM1 fixes #831
+  * [ASSocket] implement IDataInput/IDataOutput interfaces (mostly
+    stubs) and fix some issues regarding sending and receiving
+  * fix compilation for older ffmpeg version
+  * [TextField] guard access to textlines by mutex fixes #848
+  * fix hittest for MorphShapes fixes #849
+  * use correct gradient records in FOCAL_RADIAL_GRADIENT fixes
+    #850
+  * fix compilation against ffmpeg 4.5 fixes #843
+  * video: playing past end of stream wraps around
+  * compiler warnings: remove uses of 'register'
+  * fix several issues when applying filters
+  * ensure that the correct mask is rendered before it is used
+    fixes #841
+  * [CairoTokenRenderer] apply scaling to stroke_cr
+  * [AVM1] fix ActionGotoFrame2 fixes #839
+  * fix storing of SharedObject
+  * don't include matrix of main root movie in concatenated matrix
+    fixes #828
+  * fix possible deadlocks in input thread and remove unneeded
+    stuff
+  * loop over all paths of tokenvector separately in hittest fixes
+    #804
+  * fix mask handling in cached bitmaps fixes #824
+  * shader: YUV space is BT601, not jpeg variant
+  * [AVM1] make flash/url variables available as properties of
+    _root
+  * fix crash when in text edit mode fixes #838
+  * fix compiler warning
+  * typo
+  * [TextField] implement password rendering
+  * [TextField] implement caching as Bitmap for editable fields
+  * [SimpleButton] implement filter
+  * embedded video stream: 'ratio' starts from 0
+  * fix compilation warnings
+  * use cacheAsBitmap also for masks fixes #833
+  * [TextField] fix font detection fixes #835
+  * fix rendering via graphics fixes #834
+  * several fixes for rendering to bitmap fixes #819 fixes #826
+    fixes #827
+  * [DisplayObject] fix possible crash when caching as bitmap fixes
+    #832
+  * [AVM1] implement BitmapData.rectangle
+  * preserve previous rounding direction
+  * graphics: sub-logical-pixel placement of objects
+  * export TextData for ppapi plugin
+  * [LoaderInfo] fix possible crash
+  * apply colortransformation after filters
+  * fix several TextField rendering issues fixes #823
+  * [TextField] fix updating text when on cached Bitmap fixes #818
+    fixes #820
+  * implement MouseCursor handling for Buttons and Sprites
+  * implement TaxtField.selectable property fixes #817
+  * add border around filter bitmaps fixes #814 fixes #815
+  * handle swf files where display rect doesn't start at (0,0)
+  * implement support for linestyles in morphshapes
+  * fix serializing of Function objects fixes #813
+  * add environment variable to set random seed
+  * Update README.md
+  * Update changelog
+  * implement Stage.invalidate
+  * implementation of flash.filters package, final part
+  * fix cairo rendering without rotation fixes #805
+  * [TextField] fix several positioning issues fixes #803
+  * fix copmpilation on CentOS 7 fixes #808
+  * implementation of flash.filters package, part 4
+  * implementation of flash.filters package, part 3 still missing:
+    - DisplacementMapFilter - ConvolutionFilter - ShaderFilter
+  * avoid some double-frees at exit
+  * ppPlugin: don't start 'pploop' thread before 'm_sys' member is
+    set
+  * text: fix lifetime of FILLSTYLE for rendering
+  * VideoDecoder can be destroyed after render thread
+  * fix compilation with llvm
+  * implementation of flash.filters package, part 2
+  * avoid unneccessary DrawJobs for DisplayObjects cached as
+    Bitmaps
+  * fix crash when deleting SharedObject on application exit
+  * Remove info from serverString
+  * implementation of flash.filters package, part 1
+  * Add more properties to Capabilities class
+  * implement full support for MorphShapes
+  * [MovieClip] fix playing clips that are not on stage from
+    actionscript
+  * [TextField] fix several rendering issues fixes #796 fixes #800
+  * [ABCVm] fix unreachable code handling fixes #798
+  * flash xml allows "#" in tag names
+  * support fillstyles in MorpShapes fixes #797
+  * fix rendering to bitmap
+  * [ABCVm] fix coerce opcode optimization fixes #795
+  * implement ContextMenu.clone
+  * [TextField] fix x position computation
+  * [DisplayObject] ignore rotation if it is NaN fixes #793
+  * Further changes
+  * don't advance frame in MovieClip.play if clip is not stopped
+  * [AVM1] fix ActionGetProperty/ActionSetProperty
+  * [ABCVm] fix possible crash on optimized function call fixes
+    #793
+  * [AVM1] fix hittest fixes #791
+  * [AVM1] fix number conversion
+  * [CairoTokenRenderer] handle FOCAL_RADIAL_GRADIENT fixes #792
+  * [BitmapData] more fixes for rendering to bitmap fixes #789
+  * Add some missing APIs
+  * small performance improvements
+  * [ABCVm] fix getProperty optimization for overridden builtin
+    methods fixes #593
+  * [TextField] implement support for bold/italic system fonts
+  * [TextField] fix computing of autosize x position fixes #788
+  * [TextField] implement wordwrap support fixes #759 fixes #777
+  * add more classes to airfiles
+  * [TextField] fix text positioning when in autosize mode
+  * fix setting of rendering start position
+  * reduce audio buffer size fixes #773
+  * [Sound] fix possible crash
+  * fix memleak after playing sound
+  * really fix compilation for windows
+  * fix compilation for windows
+  * switch to pcre implementation from avmplus/tamarin - ensures
+    total compatibility with adobe for regular expressions -
+    removes pcre dependency - fixes several testcases in tamarin
+    test suite - fixes #224
+  * [AVM1Color] invalidate target after setting ColorTransform
+  * [AVM1] fix ActionGetMember
+  * [MovieClip] execute AVM1 framescript after construction
+  * Remove some files from built-in list
+  * [AVM1] fix RemoveMovieClip
+  * [AVM1] call constructor when creating class instances in
+    ActionNewMethod
+  * [ABCVm] fix getproperty optimization
+  * fixx several rendering issues fixes #682
+  * Added list of AIR only classes due to regex parsing difficulty
+  * [RootMovieClip] make stage available during construction
+  * [ABCVm] fix optimization of callproperty with zero args
+  * add forgotten patch
+  * [MovieClip] fix execution of framescripts
+  * [DisplayObject] fix setOnStage fixes #784
+  * ignore empty colorTransform for DefineButtonTag
+  * detect unreachable code after throw/ifeq/ifne opcodes fixes
+    #785
+  * remove unneccessary debug output
+  * Don't count AIR only Classes - part 1
+  * set result types for Math methods
+  * [DisplayObject] don't include rotation when computing width or
+    height fixes #782
+  * ensure result is really int when subtracting with forceint flag
+    fixes #781
+  * remove unneeded log output
+  * [MemoryStreamCache] fix possible crash
+  * implement SOUNDENVELOPE handling fixes #780
+  * new release 0.8.5
+  * [Template_base] derive from Type
+  * [ByteArray] use raw mode for ByteArray.inflate
+  * [BitmapData] fix copyPixels if target is not transparent fixes
+    #707
+  * [Class_inherit] ensure that class is initialized when creating
+    instance
+  * handle REGISTER_GETTER_RESULTTYPE
+  * [ContextMenu] "isSupported" is a getter
+  * [ABCVm] handle hasNext opcode in preloadFunction
+  * [DisplayObjectContainer] fix addChild if parent is in
+    resetParentList fixes #778
+  * remove accidentally committed debug messages
+  * [SimpleButton] fix setting parent in reflectState fixes #776
+  * [BitmapContainer] re-enable fast path for copyRectangle fixes
+    #774
+  * [Class_inherit] ensure class is initialized when accessing
+    variables
+  * add forgotten patch to last commit
+  * [DisplayObjectContainer] fix removeChild if parent is in
+    resetParentList
+  * ensure superclass is initialized in newclass opcode
+  * [ABCVm] add #define to enable/disable runtime abc code
+    optimization
+  * [Number] fix toUint avmplus uses toInt with a cast to uint, so
+    we do the same
+  * don't optimize getlex when in class or script initializer
+  * set return value for several methods
+  * [Vector] fix coercing in setVariableByMultiname
+  * set result value for "fscommand"
+  * fix setting parent when DisplayObject is removed from
+    DisplayList fixes #768
+  * [XMLList] fix toNumber/toInt for empty nodelist fixes #770
+  * [EventDispatcher] fix detection of duplicate eventListeners
+    fixes #772
+  * [AVM1] better handling of unknown function in
+    ActionCallFunction fixes #769
+  * fix handling of invalid UTF8 strings in regular expressions
+    fixes #766
+  * [AVM1] fix ActionCloneSprite and ActionToNumber partially fixes
+    #763
+  * [EventDispatcher] ensure that the same EventListener is not
+    added twice
+  * fix refcounting in Sound.play fixes part 2 of #762
+  * Textfield.autoSize allows values "true" and "false" in AVM1
+    fixes part 1 of #762
+  * consider smoothing when rendering fixes #662
+  * [DisplayObject] better method to ensure proper rotation value
+  * [DisplayObjectContainer] fix hitTest for non-InteractiveObjects
+    fixes #761
+  * [DisplayObject] ensure that rotation is always between -180 and
+    180 fixes #760
+  * [BitmapContainer] disable fast path for copyRectangle as it
+    doesn't work for unknown reasons fixes #707
+  * fix some warnings
+  * fix some warnings
+  * [TextField] fix more rendering issues fixes #705 fixes #706
+  * [TextField] fix some renderng issues fixes #683
+  * [AVM1] fix ActionCallFunction when inside "with" fixes #757
+  * execute framescript only if clip is on Stage fixes #755
+  * [DisplayObject] call constructor when adding to stage only for
+    legacy objects
+  * [SoundChannel] use volume set by SoundTransform fixes #754
+  * [ASObject] set resultType for declared methods
+  * [TextField] fix rendering to BitmapData fixes #752
+  * [TokenContainer] ensure that tokensvector is not changed during
+    hittest fixes #753
+  * [MovieClip] handle multiple frame advances in one EnterFrame
+    event
+  * [ABCVm] add forgotten patches for instanceOf optimization
+  * [MovieClip] ensure that frame is always properly declared
+    fixes #751
+  * [ABCVm] fix handling of convert_d in checkForLocalResult fixes
+    #750
+  * [ABCVm] optimize instanceOf
+  * fix hitTest for StaticText and multiline rendering for
+    TextField fixes #748 fixes #749
+  * ensure SoundChannel gets valid SoundTransform in Sound.play
+  * [Sound] handle all arguments in Sound.play fixes #747
+  * [MovieClip] ensure that frame is declared if MovieCLip.play is
+    called fixes #746
+  * [SBCVm] better detection of resulttype when preloading
+  * [ABCVm] optimize initialization of locals
+  * fix button rendering fixes #742
+  * properly handle Bitmap surface if BitmapData is disposed fixes
+    #745
+  * fix skippng of unreachable code fixes #743 fixes #744
+  * fix generator optimization fixes #741
+  * fix getslot/setslot optimization fixes #740
+  * fix audio on big-endian arch
+  * fix compilation on ppc
+  * small performance improvement
+  * set several result types
+  * fix generator optimization
+  * Fix formatting
+  * avoid duplicate initialization of graphics in PPAPi plugin
+  * ensure that renderjobs are rescheduled if renderthread is not
+    started
+  * optimize handling of activationobject
+  * Fix padding issues for fractionalDigits
+  * re-add check for argument count on ActionScript3
+  * More progress
+  * add forgotten patch
+  * [AVM1] workaroung for calling Math.round() with zero arguments
+    fixes #736
+  * [AVM1] implement BitmapData.loadBitmap and add support for
+    XMLSocket
+  * several small performance improvements
+  * optimize operations followed by setslot
+  * Improve CurrencyFormatter
+  * fix warnings
+  * move mxe apt repository key to github action secrets fixes #734
+  * small performance improvement
+  * [ApplicationDomain] fix domainMemory handling
+  * [ABCVm] switch int/number generators into convert_i/convert_d
+    operators
+  * [ABCVm] optimize comparison/branch operators
+  * [ABCVm] optimize away setlocal if it follows getlocal on same
+    index
+  * set resulttype for several properties/methods of builtin
+    classes
+  * fix several issues regarding mouse event handling fixes #657
+    fixes #695
+  * fix some warnings
+  * [ABCVm] fix optimization of static function calls fixes #727
+  * fix refcounting for asAtom setters
+  * [ABCContext] don't set cached type in buildTrait fixes #729
+  * [ABCVm] fix optimization of domain memory operations fixes #728
+  * [AVM1] fix ActionGetVariable for scopevariables
+  * [AVM1] add global setTimeout function
+  * [AVM1] fix refcounting for ActionGetMember fixes #730
+  * fix getlex optimization fixes #726
+  * [ABCVm] fix iffalse/iftrue optimization
+  * [Vector3D] angleBetween and distance are static methods
+  * [ABCVm] fix findpropstrict optimization
+  * fix possible crash in Sound.extract fixes #725
+  * fix several refcounting issues for XML/XMLList
+  * really fix exception handling in obfuscated swf files
+  * [TextField] fix several issues in html parser fixes #708
+  * [AVM1] fix rollOver/rollOut event handling
+  * [Vector] fix generator fixes #721
+  * [Graphics] ensure that tokenlist isn't changed during drawing
+  * fix exception handling in obfuscated swf files
+  * optimize getQualifiedClassName
+  * speedup token rendering, final part
+  * speedup token rendering, part 5
+  * Check for an error in realpath
+  * [CairoTokenRenderer] fix cairoPathFromTokens
+  * [DefineFont3Tag] fix getTextBounds
+  * set resulttype for several getters
+  * [ABCVm] split computing of jump targets and types of locals in
+    preload
+  * speedup token rendering, part 4
+  * speedup token rendering, part 3
+  * speedup token rendering, part 2
+  * [ABCVm] optimize asTypelate and isTypelate
+  * [FontTag] optimize computation of text size
+  * speedup token rendering, part 1
+  * Fix segault when you close window. Do not releaseTexture if
+    thread does not exist.
+  * typo
+  * fix package download for llvm
+  * fix compiler setting
+  * fix typo
+  * fix building with older gcc
+  * optimize tag binding
+  * [TextField] handle autosize on _setDefaultTextFormat fixes #704
+  * another fix for class init optimization
+  * fix several text rendering issues
+  * fix rendering of error message
+  * fix char texture generation
+  * fix class init optimization fixes #718
+  * update dependencies/urls/description fixes #717
+  * remove accidentally committed debug code
+  * partially revert class init optimization
+  * [TextField] implement faster rendering path for embedded fonts
+    fixes #703
+  * [ShapesBuilder] fix makeVertex
+  * small performance improvements
+  * [TokenContainer] optimize generation of tokens
+  * fix CairoTokenRenderer::hitTest fixes #715
+  * [BitmapData] speedup drawDisplayObject
+  * [ASString] speedup string.length and string.charAt
+  * faster lookup of classes by multiname
+  * [TextField] implement getCharBoundaries fixes #713
+  * [DisplayObjectContainer] fix handling of mouseChildren flag
+  * fix getTypeFromMultiname for templated classes fixes #712
+  * [Sound] implement Sound.extract
+  * [ABCVm] fix pushshort opcode for negative values
+  * fix possible crash on application exit
+  * [AVM1] look for class first in ActionNewObject fixes #711
+  * ensure DoABCDefineTag of loaded swf is executed in ABCVm thread
+    fixes #702
+  * fix detection of unreachable code fixes #709
+  * fix compilation for windows
+  * fix possible crash on application exit
+  * fix setting "this" for setInterval callback
+  * [AVM1] implement registering of listeners from prototype chain
+  * [AVM1] fix possible crash
+  * implement 3 second timeout when downloading SocketPolicyFile
+  * reduce memory usage for embedded video
+  * fix more issues regarding proper destruction on application
+    exit
+  * fix possible crash on application exit
+  * [Video] delete ambedded videodecoder after last frame is
+    displayed
+  * fix some "uninitialized value" warnings from valgrind
+  * ensure that constant ASObjects are propelry deleted on
+    application exit
+  * [MovieClip] ensure that new frames are not declared twice
+  * another rework of embedded video handling to reduce memory usage
+  * Add missing constants in StageQuality
+  * [FFMpegVideoDecoder] fix crash fixes #700
+  * [BitmapData] fix possible crash in BitmapData.draw
+  * fix setting of framerate fixes #698
+  * reduce memory usage for embedded video
+  * Add CurrencyParseResult
+  * rework embedded video decoding, decoded frames are now cached
+  * and another try to fix addedToStage handling for RootMovieClip
+    ... fixes #696 fixes #697
+  * Fix mistakes
+  * [Video] fix possible memory leak on embedded video
+  * split registering of classes into several files to reduce the
+    memory used to compile abc.cpp
+  * fix embedded video fixes #581
+  * [ABCVm] fix possible crash in preloadFunction
+  * Improved NumberFormatter
+  * next try to fix addedToStage handling when constructing
+    RootMovieClip...
+  * fix compilation on older GLEW
+  * make lightspark running directly on wayland using
+    SDL_VIDEODRIVER=wayland fixes #645
+  * fix color format when compiling for OpenGL-ES fixes #656
+  * [ABCVm] fix skipping of unreachable code
+  * fix compilation with -DENABLE_LLVM this just fixes the
+    compilation, llvm-jit still doesn't work fixes #694
+  * [TextField] fix height computation in boundsRect fixes #688
+  * [TextField] properly handle maxChars fixes #693
+  * [AVM1] implement LoadVars.sendAndLoad partially fixes #690
+  * [TextField] ensure that bounds are always positive
+  * revert commit 6215e5ec86674acfaea55b816aa19a1b01e82442 I don't
+    know why I added this in the first place, so maybe reverting
+    this will lead to another regression... fixes #689
+  * add forgotten commit
+  * [TextField] fix computation of boundsRect fixes #574
+  * [Graphics] make texture recreation skippable
+  * fix intGenerator optimization (again...) fixes #686
+  * [AVM1] handle AVM1Function on setInterval fixes #685
+  * [AVM1] fix MovieClip.play and MovieClip.unloadMovie
+  * [BitmapContainer] fix possible crash when rendering
+  * fix rendering
+  * [.gitignore] Remove mistakenly added obj-build
+  * [AVM1] handle pressing muliple keys fixes #643
+  * [DisplayObject] fix alpha property handling for AVM1
+  * [XMLDocument] fix firstChild fixes #664
+  * fix recursive calling of the same function during preloading
+  * fix handling of jumps inside unreachable code
+  * [AVM1] send mouseUp/mouseDown/mouseMove events to all clips on
+    the Stage fixes #672 fixes #642
+  * [.gitignore] Re-add obj/, and also add obj-debug/
+  * fix llvm compilation
+  * [AVM1] handle obfuscated code in CLIPACTIONS
+  * [AVM1] add specialized NetConnection class and add stub for
+    LoadVars.sendAndLoad fixes #678
+  * [AVM1] dont' allow removing of RootMovieClip from stage
+  * Update .gitignore to reflect new names of obj dirs
+  * really fix packaging for windows
+  * fix packaging for windows
+  * fix warning regarding cmake version fixes #679
+  * [BitmapData] ensure BitmapContainer is uploaded when first user
+    is added fixes #564
+  * fix hittest for buttons fixes #646
+  * [AVM1] avoid exception when calling ActionGetMember on
+    Null/Undefined fixes #666
+  * Add remaining flash-specific quirk
+  * Rebase pugixml
+  * fix(scripting/flash/display): Don't render empty Bitmaps
+  * implement seperate faster rendering for Bitmaps fixes #644
+    fixes #661
+  * fix some issues when setting current frame by script
+  * fix shape rendering.cpp fixes #663
+  * fix setting RootMovieClip on stage
+  * [AVM1] add stub for LoadVars class
+  * [AVM1] ensure that scripts are executed only once after
+    advancing frame
+  * [DisplayObject] fix getStage (again...) fixes #668
+  * [AVM1] handle _url in textfield synchronization fixes #669
+  * [AVM1] fix ActionGotoFrame2
+  * fix crash on Windows fixes #659
+- Remove bcond conditional for ffmpeg, ffmpeg is available.
+- Drop lang sub-package, no translations available anymore.
+- Use ldconfig_scriptlets macro.
+
+-------------------------------------------------------------------
+Mon Oct  4 12:01:22 UTC 2021 - Aaron Stern <ukbeast89@protonmail.com>
+
+- Update to version 0.8.5:
+  * new release 0.8.5
+  * [Template_base] derive from Type
+  * [ByteArray] use raw mode for ByteArray.inflate
+  * [BitmapData] fix copyPixels if target is not transparent fixes #707
+  * [Class_inherit] ensure that class is initialized when creating instance
+  * handle REGISTER_GETTER_RESULTTYPE
+  * [ContextMenu] "isSupported" is a getter
+  * [ABCVm] handle hasNext opcode in preloadFunction
+  * [DisplayObjectContainer] fix addChild if parent is in resetParentList fixes #778
+  * remove accidentally committed debug messages
+  * [SimpleButton] fix setting parent in reflectState fixes #776
+  * [BitmapContainer] re-enable fast path for copyRectangle fixes #774
+  * [Class_inherit] ensure class is initialized when accessing variables
+  * add forgotten patch to last commit
+  * [DisplayObjectContainer] fix removeChild if parent is in resetParentList
+  * ensure superclass is initialized in newclass opcode
+  * [ABCVm] add #define to enable/disable runtime abc code optimization
+  * [Number] fix toUint avmplus uses toInt with a cast to uint, so we do the same
+  * don't optimize getlex when in class or script initializer
+  * set return value for several methods
+  * [Vector] fix coercing in setVariableByMultiname
+  * set result value for "fscommand"
+  * fix setting parent when DisplayObject is removed from DisplayList fixes #768
+  * [XMLList] fix toNumber/toInt for empty nodelist fixes #770
+  * [EventDispatcher] fix detection of duplicate eventListeners fixes #772
+  * [AVM1] better handling of unknown function in ActionCallFunction fixes #769
+  * fix handling of invalid UTF8 strings in regular expressions fixes #766
+  * [AVM1] fix ActionCloneSprite and ActionToNumber partially fixes #763
+  * [EventDispatcher] ensure that the same EventListener is not added twice
+  * fix refcounting in Sound.play fixes part 2 of #762
+  * Textfield.autoSize allows values "true" and "false" in AVM1 fixes part 1 of #762
+  * consider smoothing when rendering fixes #662
+  * [DisplayObject] better method to ensure proper rotation value
+  * [DisplayObjectContainer] fix hitTest for non-InteractiveObjects fixes #761
+  * [DisplayObject] ensure that rotation is always between -180 and 180 fixes #760
+  * [BitmapContainer] disable fast path for copyRectangle as it doesn't work for unknown reasons fixes #707
+  * fix some warnings
+  * fix some warnings
+  * [TextField] fix more rendering issues fixes #705 fixes #706
+  * [TextField] fix some renderng issues fixes #683
+  * [AVM1] fix ActionCallFunction when inside "with" fixes #757
+  * execute framescript only if clip is on Stage fixes #755
+  * [DisplayObject] call constructor when adding to stage only for legacy objects
+  * [SoundChannel] use volume set by SoundTransform fixes #754
+  * [ASObject] set resultType for declared methods
+  * [TextField] fix rendering to BitmapData fixes #752
+  * [TokenContainer] ensure that tokensvector is not changed during hittest fixes #753
+  * [MovieClip] handle multiple frame advances in one EnterFrame event
+  * [ABCVm] add forgotten patches for instanceOf optimization
+  * [MovieClip] ensure that frame is always properly declared fixes #751
+  * [ABCVm] fix handling of convert_d in checkForLocalResult fixes #750
+  * [ABCVm] optimize instanceOf
+  * fix hitTest for StaticText and multiline rendering for TextField fixes #748 fixes #749
+  * ensure SoundChannel gets valid SoundTransform in Sound.play
+  * [Sound] handle all arguments in Sound.play fixes #747
+  * [MovieClip] ensure that frame is declared if MovieCLip.play is called fixes #746
+  * [SBCVm] better detection of resulttype when preloading
+  * [ABCVm] optimize initialization of locals
+  * fix button rendering fixes #742
+  * properly handle Bitmap surface if BitmapData is disposed fixes #745
+  * fix skippng of unreachable code fixes #743 fixes #744
+  * fix generator optimization fixes #741
+  * fix getslot/setslot optimization fixes #740
+  * fix audio on big-endian arch
+  * fix compilation on ppc
+  * small performance improvement
+  * set several result types
+  * fix generator optimization
+  * Fix formatting
+  * avoid duplicate initialization of graphics in PPAPi plugin
+  * ensure that renderjobs are rescheduled if renderthread is not started
+  * optimize handling of activationobject
+  * Fix padding issues for fractionalDigits
+  * re-add check for argument count on ActionScript3
+  * More progress
+  * add forgotten patch
+  * [AVM1] workaroung for calling Math.round() with zero arguments fixes #736
+  * [AVM1] implement BitmapData.loadBitmap and add support for XMLSocket
+  * several small performance improvements
+  * optimize operations followed by setslot
+  * Improve CurrencyFormatter
+  * fix warnings
+  * move mxe apt repository key to github action secrets fixes #734
+  * small performance improvement
+  * [ApplicationDomain] fix domainMemory handling
+  * [ABCVm] switch int/number generators into convert_i/convert_d operators
+  * [ABCVm] optimize comparison/branch operators
+  * [ABCVm] optimize away setlocal if it follows getlocal on same index
+  * set resulttype for several properties/methods of builtin classes
+  * fix several issues regarding mouse event handling fixes #657 fixes #695
+  * fix some warnings
+  * [ABCVm] fix optimization of static function calls fixes #727
+  * fix refcounting for asAtom setters
+  * [ABCContext] don't set cached type in buildTrait fixes #729
+  * [ABCVm] fix optimization of domain memory operations fixes #728
+  * [AVM1] fix ActionGetVariable for scopevariables
+  * [AVM1] add global setTimeout function
+  * [AVM1] fix refcounting for ActionGetMember fixes #730
+  * fix getlex optimization fixes #726
+  * [ABCVm] fix iffalse/iftrue optimization
+  * [Vector3D] angleBetween and distance are static methods
+  * [ABCVm] fix findpropstrict optimization
+  * fix possible crash in Sound.extract fixes #725
+  * fix several refcounting issues for XML/XMLList
+  * really fix exception handling in obfuscated swf files
+  * [TextField] fix several issues in html parser fixes #708
+  * [AVM1] fix rollOver/rollOut event handling
+  * [Vector] fix generator fixes #721
+  * [Graphics] ensure that tokenlist isn't changed during drawing
+  * fix exception handling in obfuscated swf files
+  * optimize getQualifiedClassName
+  * speedup token rendering, final part
+  * speedup token rendering, part 5
+  * Check for an error in realpath
+  * [CairoTokenRenderer] fix cairoPathFromTokens
+  * [DefineFont3Tag] fix getTextBounds
+  * set resulttype for several getters
+  * [ABCVm] split computing of jump targets and types of locals in preload
+  * speedup token rendering, part 4
+  * speedup token rendering, part 3
+  * speedup token rendering, part 2
+  * [ABCVm] optimize asTypelate and isTypelate
+  * [FontTag] optimize computation of text size
+  * speedup token rendering, part 1
+  * Fix segault when you close window. Do not releaseTexture if thread does not exist.
+  * typo
+  * fix package download for llvm
+  * fix compiler setting
+  * fix typo
+  * fix building with older gcc
+  * optimize tag binding
+  * [TextField] handle autosize on _setDefaultTextFormat fixes #704
+  * another fix for class init optimization
+  * fix several text rendering issues
+  * fix rendering of error message
+  * fix char texture generation
+  * fix class init optimization fixes #718
+  * update dependencies/urls/description fixes #717
+  * remove accidentally committed debug code
+  * partially revert class init optimization
+  * [TextField] implement faster rendering path for embedded fonts fixes #703
+  * [ShapesBuilder] fix makeVertex
+  * small performance improvements
+  * [TokenContainer] optimize generation of tokens
+  * fix CairoTokenRenderer::hitTest fixes #715
+  * [BitmapData] speedup drawDisplayObject
+  * [ASString] speedup string.length and string.charAt
+  * faster lookup of classes by multiname
+  * [TextField] implement getCharBoundaries fixes #713
+  * [DisplayObjectContainer] fix handling of mouseChildren flag
+  * fix getTypeFromMultiname for templated classes fixes #712
+  * [Sound] implement Sound.extract
+  * [ABCVm] fix pushshort opcode for negative values
+  * fix possible crash on application exit
+  * [AVM1] look for class first in ActionNewObject fixes #711
+  * ensure DoABCDefineTag of loaded swf is executed in ABCVm thread fixes #702
+  * fix detection of unreachable code fixes #709
+  * fix compilation for windows
+  * fix possible crash on application exit
+  * fix setting "this" for setInterval callback
+  * [AVM1] implement registering of listeners from prototype chain
+  * [AVM1] fix possible crash
+  * implement 3 second timeout when downloading SocketPolicyFile
+  * reduce memory usage for embedded video
+  * fix more issues regarding proper destruction on application exit
+  * fix possible crash on application exit
+  * [Video] delete ambedded videodecoder after last frame is displayed
+  * fix some "uninitialized value" warnings from valgrind
+  * ensure that constant ASObjects are propelry deleted on application exit
+  * [MovieClip] ensure that new frames are not declared twice
+  * another rework of embedded video handling to reduce memory usage
+  * Add missing constants in StageQuality
+  * [FFMpegVideoDecoder] fix crash fixes #700
+  * [BitmapData] fix possible crash in BitmapData.draw
+  * fix setting of framerate fixes #698
+  * reduce memory usage for embedded video
+  * Add CurrencyParseResult
+  * rework embedded video decoding, decoded frames are now cached
+  * and another try to fix addedToStage handling for RootMovieClip... fixes #696 fixes #697
+  * Fix mistakes
+  * [Video] fix possible memory leak on embedded video
+  * split registering of classes into several files to reduce the memory used to compile abc.cpp
+  * fix embedded video fixes #581
+  * [ABCVm] fix possible crash in preloadFunction
+  * Improved NumberFormatter
+  * next try to fix addedToStage handling when constructing RootMovieClip...
+  * fix compilation on older GLEW
+  * make lightspark running directly on wayland using SDL_VIDEODRIVER=wayland fixes #645
+  * fix color format when compiling for OpenGL-ES fixes #656
+  * [ABCVm] fix skipping of unreachable code
+  * fix compilation with -DENABLE_LLVM this just fixes the compilation, llvm-jit still doesn't work fixes #694
+  * [TextField] fix height computation in boundsRect fixes #688
+  * [TextField] properly handle maxChars fixes #693
+  * [AVM1] implement LoadVars.sendAndLoad partially fixes #690
+  * [TextField] ensure that bounds are always positive
+  * revert commit 6215e5ec86674acfaea55b816aa19a1b01e82442 I don't know why I added this in the first place, so maybe reverting this will lead to another regression... fixes #689
+  * add forgotten commit
+  * [TextField] fix computation of boundsRect fixes #574
+  * [Graphics] make texture recreation skippable
+  * fix intGenerator optimization (again...) fixes #686
+  * [AVM1] handle AVM1Function on setInterval fixes #685
+  * [AVM1] fix MovieClip.play and MovieClip.unloadMovie
+  * [BitmapContainer] fix possible crash when rendering
+  * fix rendering
+  * [.gitignore] Remove mistakenly added obj-build
+  * [AVM1] handle pressing muliple keys fixes #643
+  * [DisplayObject] fix alpha property handling for AVM1
+  * [XMLDocument] fix firstChild fixes #664
+  * fix recursive calling of the same function during preloading
+  * fix handling of jumps inside unreachable code
+  * [AVM1] send mouseUp/mouseDown/mouseMove events to all clips on the Stage fixes #672 fixes #642
+  * [.gitignore] Re-add obj/, and also add obj-debug/
+  * fix llvm compilation
+  * [AVM1] handle obfuscated code in CLIPACTIONS
+  * [AVM1] add specialized NetConnection class and add stub for LoadVars.sendAndLoad fixes #678
+  * [AVM1] dont' allow removing of RootMovieClip from stage
+  * Update .gitignore to reflect new names of obj dirs
+  * really fix packaging for windows
+  * fix packaging for windows
+  * fix warning regarding cmake version fixes #679
+  * [BitmapData] ensure BitmapContainer is uploaded when first user is added fixes #564
+  * fix hittest for buttons fixes #646
+  * [AVM1] avoid exception when calling ActionGetMember on Null/Undefined fixes #666
+  * Add remaining flash-specific quirk
+  * Rebase pugixml
+  * fix(scripting/flash/display): Don't render empty Bitmaps
+  * implement seperate faster rendering for Bitmaps fixes #644 fixes #661
+  * fix some issues when setting current frame by script
+  * fix shape rendering.cpp fixes #663
+  * fix setting RootMovieClip on stage
+  * [AVM1] add stub for LoadVars class
+  * [AVM1] ensure that scripts are executed only once after advancing frame
+  * [DisplayObject] fix getStage (again...) fixes #668
+  * [AVM1] handle _url in textfield synchronization fixes #669
+  * [AVM1] fix ActionGotoFrame2
+  * new release 0.8.4.1
+  * fix crash on Windows fixes #659
+  
+-------------------------------------------------------------------
+Wed Feb 10 16:03:36 UTC 2021 - Aaron Stern <ukbeast89@protonmail.com>
+
+- Update to version 0.8.4:
+  * new version 0.8.4
+  * improved handling of mixed AVM1/AVM2 files
+  * implement streaming of videos embedded in the swf file
+  * implement class inheritance for AVM1
+  * added settings dialog, currently only used to enable/disable local storage
+  * support for local storage added
+  * use SDL threading methods, remove glibmm dependency
+
+-------------------------------------------------------------------
+Sat Sep 05 14:24:35 UTC 2020 - aloisio@gmx.com
+
+- Update to version 0.8.3:
+  * new version 0.8.3
+  * fix callproperty optimization
+  * Added Orientation3D class
+  * [StaticText] use same hitTestImpl as in TextField
+  * ensure that "complete" event is sended for root movieclip fixes #520
+  * ensure arguments are converted to int in abc_getPropertyInteger* calls fixes #519
+  * optimize inclocal_i/declocal_i
+  * [PlaceObject2Tag] reduce number of calls to getUniqueStringId()
+  * small speedup when writing to ByteArray
+  * fix several comparison optimizations
+  * fix setting next frame from Actionscript
+  * fix parsing of OBJECT/EMBED parameters
+  * small performance improvements
+  * make AudioStream class public fixes #496
+  * speedup generation of string ids on startup fixes #516
+  * fix increment_i/decrement_i optimization
+  * fix construction of RootMovieClip from loaded swf fixes #515
+  * fix ifnge optimization
+  * fix optimization of static method calls
+  * fix detection of unreachable code
+  * avoid coercing function result if unneccessary
+  * script for uninstalling
+  * optimize ifnge opcode
+  * fix callproperty optimization
+  * fix previous commit
+  * small performance improvement
+  * avoid creating new call_context when not in recursive function call
+  * small performance improvements
+  * Fix indentations in the last 4 commits
+  * Added JPEGEncoderOptions
+  * Added JPEGXREncoderOptions
+  * Added PNGEncoderOptions
+  * Added MicrophoneEnhancedOptions
+  * several small performance improvements
+  * fix building in debug mode
+  * fix several warnings fixes #512
+  * fix advancing frame during parsing
+  * [Texture] fix uploadFromBitmapData
+  * fix loading of Bitmaps from Loader
+  * make windows executable work on Windows7 fixes #454
+  * [ColorTransform] fix applyTransformation for Bitmaps
+  * [ABCVm] fix coercearguments detection
+  * [ABCVm] fix preloading of finddef opcode
+  * Added ID3Info
+  * [ABCVm] put (optimized) methods in separate files
+  * [BitmapContainer] fix handling of PNGs without alpha
+  * [ABCVm] use new typestack to avoid argument coercion in callProperty
+  * [Global] ensure that script is run when first accessed from setter
+  * ensure framescript for frame 0 is executed in root movie
+  * keep track of the type of the arguments on stack during preloadFunction currently only used for get/setPropertyInteger optimization
+  * Added AVTagData
+  * Added ColorCorrectionSupport
+  * stop sound streaming if MovieClip is stopped fixes second part of #509
+  * fix possible crash fixes first part of #509
+  * [URLRequest] allow Authorization header contrary to specs, it seems to be allowed in newer flash player versions see https://helpx.adobe.com/flash-player/kb/actionscript-error-send- action-contains.html
+  * [RegExp] fix match
+  * only execute ScriptLimitsTag on main clip fixes #508
+  * [flash.geom] implement copyFrom for Point, Rectangle and Vector3D
+  * fix get/setPropertyInteger optimization fixes #507
+  * optimize get/setProperty with Integer parameter
+  * fix RootMovieClip afterConstruction fixes #505 and #506
+  * [AVM1] implement _rotation getter/setter
+  * [AVM1] don't execute scripts directly in AttachMovie fixes #504
+  * fix putting root movie clip on stage fixes #500 and #503
+  * fix calling of AVM1 constructors fixes #499
+  * implement support for AdditionalDataTag in PlaceObject2Tag
+  * [AVM1] rework DoInitAction tag handling
+  * [AVM1] fix ActionWith handling fixes #490
+  * fix RootMovieClip construction (again...)
+  * Added more constants
+  * fix setting super class
+  * fix construction of RootMovieClip for AVM1
+  * [ABCVm] fix optimization of getlex for constants
+  * fix construction of RootMovieClip
+  * fix SoundStreamBlockTag::decodeSoundBlock partially fixes #489
+  * prefer inherited classes with same name over builtin classes
+  * [DisplayObject] fix refcounting for getRoot fixes #492 and #493
+  * fix initializing of embedded swf fixes #488
+  * [AVM1] fix DoInitActionTag handling fixes #487
+  * [PlaceObject2Tag] fix reusing removed legacy children fixes #484
+  * ensure main object is added to stage after it is completely constructed fixes #494
+  * add forgotten patch
+  * [AVM1] add caller/callee to arguments array
+  * fix usage of additional AdditionalDataTag in AVM1 obfuscation fixes #486 and #491
+  * fix reading of additionalDataTag
+  * [DisplayObjectContainer] fix handling of mouseChildren for hittest fixes #485
+  * fix reading GRADIENTGLOWFILTER
+  * [DisplayObject] fix setOnStage
+  * fix referencecounting when executing event listeners fixes #483
+  * [ABCVm] optimize getlex for constants
+  * [Vector] speedup coerce
+  * [ByteArray] fix handling of invalid UTF8 in toString
+  * partially revert "ensure that classes are defined as soon as possible" this fixes several regressed tamarin tests
+  * fix computation of bounds rect
+  * [ABCVm] fix skipping of unreachable code fixes #467
+  * Fixed line indentatons
+  * Added more flash.globalization contast values
+  * [AVM1] execute scripts for MovieClips not generated from timeline
+  * ensure that classes are defined as soon as possible fixes #479
+  * Fixed last operation values in some flash.globalization classes
+  * Split classes in flashglobalization.* to other files
+  * [ABCVm] fix optimizing of skippable opcodes
+  * Added StringTools class
+  * [ByteArray] speedup toString
+  * [AVM1] fix ContextMenu handling fixes #478
+  * [AVM1] fix ActionWith handling fixes #477
+  * [AVM1] fix handling of jumps beyond actionlist size
+  * [AVM1] AVM1 allows setting contextMenu to a DisplayObject
+  * fix handling of FrameLabelTag
+  * [AVM1] check for class variables first in AVM1GetVariable
+  * fix possible crash
+  * rework AVM1 interpreter to avoid problems with obfuscation fixes #459
+  * travis.yaml: Add Debug Build
+  * implement flash.filters.BitmapFilterType fixes #472
+  * [BitmapData] add stub for paletteMap fixes #473
+  * [AVM1] only execute clipactions if dispatcher is correct fixes #471
+  * [PlaceObject2Tag] fix placing of BitmapData tags
+  * fix parsing of PlaceObject3Tag
+  * fix refcounting for global variables
+  * implement applying of ColorTransform to bitmap fill style
+  * [MovieClip] fix AdvanceFrame if clip has not yet finished loading fixes #456
+  * fix clang builds
+  * add 32bit windows version to travis
+  * [DisplayObject] fix possible crash in getVariableBindingValue fixes #466
+  * [AVM1] fix attachMovieClip
+  * [Function] fix setting of returnType
+  * [AVM1] fix getting variables with dot
+  * fix several refcounting bugs fixes #458
+  * add new command line argument to ignore unhandled exceptions fixes #457
+  * [SyntheticFunction] fix isEqual
+  * Undo unintended change
+  * Oops
+  * Check before doing anything
+  * Refactor to do help before the other stuff
+  * Add extra checks
+  * Do debug and release builds in different dirs
+  * Keep original build instructions
+  * [MovieClip] wait until the frame is loaded in gotoAndPlay/Stop
+  * fix html parsing of <br> tags
+  * fix binding of classes that are initialized in a frame not yet loaded fixes 447
+  * Clarify running of build-script a bit
+  * Use build script in .travis.yml
+  * Refactor handling of input and add help message
+  * [DisplayObjectContainer] fix possible crash during declareFrame
+  * [PlaceObject3Tag] implement support for PlaceFlagHasVisible
+  * Update README.md
+  * Create build
+  * fix generating of images without alpha
+  * [ABCVm] optimize setProperty if no operands are available
+  * small performance improvement
+  * Replaced uint to uint32_t in currencyformatter.h
+  * Undo merge issues
+  * Removed added line in DateTimeStyle
+  * Made changes to CurrencyFormatter format method
+  * Logic error fixes
+  * Dead code elimination
+  * Fix dumb typo
+  * Updates to README.md
+  * add stubs for classes GameInput/GameInputDevice/GameInputEvent
+  * don't play sound when skipping frames from actionscript fixes #450
+  * partially implement flash.globalization.NumberFormatter fixes #449
+  * [RootMovieClip] turn dictionary into an unordered_map this significantly speeds up parsing of big swf files
+  * [AVM1] all parameters for MovieClip.startDrag are optional fixes #455
+  * fix some XML issues fixes #452
+  * fix image decoding
+  * [LoaderThread] ensure content is set when loading from ByteArray fixes #451
+  * Made more progress in CurrencyFormatter
+  * [AVM1] implement _url for ActionGetProperty
+  * [AVM1] add stub for MovieClip.loadMovie
+  * don't allocate sounddata on stack as it may be quite large
+  * [AVM1] fix setting of prototype fixes #446
+  * implement ContextMenus the builtin commands are not doing anything yet, but items added by the developer are handled properly fixes #443
+  * Initial implementation of CurrencyFormatter Flash API class
+  * [DisplayObject] fix possible crash in swapDepths
+  * [AVM1] always search case-insensitive for AVM1 functions
+  * [PlaceObject2Tag] remove unneeded workaround for AVM1
+  * throw exception when trying to delete function from sealed object
+  * fix creating instance of ASObject
+  * [Date] handle constructor with infinity as parameter
+  * add more tests to blacklist adobe player fails at them in the same way lightspark does
+  * [Number] use adobes avmplus code for converting numbers to strings taken from https://github.com/adobe/avmplus
+  * [PlaceObject2Tag] only call constructionComplete in AVM1
+  * don't advance frame during executing of framescript fixes #444
+  * fix constructing MovieClips from Tags
+  * [BitmapData] implement hitTest with Bitmap/BitmapData as secondObject
+  * fix compilation with minGW, 3rd try...
+  * fix compilation with minGW, 2nd try
+  * fix compilation on minGW
+  * [Context3D] implement setColorMask and setScissorRectangle
+  * [ABCVm] fix optimization of lf32/lf64 opcodes
+  * [Texture] patially implement uploadCompressedTextureFromByteArray
+  * [Texture] implement uploadFromByteArray
+  * [CubeTexture] implement uploadFromBitmapData
+  * fix order of construction for DisplayObjects fixes #441
+  * [avmplus] partially implement describeTypeJSON
+  * fix stage3d rendering
+  * [ByteArray] remove nullbytes at end of result in readMultiByte
+  * handle identical name for protected namespace in different loaded swfs
+  * add stubs for several methods in flash.sampler package shoud fix #437
+  * fix several issues when loading additional swf files
+  * better handling of wrong parameter in getlocal opcode fixes #439
+  * implement flash.events.ThrottleEvent
+  * fix describeType for object instances
+  * set traitsInitialized for tags that are not binded to a class
+  * fix warning
+  * fix skipping of jump tags fixes #429
+  * fix screenshot generation fixes #430
+  * fix rendering of error messages when resizing fixes #432
+  * Update SWF Support section
+  * switch to Ctrl+S as shortcut for screenshot generation
+  * fix stupid memory leak on screenshot generation should fix #427
+  * don't throw exception if id is not found on dictionary
+  * [AVM1] reuse soundchannel from DefineSoundTag in attachSound should fix #425
+  * fix StartSoundTag if DefineSoundTag is attached to a sound object fixes #422
+  * implement ability to create screenshot with keyboard shortcut Ctrl+o fixes #245
+  * fix handling of dynamic functions fixes #424
+  * [HtmlTextParser] handle &nbsp;
+  * fix possible crash
+  * fix possible crash when plotting profile data fixes #420
+  * ensure that rendering is not done during AdvanceFrameEvent fixes #423
+  * [TokenContainer] fix colorTransformation handling
+  * [AVM1] implement Object.registerClass
+  * [AVM1] store member variables case sensitive
+  * [AVM1] implement ActionCallMethod with empty name
+  * [AVM1] add TextFormat class
+  * [PlaceObject2Tag] handle ClipEventConstruct and ClipEventInitialize
+  * [AVM1] fix Object.addProperty fixes #416
+  * [AVM1] implement ActionInstanceOf and ActionExtends
+  * fix warnings
+  * fix handling of reused DisplayObjects fixes #421
+  * fix compilation on Ubuntu 16.04
+  * fix event handling when in fullscreen mode on Firefox fixes #419
+  * [DefineSoundTag] detect sample rate regardless of value provided
+  * fix creation of cache directory
+  * [AVM1Sound] store position when stopping sound fixes #418
+  * [TextField] prefer embedded font from loaded swf fixes #417
+  * remove boost dependency
+  * add workaround for SoundChannel.position to match adobes behaviour fixes #398
+  * fix variable binding for textfields and properly handle case sensitivity for Stage.DisplayState fixes #415
+  * [RenderThread] dont't do any rendering if nothing has changed fixes #401
+  * [SimpleButton] ensure reflectState() is called on construction
+  * [FontTag] ignore spaces when checking for available glyphs fixes #410
+  * more readable keyboard shortcut explanations
+  * fix possible crash in firefox plugin.cpp fixes #413
+  * [AVM1] don't throw exception if setting display state is not allowed
+  * [Stage] implement softKeyboardRect as stub
+  * fix compilation with profiling
+  * [IntervalRunner] fix refcounting
+  * fix resizing
+  * [EventDispatcher] properly initialze forcedTarget
+  * ensure that traits are initialized for movies loaded from actionscript
+  * handle asAtom isLess for (U)Integer ASObjects
+  * [AVM1] fix handling of function parameters as locals (2nd try) fixes #411
+  * Update README.md
+  * fix loading of embedded fonts fixes #407
+  * add Keyboard shortcut (Ctrl+f) for switching to/from fullscreen view fixes #404
+  * fix URL for flex download fixes #400
+  * reset state of reused legacy objects fixes #402
+  * ensure tag instances not binded to a class are marked as constructed fixes #403
+  * [AVM1] fix handling of function parameters as locals
+  * [AVM1] implement Color class
+  * Fix build with boost 1.72.0.
+  * [AVM1] handle case insensivity in ActionGetMember
+  * [AVM1] don't crash if attaching a movie fails
+  * [AVM1] properly store AVM1Functions as variable
+  * [AVM1] implement tag ActionStringExtract
+  * [AVM1] add System.security class
+  * [AVM1] implement getSWFVersion
+  * [AVM1] allow zero parameters in getBounds fixes #399
+  * [AVM1] implement global "_level0" property
+  * Rework "Reporting Bugs"
+  * set audiostream starting time based on first mixing callback
+  * create soundchannel also if the sound is not connected to a clip
+  * ensure _named_ displayobjects are reused when re-added to timeline this seems to be how adobe handles it fixes #397
+  * [AVM1] fix mouse click handling
+  * [TextField] handle negative values when setting width/height
+  * fix some refcounting issues
+  * fix some warnings on llvm
+  * [AVM1] implement video streaming
+  * [AVM1] make function names case insensitive
+  * [AVM1] fix xml loading/parsing
+  * [AVM1] ensure that handler for onPress is not called twice
+  * [AVM1] implement setInterval with 3+ arguments
+  * [AVM1] implement MovieClip.getInstanceAtDepth
+  * ensure init/complete events are sended after image is loaded
+  * [AVM1] fix Function.apply/call
+  * [AVM1] implement XML loading
+  * only render if all flushed drawjobs are done, 2nd try fixes #396
+  * only render if all drawjobs that are flushed in one step are done fixes the remaining parts of #393
+  * [SoundChannel] fix stopping fixes #395
+  * fix bitmap rendering on resized window fixes #394
+  * [SoundChannel] ensure that position is correctly reported after the whole sound is loaded fixes part 3 of #393
+  * fix rendering when resizing window fixes #378 and #392
+  * fix mouse down events for AVM1 fixes #388
+  * [SimpleButton] implement getTagID fixes #389
+  * ensure that "complete" event is handled after all "progress" events fixes #390
+  * implement support for fullscreen mode fixes #387
+  * fix possible deadlocks on exit fixes #386
+  * fix handling of hasChanged flag in invalidation fixes #384
+  * [CairoRenderer] ensure pixelbuffer is always large enough fixes #385
+  * [ABCVm] fix checklocalresult (again...)
+  * [Sound] properly handle stopping and (re)starting of sound fixes #383
+  * [AVM1] fix MovieClipLoader fixes #379
+  * improve progressEvent handling
+  * [AVM1] fix ActionWith handling fixes #382
+  * implement undocumented NameCharacter tag
+  * [ABCVm] fix checkforlocalresult
+  * fix several sound issues, mostly for AVM1 fixes #377, #380 and #381
+  * [AVM1] fix keyEvent handling
+  * add special class for AVM1 TextFields fixes #374
+  * [AVM1] implement Key.getAscii fixes #375 and #376
+  * implement undocumented tag 253 (apparently needed for obfuscated files)
+  * optimize callprperty/callpropvoid with more than one argument
+  * properly handle missing FileAttributesTag fixes #372
+  * fix event handling during loading of swf files and images
+  * replace usage of deprecated type Glib::TimeVal
+  * properly read morphfillstyle for FOCAL_RADIAL_GRADIENT
+  * fix warning
+  * ensure that frames are not declared multiple times when set explicitely
+  * implement access to all kinds of DisplayObjects in AVM1
+  * [AVM1MovieClipLoader] implement add/removeListener
+  * fix possible crash when running AVM1 files fixes #371
+  * partially implement flash.globalization.DateTimeFormatter fixes #369
+  * [TextField] refresh sizes when calling setTextFormat
+  * [DisplayObject] add property "metaData"
+  * small performance improvements
+  * fixed log text
+  * optimize "typeof" opcode
+  * inline some methods
+  * fix warning
+  * check if coercion of arguments can be skipped when executing a SyntheticFunction
+  * small performance improvements
+  * Implement startDrag/stopDrag for AVM1MovieClip.
+  * Add AVM1 methods for getting and setting pan.
+  * fix clang-nightly build (again...)
+  * new version 0.8.2
+  * add support for REGISTER_GETTER_SETTER_RESULTTYPE
+  * fix initializing swf files loaded via Loader
+  * fix possible crash when handling avm1 events
+  * fix jump target handling in preloadFunction
+  * fix refcounting when coercing on Vectors
+  * handle StartSoundTag as DisplayListTag fixes #364
+  * implement AVM1 mouse handling for ASObjects
+  * ignore visible flag when rendering to BitmapData
+  * implement mouse event handling for AVM1
+  * fix avm1 script execution order
+  * add stub classes for all filters
+  * [DisplayObjectContainer] fix set/deleteVariableByMultiname
+  * [ABCVm] fix checkForLocalResult
+  * fix mouse click handling
+  * work on avm1 support
+  * switch to clang-10 for nightly build
+  * work on AVM1 support this also fixes #361
+  * fix creation of error message
+  * several small optimizations
+  * fix detection of overridden methods
+  * add forgotten patch from last commit
+  * rework refcounting in coerce
+  * [ABCVm] implement optimization for lessthan opcode
+  * optimize builtin methods by setting result type currently only implemented for ByteArray
+  * [ABCVm] optimize calling void functions with no arguments
+  * fix refcounting for activation objects
+  * add more cases where initProperty/setProperty is optimized to setSlot
+  * optimize getProperty/setProperty to use getSlot/setSlot if possible
+  * fix destruction of DisplayObjects
+  * Only require X11 for the NPAPI plugin
+  * small performance improvement
+  * fix some refcounting issues
+  * [ABCVm] optimize convert_b/pushtrue/pushfalse/coerce/construct opcodes
+  * [ABCVm] improve checking for local result
+  * [ABCVm] optimize constructProp opcode
+  * [ABCVm] optimize convert_i and convert_u
+  * [ABCVm] add optimization for setSlot, pushNaN and getscopeobject opcodes
+  * ensure that names of overridden methods are available before the inherited classes are constructed
+  * [ABCVm] disable callFunctionMultiArgs optimization for now
+  * [ABCVm] fix increment/decrement optimization
+  * [ABCVm] fix findproperty/findpropstrict optimization
+  * [ABCVm] optimize alchemy opcodes
+  * [ABCVm] optimize increment_i/decrement_i
+  * optimize getters and setters by using the type info, when available
+  * inline ASObject::destruct()
+  * [AVM1] partially implement MovieClipLoader
+  * fix warnings
+  * fix possible crash
+  * [AVM1] implement Key.addListener,Key.removeListener,Key.getCode
+  * fix using of actionscript2
+  * small performance improvement on arithmetic operations
+  * Create Windows NSIS Installer on Tagged Builds
+  * rework asAtom, part 5: turn asAtom into a simple union
+  * fix ffmpeg warnings
+  * enable AVM1 handling for swf version 9
+  * Create GitHub Issue Template
+  * small performance improvements
+  * rework handling of order of operations
+  * more refcounting fixes this _really_ fixes #346
+  * README: made markdown with badges
+  * [AVM1] implement MovieClip.onLoad
+  * fix AVM1 string reading
+  * adobe seems to accept jpegs with invalid headers, so we do the same
+  * Travis CI: Add Ubuntu + Clang Versions
+  * more refcounting fixes this fixes #346
+  * Another travis ci fix
+  * travis ci: use mxe cmake wrapper script
+  * next try to fix travis builds...
+  * (hopefully) fix travis windows build and remove unneccessary packages
+  * more refcounting fixes
+  * Fix Clang Casting Error
+  * Basic CI with Travis
+
+-------------------------------------------------------------------
+Wed May 29 10:35:00 UTC 2019 - aloisio@gmx.com
+
+- Update to version 0.8.1+git.20190521:
+  * fix several refcounting issues
+  * [Sound] implement loadCompressedDataFromByteArray fixes #328
+  * switch to using lightspark by default for AVM1 files fixes #292 and #339
+  * rework asAtom, part 4: reduce size to 8 byte (4 byte on 32bit arch)
+  * rework asAtom, part 3: implement seperate types for asAtom
+  * rework asAtom, part 2: store method closure seperately
+  * rework asAtom, part 1: make type private
+  * add checks for interfaces
+  * revert accidentally committed stuff
+  * [flash.net.ObjectEncoding] implement dynamicPropertyWriter
+  * [Textfield] check for number when syncing AVM1 variable
+  * [AVM1] ensure that scripts in frame 0 are executed in cloned sprite
+  * [Class_base] fix setting of constructIndicator
+  * switch to python3
+  * [ABCVm] fix skipping of unreachable code
+  * don't flush invalidation queue before frame scripts are executed
+  * ensure that variable is not bound twice
+  * [Array]} fix handling of index 0xFFFFFFFF
+  * fix compilation for Windows
+  * [DisplayObject] implement getBounds for AVM1
+  * [DisplayObject] inherit blendmode from ancestors when rendering
+  * [PlaceObject2Tag] ensure that placed objects are not removed
+  * [AVM1] fix variable binding
+  * [AVM1] fix prototype handling
+  * [AVM1] implement _alpha property
+  * fix mouse handling for AVM1
+  * implement optimized getslot opcode
+  * fix focus handling
+  * [Graphics] fix beginGradientFill
+  * really fix execution order of framescripts
+  * fix focus handling
+  * [Graphics] fix rendering of objects not on stage
+  * fix execution order of framescripts
+  * fix the fix for mouse click handling on Sprites...
+  * fix iftrue/iffalse optimization
+  * reduce excessive copying of GeomTokens
+  * fix mouse click handling on sprites
+  * [AVM1] fix ActionEnumerate2
+  * fix drawing of mixed strokes/fills
+  * disable compilation of tightspark by default
+  * switch to python3
+  * fix mouse input handling
+  * [DisplayObjectContainer] fix checkColorTransformForLegacyChildAt
+  * [ACTIONRECORD] fix local variables handling for AVM1
+  * [ABCVm] fix preloading
+  * implement SWF7 action model
+  * throw error if argument count is to high
+  * [ABCVm] implement some small preload optimizations
+  * [Array] speedup isValidMultiname
+  * implement swf6 action model
+  * avoid infinite loop in checkPropertyException
+  * don't expose constructor in describeType
+  * implement SampleDataEvent
+  * [TextField] fix variable binding
+  * [AVM1] fix mouseOut event handling
+  * [CairoTokenRenderer] handle ColorTransformation for LineStyles
+  * [SimpleButton] fix handling of ColorTransform
+  * [AVM1] it seems that Adobe ignores invalid paths in ActionSetProperty
+  * [AVM1] another fix for ActionCloneSprite
+  * [AVM1] scripts are executed after all DisplayObjects called InitFrame
+  * [AVM1] fix hitTest
+  * [AVM1] fix ActionCloneSprite
+  * [PlaceObject2Tag] ensure name is properly set
+  * add forgotten patch to latest commit
+  * [ColorTransform] fix applyTransformation
+  * [MovieClip] fix purging of placed objects
+  * fix rendering of thin lines
+  * [AVM1] implement ActionCall
+  * [AVM1] implement ActionSetTarget2
+  * [AVM1] add Stage class
+  * [AVM1] don't overwrite text in bound textfield
+  * [AVM1] implement handling for ClipEventLoad and ClipEventEnterFrame
+  * fix possible deadlock when handling drag/drop
+  * implement SWF5 action model
+  * fix MorphShape rendering
+  * ensure that AVM1 actions are executed last
+  * fix possible deadlock when input listeners are removed during DisplayObjectContainer destruction
+  * fix handling of empty JPEGTablesTag
+  * implement support for text input
+  * implement DefineFontInfoTag
+  * implement SWF4 action model
+  * don't clean memory too early
+  * try to continue when there is no FileAttributes Tag
+  * handle first tag correctly
+  * better code formatting
+  * [MovieClip] ensure gotoAndPlay/gotoAndStop jump to new frame after current function is executed
+  * partially implement AVM1 swf3 action model
+  * ensure masked objects are invalidated when mask changes
+  * optimize shape generation
+  * fix several warnings
+  * fix sound streaming
+  * fix inserting legacy child objects
+  * implement sound streaming (SoundStreamHead/SoundStreamHeadBlock tags)
+  * add experimental support for swf version 8 and older currently this doesn't do very much, as no actions are implemented, but some animations without user interaction may work. this can be activated by setting environment variable LIGHTSPARK_USE_GNASH=0
+  * [RenderThread] apply FrontFace
+  * apply ColorTransform when creating rendering tokens for DisplayObjects
+  * [SoundChannel] ensure sounds are not played before engine is initialized
+  * [Context3D] fix rendering to texture
+  * [Stage] fix handling of hidden objects
+  * [ABCVm] fix simple getter/setter optimization
+  * [CurlDownloader] fix redirected download
+  * fix several issues on resampled sounds
+  * fix LineStyle/FillStyle creation in SHAPERECORD construction
+  * more text rendering issues fixed
+  * fix several text rendering issues
+  * fix OpenGL not properly detected at runtime on nvidia
+  * [TextBloc] fix recreateTextLine
+  * implement class ActionScriptVersion fixes #338
+  * fix warning
+  * fix loading of ppapi plugin
+  * [XML] implement undocumented methods notification/setNotification fixes #337
+  * optimize simple getters and setters that are only a wrapper around private variables
+  * [ABCVm] implement optimization for callpropvoid opcode
+  * [ABCVm] optimize iftrue/iffalse opcode
+  * implement "not" opcode optimization
+  * fix compilation with llvm 7 fixes #336
+  * small performance improvement
+  * [tiny_string] use avmplus implementation of toupper/tolower
+  * [ASString] avoid creation of ASObjects in fromCharCode, if possible
+  * implement optimized setproperty for static multinames
+  * fix several cmake warnings
+  * [SoundMixer] make properties bufferTime and soundTransform static
+  * reduce creation of ASObjects
+  * [ASObject] avoid creation of ASString objects in nextName
+  * optimize equals opcode
+  * make llvm dependency optional (disabled by default)
+  * implement flash.system.Worker/WorkerDomain fixes #280 and #335
+  * more refcounting fixes
+  * use libswresample instead of libavresample, if available
+  * ensure that symbol 0 from SymbolClassTag takes precedence over non-lazy DoABC tags for execution
+  * [Date] make protoype method toString() dynamic
+  * [Array] it seems it's allowed to overwrite all prototype methods in Array
+  * [ABCContext] set width and height of the swf file from metadata, if available
+  * [BuiltinStreamDecoder] set framerate from metadata, if available
+  * [DisplayObject] fix deletion of masks
+  * [Sound] fix possible crash when loading sound
+  * Even more granular memory accounting for Tokens
+  * more fixes to reference counting
+  * create tokenvector on demand (reduces memory usage)
+  * fix compilation on big endian This is not tested, as I don't have access to a big endian machine see https://github.com/lightspark/lightspark/issues/283
+  * fix compilation for ppc
+  * fix reference counting for synthetic functions created by as3 code
+  * disable "add" optimization, as it breaks refcounting
+  * [asAtom] avoid creation of ASStrings in isEqual
+  * Memory Profiling: Track tokens in separate account
+  * fix several refcounting issues
+  * Fix MEMORY_USAGE_PROFILING
+  * add forgotten patch to last commit
+  * [ABCVm] optimize findpropstrict opcode
+  * fix refcounting for optimized opcodes
+  * [MovieClip] ensure Framescripts are executed after the function calling gotoAndPlay/gotoAndStop/prevFrame/nextFrame is completely executed
+  * [CairoTokenRenderer] fix hit test
+  * [ABCVm] fix getlex optimization
+  * [XML,XMLList] fix hasOwnPrototype
+  * [Class_inherit] speedup creation of new instances
+  * [ABCVm] optimize getLex when argument can be resolved to a slot of the closure
+  * [asAtom] small performance improvement when adding strings
+  * [ABCVm] optimize lessequals/greaterequals opcode
+  * [asAtom] avoid creating ASStrings for isLess on single char strings
+  * fix possible deadlock on multiple concurrent downloads
+  * [NetConnection] fix possible crash if download fails
+  * ensure that clips are started in correct size on Firefox
+  * [ABCVm] fix lookupswitch handling in preloadFunction
+  * [ASString] optimize charAt/charCodeAt when iterating over all chars
+  * [LoaderInfo] 3rd try to fix sending of init/complete events
+  * fix QName to multiname conversion
+  * [Array] fix sortOn return value
+  * [LoaderInfo] fix sending of init/complete events
+  * [TextBlock] fix return value for createTextLine
+  * revert fix for loader complete handling
+  * fix getLex optimization
+  * [DisplayObjectContainer] fix setOnStage
+  * [ABCContext] fix handling of const traits in buildTrait
+  * [Loader] move "complete" event after the construction of DisplayObject fixes #329
+  * fix getProperty optimization
+  * [Stage] only request resize if ScaleMode is really changed
+  * [ABCVm] implement undocumented opcode 0x5f (finddef)
+  * [ABCContext] constant traits without index are initialized to null fixes #327
+  * [RootMovieClip] allow framesizes without xmin==0 and ymin==0 fixes #326
+  * fix some log output
+  * [BuiltinStreamDecoder] fix AAC decoding
+  * [SocketPolicyFile] allow \n as last char in downloaded policy file
+  * add partial support for rtmfp protocol and ensure NetConnection.connected is set only after the NetConnection.Connect.Success event has been handled
+  * [Math] small performance improvement for abs()
+  * implement caching of constants created through getlex on static multinames or through arithmetic operations on constants
+  * make most prototype methods constant apparently all prototype methods that are not also defined in ASObject are final
+  * [ByteArray] fix toString()
+  * fix several corner cases for parseInt
+  * fix several prototype handling issues
+  * [ABCVm] fix instanceOf
+  * [Socket] implement endian getter/setter, readBytes and writeBytes fixes #325
+  * add stubs for Camera/VideoStreamSettings/H264VideoStreamSettings fixes #323
+  * [Date] add toLocaleTimeString with AS3 namespace fixes #324
+  * [Number] fix toString() if value is an integer
+  * ensure dynamic properties are searched in getLex
+  * [JSON] throw exception when parsing empty string
+  * [SyntheticFunction] initialize locals to undefined. Apparently it is allowed to access uninitialized local variables fixes #276
+  * [SharedObject] return proper values for getRemote and flush
+  * [Math] use same precision for mathematical constants as math.h does
+  * properly handle slot_traits with slot_id 0
+  * prepare release 0.8.1
+  * fix caching for callproperty/callpropvoid
+  * [Math] small performance improvement for abs
+  * [BitmapData] implement perlinNoise
+  * partially implement flash.net.Socket
+  * check for and remove unreachable code in jump opcode
+  * [Array] optimize sortOn
+  * optimize performance of returnvalue opcode by avoiding pop of operand from stack wherever possible
+  * optimize performance of convert_d opcode by avoiding push/pop of operand and result to/from stack wherever possible
+  * [XMLNode] implement NodeName setter
+  * [asAtom] fix setFunction
+  * fix several chromium plugin issues fixes #321
+  * fix possible crash in log output
+  * fix possible crash during external call
+  * make npapi plugin run on Firefox >= 58
+  * speedup newobject opcode handling
+  * handle coerce_a opcode when checking for optimization
+  * implement caching in optimized static callproperty calls
+  * speedup index access to array elements
+  * optimize performance of iftrue/iffalse/dup operations by avoiding push/pop of operands and results to/from stack wherever possible
+  * optimize performance of callproperty and greaterthan opcodes by avoiding push/pop of operands and results to/from stack wherever possible callproperty is currently only optimized for calls with one argument and static multiname
+  * optimize performance of getlex by avoiding push result to stack wherever possible
+
+-------------------------------------------------------------------
+Thu May 10 10:53:25 UTC 2018 - bjorn.lie@gmail.com
+
+- Update to version 0.8.0+git.20180506:
+  * optimize performance of branch operators by avoiding push/pop of operands and results to/from stack wherever possible
+  * optimize performance of getproperty by avoiding push/pop of operands and results to/from stack wherever possible
+  * optimize performance of arithmetic operations by avoiding push/pop of operands and results to/from stack wherever possible
+  * fix callproperty caching
+  * improve performance of callproperty/callpropvoid/callproplex/getproperty
+  * more small performance improvements
+  * fix compilation
+  * [TextField] fix autoSize handling
+  * [CairoRenderContext] implement more BlendModes
+  * implement classes flash.display.CapsStyle and flash.display.JointStyle
+  * several performance improvements
+  * add forgotten patch (fixes #319)
+  * [TextField] fix adjusting width and height
+  * don't coerce the return value of sort comparison functions This has to be done because otherwise coercing to int may loose the sign of the result (avmplus does the same). fixes #318
+  * [XML] fix replace
+  * [BitmapData] implement noise
+  * force several asAtom methods inline
+  * pass asAtom vars by reference to reduce copying
+  * more rendering fixes
+  * reduce generation of unneccessary ASStrings
+  * [DefineEditTextTag] take bounds and leading into account when placing the tag
+  * [Vector] fix generator
+  * [ABCVm] fix handling of "constructor" property in newClass
+  * [DisplayObjectContainer] fix hitTestImpl
+  * fix possible crash introduced in last commit
+  * fix several rendering issues in Bitmaps and TextFields
+  * further reduce generation of primitive ASObjects
+  * [Class_base] fix coerceForTemplate
+  * speedup handling of one-char-strings
+  * [ApplicationDomain] handle templated classes in hasDefinition/ getDefinition
+  * [BitmapData] implement hitTest with rectangle
+  * [Vector] really fix coercing in concat
+  * reduce creation of ASObjects for primitives
+  * [ABCVm] fix pushbyte
+  * add forgotton patch to previous commit
+  * [ABCVm] rework preloadFunction
+  * [MorphShape] implement SOLID_FILL morphing
+  * [Vector] fix coercing in concat
+  * [DisplayObject] implement blend modes ADD and SCREEN
+  * [call_context] remove unneccessary reference counting
+  * [DisplayObject] implement handling of BlendMode "multiply"
+  * [NativeApplication] fix getNativeApplication
+  * [SimpleButton] set correct default values for enabled and useHandCursor
+  * [Context3D] fix orientation when rendering to texture
+  * avoid endless loop on sorting
+  * fix stringToQName for template types
+  * fix some rounding errors
+  * fix mixed rendering of 3D and 2D content
+  * fix mingw compilation
+  * fix llvm optimizer, part 1
+  * fix compilation with clang
+  * add command line option to disable rendering removes the need for xvfb for tamarin test suite runs
+  * [Context3D] skip rendering if previous frame is not completed
+  * [SystemState] fix reference counting in frameListeners fixes https://github.com/lightspark/lightspark/issues/311
+  * Fixed C++ scoping issue detected by LLVM Trunk
+  * Fixed C++ syntax issue detected by LLVM Trunk
+  * Fixed several memory leaks
+  * [ThreadPool] catch std exceptions in worker
+  * fix handling of multiple embedded fonts with same name
+  * [Context3D] implement rendering to texture
+  * work on rendertotexture mode for Stage3D
+  * work on Stage3D
+  * Implemented LINEAR_PCM_LE audio
+  * implement DisplacementMapFilterMode and add method stubs to DisplacementMapFilter
+  * more work on stage3D
+  * [Context3D] handle parameter enableDepthAndStencil in configureBackBuffer
+  * [Matrix3D] implement several methods
+  * more work on Stage3D implementation
+  * [Class_base] don't overwrite borrowed Variables in copyBorrowedTraitsFromSuper
+  * [Matrix3D] implement copyRawDataFrom
+  * [DefineBitsJPEG3Tag] fix alpha values generation
+  * partial implementation of Stage3D support this is a work in progress, it currently only renders some simple examples
+  * fix image decoding for DefineBitsLosslessTag
+  * remove unused class
+  * fix png rendering
+  * [FFMpegStreamDecoder] fix decoding with ffmpeg version >= 3.1
+  * [XML] fix inScopeNamespaces
+  * remove accidentally committed log messages
+  * [XML,XMLList] fix hasOwnProperty
+  * fix mouse click handling in firefox plugin
+  * avoid endless loop on sorting
+  * implement Matrix.setTo and Matrix.copyFrom, add stub for Matrix3D.copyRawDataFrom
+  * fix sorting with comparison function on Arrays and Vectors
+  * switch all remaining classes to asAtom
+  * fix serialization
+  * switch all Error classes to asAtom
+  * avoid creating unneccessary ASObjects on convert_s
+  * [Dictionary] switch to asAtom and implement weak keys
+  * [flash.system] switch to asAtom
+  * fix execution of framescripts
+  * [flash.net] switch to asAtom
+  * [Date] switch to asAtom
+  * partially implement MorphShape rendering does not really morph anything, it more or less just renders the start and end shapes
+  * [flash.media] switch to asAtom
+  * [flash.filters] switch to asAtom
+  * add another case where objects can be cached in findPropStrictCache
+  * switch ByteArray and URLStream classes to asAtom
+  * [Math] use asAtoms for declared constants
+  * properly handle download of adobe signed libraries (*.swz files) We can't decrypt them, so we send an IOErrorEvent when trying to download such a file
+  * [XML] add check for empty childrenlist
+  * [StyleSheet] add stub for method parseCSS
+  * build class for tag on first access
+  * [ASFont] implement hasGlyphs for embedded fonts
+  * [TextFormat] implement property "display" (not mentioned in spec)
+  * [ABCVm] fix caching in getLex
+  * fix ArgumentConversionAtom<Ref<T>>
+  * [flash.geom.Transform] implement undocumented constructor
+  * [flash.text.engine] implement TextElement.replaceText, ContentElement.rawText, FontDescription.isFontCompatible, TextBlock.firstLine, TextBlock.lastLine, TextLine.unjustifiedTextWidth
+  * use stage directly instead of going through mainClip (mainClip may be removed from stage)
+  * [ASObject] switch to asAtom
+  * [flash.geom] switch all classes to asAtom and make them reusable
+  * add another test to blacklist that doesn't work on adobe player
+  * fix compilation for windows
+  * mark BitmapData as initialized when constructed through BitmapTag
+  * fix compilation with llvm 5.0 fixes https://github.com/lightspark/lightspark/issues/308
+  * fix compilation for Windows
+  * [ABCVm] throw correct exception in constructProp
+  * [avmplus.System] implement getRunmode
+  * [Keyboard] switch to asAtom
+  * remove gtk2 dependency
+  * [TextField] implement horizontal alignment in <p> tag
+  * implement class flash.net.FileFilter
+  * make sure root movie clip is availabe in Stage
+  * add possibility to switch log levels by pressing ctrl+l (in debug build)
+  * several fixes for describeType
+  * [RegExp] reset lastIndex if no math is found
+  * [Vector] throw correct exception on get/setVariableByMultiname
+  * add stubs for methods and classes in package flash.sampler
+  * add several tests that fail on adobe player to blacklist
+  * implement handling for different swf versions
+  * [langref_parser] fix conversion of file path to class package
+  * fix several namespace handling bugs in XML/XMLList switch XML/XMLList to asAtom based methods
+  * convert all Event classes to asAtom
+  * add forgotten patch for eb79070679decb558533c92be6fe75bd86f1d600
+  * add several tests that fail on adobe player to blacklist
+  * [avmpluFile] implement saving and loading files for standalone version
+  * change instance traits into declared traits if they are overwritten in class objects
+  * [Array] fix sorting
+  * [MovieClip] implement ClipDepth handling
+  * [MovieClip] fix execution of first framescript
+  * fix refcounting for calling setters
+  * forgotten part of last commit
+  * fix refcounting for asAtom getters
+  * fix llvm detection under Ubuntu
+  * getQualifiedClassName: implement handling for T_TEMPLATE also switch several methods to asAtom
+  * [RegExp] switch to asAtom
+  * [ABCVm] implement callproplex
+  * rework reference counting, significantly reduces memory usage
+  * Install Pepperflash to the $LIBDIR
+  * [CairoTokenRenderer] fix hitTest fixes https://github.com/lightspark/lightspark/issues/299
+  * [flash.display] move all classes to asAtom
+  * fix reference counting for getVariableByMultiname now every derived version of getVariableByMultiname is expected to deliver the return value so that one ref can be consumed by the caller
+  * [asAtom] unify string handling
+  * switch all flash.text classes to asAtom
+  * allow multinames without namespace in setVariableByMultiname
+  * [Number/UInteger] switch to asAtom
+- Drop lightspark-link.patch, builds for Tumbleweed and Leap 15.0
+  without it, and those are the distros we currently care about.
+
+-------------------------------------------------------------------
+Fri Jul 28 23:02:50 UTC 2017 - mpluskal@suse.com
+
+- Update to version 0.8.0+git.20170723:
+  * fix file IO and external call handling in ppapi plugin this avoids several possible deadlocks
+  * fix compilation with older ffmpeg versions
+  * [flash.media] add stubs for classes SoundMixer and Microphone
+  * [flash.text.textengine] add several stub classes and enumerations
+  * implement flash.crypto.generateRandomBytes
+  * [ABCVm] fix possible crash in coerce
+  * [BitmapData] add stub for method "treshold"
+  * [DisplayObjectContainer] implement methods "removeChildren" and "getObjectsUnderPoint"
+  * [BevelFilter] add several stub properties
+  * [flash.geom] add method "setTo" to Rectangle and Point
+  * [Sound] handle null urlRequest in constructor
+  * [pygil] remove wrong stub classes counting
+  * [LocalConnection] partially implement property "domain"
+  * [System] add stubs for "pauseForGCIfCollectionImminent" and "gc"
+  * [XML] fix namespace for several methods
+  * [memorystream] small performance improvements
+  * [ASObject] use boost::flat_map instead of std::map as variables map for better performance
+  * [ASObject] fix compilation with older boost
+  * [ImageDecodingPolicy] fix typo
+  * [FFMpegStreamDecoder] fix compilation with ffmpeg 3.0 fixes https://github.com/lightspark/lightspark/issues/281
+  * [FFMpegStreamDecoder] really fix compilation with ffmpeg 3.0
+  * fix detection of llvm 4.0 fixes https://github.com/lightspark/lightspark/issues/284
+  * [RootMovieClip] avoid re-binding classes on every InitFrame
+  * improve perfomance by caching the property in callProperty and findPropStrict, if possible
+  * reduce the number of dynamic_casts
+  * use unsigned integer in loops
+  * [SharedObject] add missing incRef
+  * [ABCVm] fix callPropertyCache
+  * [ABCVm] cache type in multiname
+  * [TextField] only request invalidation if really neccessary
+  * [ABCVm] remove callPropertyCache, it doesn't work correctly and doesn't really improve perfomance
+  * [ABCVm] small speedup for getMultiname()
+  * [Class_base] performance improvement for isSubClass()
+  * add new builtin string "length"
+  * [ASObject] only search in declared variables if multiname doesn't contain the public namespace
+  * [Array] switch to flat_map
+  * [ABCVm] throw correct errors in checkfilter
+  * [Matrix3D] add some method stubs
+  * [DisplayObject] add some property stubs
+  * switch to using a flat_multimap for variables. namespaces in multinames are not sorted anymore.
+  * [Array] fix some corner cases when handling index UINT32_MAX
+  * [memorystream] cache the u30/s24 codes before executing a function the first time
+  * [TagFactory] don't throw exception if tag is longer as expected (Adobe seems to allow this, too)
+  * [ThreadPool] increase number of threads this leads to less stuttering when playing multiple sounds
+  * set emulated version to current adobe version
+  * [SyntheticFunction] add call to ABCVm::preloadFunction
+  * enale building of ppapi plugin by default
+  * [ASObject] handle declared properties in JSON stringify
+  * [ASObject] more fixes for JSON.stringify
+  * [ABCVm] use function pointer array instead of switch in executeFunction
+  * [IFunction] fix prototype constructor
+  * [Number] add toLocaleString and make several properties not enumerable
+  * return exit code 1 if exit was caused by uncaught exception
+  * [tests] switch to the github adobe avmplus repository as base for the tamarin test suite
+  * [Global] make all builtin classes constant traits
+  * [Array] implement insertAt() and removeAt()
+  * [Vector] implement insertAt() and removeAt()
+  * fix test output
+  * rework blacklist for tests not working on adobe (not yet complete)
+  * [avmplus] implement System.canonicalizeNumber
+  * [SharedObject] add stub method setProperty()
+  * remove more dynamic_casts
+  * [ArgumentConversion] handle Undefined in toConcrete()
+  * [ABCVm] fix sxi1 opcode implementation
+  * [Array] small performance improvement in isValidMultiname()
+  * [ApplicationDomain/avmplus.Domain] fix DomainMemory handling
+  * [SyntheticFunction] fix needsRest()
+  * [ASFont] add stub for hasGlyphs()
+  * [DisplayObjectContainer] fix deleteLegacyChildAt
+  * [avmplusDomain] implement loadBytes()
+  * reduce number of AsyncDrawJobs by ensuring a DisplayObject is only rendered once until it changes again
+  * [InputThread] add null-checks to results of getMouseTarget
+  * [ABCVm] implement opcode hasnext (0x1f)
+  * remove more dynamic_casts
+  * [SystemState] avoid creating AsyncDrawJob if DisplayObject is unchanged
+  * add test to blacklist that doesn't work on Adobe
+  * [BitmapData] add stub for method "merge"
+  * [ABCVm] remove unneeded argument from abc_function
+  * implement alpha support for pngs and images with palette
+  * [ABCVm] implement opcode 0x43 (callMethod)
+  * [DisplayObject] implement ColorTransform handling
+  * implement stroke handling in Shapes
+  * introduce class asAtom as wrapper around ASObject This allows operations on primitives without reference counting. TODO: There are only a few builtin methods currently converted to this wrapper, see usage of ASFUNCTION_ATOM vs ASFUNCTION
+  * fix warning
+  * conversion to asAtom, second part calling of functions is now handled in asAtom to avoid creating of new function objects every time the function is executed
+  * conversion to asAtom, third part Vector class uses vector of asAtom as underlying data structure
+  * move several #includes from .h to .cpp
+  * [CairoTokenRenderer] only draw strokes if necessary
+  * set results of arithmetic operations on asAtoms as (U)Integers, if possible
+  * [Math] fix several corner cases
+  * [variables_map] switch to unordered_map as basic datastructure
+  * conversion to asAtom, fourth part - all ASString methods use asAtom - ASFUNCTION_ATOM now has additional parameter "sys"
+  * [Array] switch to unordered_map to store array elements
+  * rework function calling to only count references if neccessary
+  * fix compilation for Windows fixes issues #270 and #288 the npapi/ppapi plugins compile but are not tested
+  * fix compilation on older stdlib
+  * [Array] use std::vector for small arrays (up to 65536 elements) and unordered_map for large arrays
+  * [asAtom] make most methods inline
+  * [Vector] fix forEach
+  * [multiname] small performance improvements
+  * add more subtypes for dynamic casts
+  * [ExternalInterface] switch to asAtom
+  * [SecurityManager] allow to call https URLs even if the main URL is http
+  * fix compilation on windows
+  * fix compilation in profiling mode fixes https://github.com/lightspark/lightspark/issues/291
+  * make NPAPI plugin windowless
+  * fix minGW compilation
+  * prepare release 0.8
+  * bump version number
+  * Now Cmake supports LLVM up to 4.0
+  * add several missing tags in describeType
+  * [ApplicationDomain] fix hasDefinition/getDefinition
+  * Add NullVideoDecoder::switchCodec
+  * fix ArgumentConversionAtom
+  * don't throw if setting a dynamic variable with not-empty namespace
+  * [ASString] fix localeCompare
+  * [method_info] switch to asAtom for getConstant/getOptional
+  * [Integer] switch to asAtom
+  * [asAtom] add support for strings with a stringID, reduces the need to create ASString objects in some cases
+  * [pygil] implement detection of setVariableAtomByQName
+  * add two tests to blacklist that don't work on Adobe
+
+-------------------------------------------------------------------
+Thu Mar  2 10:09:32 UTC 2017 - jengelh@inai.de
+
+- Update description
+
+-------------------------------------------------------------------
+Thu Feb 23 11:44:58 UTC 2017 - mpluskal@suse.com
+
+- Update to version 0.7.2+git.20170107:
+  * [ppapi] implement keyboard and mouse event handling
+  * [ppapi] implement downloading of additional files
+  * directly include shaders into sourcecode to avoid filesystem access which is not allowed in ppapi sandbox
+  * [Config] fix loading config from ppapi plugin ppapi doesn't allow direct filesystem access so we just ignore the errors reported when trying to load config file
+  * [ppapi] implement separate file cache for ppapi plugin. Now the ppapi plugin runs in sandboxed mode with some limitations: - It doesn't detect system fonts properly as cairo tries to read fontconfig files which is not allowed from sandbox. - Sound output doesn't work yet, as sdl_audio initialization crashes when done inside sandbox.
+  * [FFMpegStreamDecoder] fix possible crash when probing input format
+  * [ppapi] implement sound support
+  * [SoundChannel] implement volume handling
+  * [ppapi] implement font rendering
+  * [SoundTransform] initialize volume/pan to default values
+- Add _service
+- Add lightspark-link.patch
+
+-------------------------------------------------------------------
+Tue Sep 22 08:47:31 UTC 2015 - olaf@aepfle.de
+
+- Use pkgconfig for ffmpeg BuildRequires
+
+-------------------------------------------------------------------
+Thu May 30 09:33:39 CEST 2013 - mhrusecky@suse.cz
+
+- fixed build with new llvm: llvm-3.3.patch
+
+-------------------------------------------------------------------
+Mon May  6 11:41:54 UTC 2013 - reddwarf@opensuse.org
+
+- Update to 0.7.2
+  * Improved image support: alpha in palettes, abbreviated JPEGs
+  * Improved embedded font parsing and text positioning
+  * Open links in a browser (plugin only)
+  * BitmapData improvements
+  * Fixed many crashes
+- Remove lightspark-0.7.0-no_glu.patch. Applied upstream.
+
+-------------------------------------------------------------------
+Thu Dec 27 22:53:22 UTC 2012 - reddwarf@opensuse.org
+
+- Update to 0.7.1
+  * Fixes for YouTube
+  * Support keyboard press and release events
+  * Support mouse wheel events and other mouse event improvements
+  * Support LLVM 3.2
+  * Implemented hit testing of DisplayObjects
+  * Parse JPEG images embedded in DefineBits tags
+  * Parse RGB15 and paletted images in DefineBitsLossless tags
+  * Improved XML support
+- Remove lightspark-0.7.0-llvm32.patch, applied upstream.
+
+-------------------------------------------------------------------
+
+Fri Nov 30 10:45:57 UTC 2012 - reddwarf@opensuse.org
+
+- Add lightspark-0.7.0-llvm32.patch to fix build with LLVM 3.2
+
+-------------------------------------------------------------------
+Wed Oct 31 10:09:51 UTC 2012 - reddwarf@opensuse.org
+
+- Update to 0.7.0
+  * Support LZMA compressed SWFs [Requires liblzma]
+  * Improved BitmapData support
+  * Improved ActionScript compatibility
+  * Improved virtual machine performance and memory consumption
+  * Improved XML support
+  * Experimental support for bytecode optimization at runtime
+  * Improved ExternalInterface (browser integration) support
+  * Improved performance of JPEG loading
+  * Support for XMLSocket
+  * Completely redesigned and improved masking support
+- Take minimum version of pkgconfig(libxml++-2.6) and llvm-devel
+  from CMakeLists.txt and specify them in the BuildRequires
+- Add pkgconfig(liblzma), pkgconfig(gl) and pkgconfig(zlib) BuildRequires
+- Remove pkgconfig(gobject-2.0) BuildRequire
+- Add lightspark-0.7.0-no_glu.patch and remove explicit glu dependency
+
+-------------------------------------------------------------------
+Fri Sep 21 11:22:07 UTC 2012 - idonmez@suse.com
+
+- Add explicit glu dependency
+
+-------------------------------------------------------------------
+Fri Jun 22 17:07:14 UTC 2012 - reddwarf@opensuse.org
+
+- Update to 0.6.0.1
+  * Enable RTMP support by default, requires librtmp
+  * Fixed support for IEventDispatcher implementation pattern
+  * Improved serialization robustness
+  * Improved matrix handling
+  * Implement string and namespace pooling to reduce memory consumption
+  * Proper support for private namespaces
+  * Improved support for fonts
+  * Support LLVM 3.1
+  * Fix full volume issue when PulseAudio flat volumes are enabled
+  * Initial support for AIR desktop applications
+  * Support for www.bbc.co.uk video player
+- Remove lightspark-0.5.7-llvm_31.patch and
+  lightspark-0.5.7-ffmpeg_011.patch, applied upstream
+- Optionally support RTMP
+
+-------------------------------------------------------------------
+Wed Jun  6 20:37:11 UTC 2012 - reddwarf@opensuse.org
+
+- Fix ffmpeg 0.11 patch, now upstreamed
+
+-------------------------------------------------------------------
+Mon May 28 14:54:59 UTC 2012 - reddwarf@opensuse.org
+
+- Fix build with ffmpeg 0.11
+
+-------------------------------------------------------------------
+Thu May 17 17:16:06 UTC 2012 - reddwarf@opensuse.org
+
+- Update to 0.5.7
+
+-------------------------------------------------------------------
+Tue Mar 27 09:37:54 UTC 2012 - reddwarf@opensuse.org
+
+- Don't remove rpath
+
+-------------------------------------------------------------------
+Thu Mar 22 17:54:01 UTC 2012 - reddwarf@opensuse.org
+
+- Update to 0.5.5
+
+-------------------------------------------------------------------
+Sat Dec 11 19:04:22 UTC 2010 - reddwarf@opensuse.org
+
+- Initial package
+

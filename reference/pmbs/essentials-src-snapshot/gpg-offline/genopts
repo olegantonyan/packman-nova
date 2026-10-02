@@ -1,0 +1,650 @@
+#! /bin/bash
+
+# genopts: Generator of Bash based option parser.
+# Version 1.3, Stanislav Brabec <sbrabec@suse.cz>, 2004:
+#  Support for automake (write to current directory).
+# Version 1.2, Stanislav Brabec <sbrabec@suse.cz>, 2004:
+#  Fixed @options_only.
+#  Added @multioption.
+#  Added @capitalize_helpusage.
+#  Code formatting fixes.
+# Version 1.1, Stanislav Brabec <sbrabec@suse.cz>, 2004:
+#  @genopts can be in middle of file.
+#  Added @code_style, @options_only.
+#  Bash code improvements.
+#  Fixed backlash disappearing problem.
+#  Typo fixes.
+#
+# Version 1.0, Stanislav Brabec <utx@penguin.cz>, 2002:
+#  Initial version.
+#
+# Usage: $EDITOR FILE.gopts ; genopts FILE (will overwrite FILE)
+
+if [ -e $1.gopts ]
+then
+    exec 0<$1.gopts 1>${1##*/}
+    chmod +x ${1##*/}
+else
+    echo "Input file $1.gopts doesn't exist."
+    exit 1
+fi
+
+gen_option()
+{
+    SHORTOPT=
+    LONGOPT=
+    FIRSTARG=true
+    DEFAULT=
+    SCANARGS=true
+    for i in $1
+    do
+    if $SCANARGS
+    then
+	case $i in
+	    --* )
+		$FIRSTARG && echo >&2 "Error: No OPTNAME in $1"
+		FIRSTARG=false
+		REQ_ARG=true
+		LONGOPT="$i"
+		LONGPARSE="$LONGPARSE
+${TAB[2+CASETAB]}${i%%=*} )
+${TAB[3+CASETAB]}[[ \$# < 2 ]] && opt_err_req_arg $i
+${TAB[3+CASETAB]}shift
+${TAB[3+CASETAB]}OPTARG_$OPTNAME=true"
+		if $3 ; then
+		    LONGPARSE="$LONGPARSE
+${TAB[3+CASETAB]}OPTVAL_$OPTNAME[\${#OPTVAL_$OPTNAME[@]}]=\"\$1\""
+		else
+		    LONGPARSE="$LONGPARSE
+${TAB[3+CASETAB]}OPTVAL_$OPTNAME=\"\$1\""
+		fi
+		LONGPARSE="$LONGPARSE
+${TAB[3+CASETAB]};;
+${TAB[2+CASETAB]}${i%%=*}=* )
+${TAB[3+CASETAB]}OPTARG_$OPTNAME=true"
+		if $3 ; then
+		    LONGPARSE="$LONGPARSE
+${TAB[3+CASETAB]}OPTVAL_$OPTNAME[\${#OPTVAL_$OPTNAME[@]}]=\"\${1#${i%%=*}=}\""
+		else
+		    LONGPARSE="$LONGPARSE
+${TAB[3+CASETAB]}OPTVAL_$OPTNAME=\"\${1#${i%%=*}=}\""
+		fi
+		LONGPARSE="$LONGPARSE
+${TAB[3+CASETAB]};;"
+		;;
+	    -* )
+		$FIRSTARG && echo >&2 "Error: No OPTNAME in $1"
+		FIRSTARG=false
+		REQ_SARG=true
+		SHORTOPT="$i"
+		SHORTPARSE="$SHORTPARSE
+${TAB[4+2*CASETAB]}${i:1:1} )
+${TAB[5+2*CASETAB]}OPTARG_$OPTNAME=true"
+		if $3 ; then
+		    SHORTPARSE="$SHORTPARSE
+${TAB[5+2*CASETAB]}OPTVAL_$OPTNAME[\${#OPTVAL_$OPTNAME[@]}]=\"\${OPTTMP:1}\""
+		else
+		    SHORTPARSE="$SHORTPARSE
+${TAB[5+2*CASETAB]}OPTVAL_$OPTNAME=\"\${OPTTMP:1}\""
+		fi
+		SHORTPARSE="$SHORTPARSE
+${TAB[5+2*CASETAB]}if [[ -z \"\$OPTVAL_$OPTNAME\" ]]${LINEUP_SEMIC:-
+${TAB[5+2*CASETAB]}}then
+${TAB[6+2*CASETAB]}[[ \$# < 2 ]] && opt_err_req_sarg ${i:1:1}
+${TAB[6+2*CASETAB]}shift"
+		if $3 ; then
+		    SHORTPARSE="$SHORTPARSE
+${TAB[6+2*CASETAB]}OPTVAL_$OPTNAME[\${#OPTVAL_$OPTNAME[@]}]=\"\$1\""
+		else
+		    SHORTPARSE="$SHORTPARSE
+${TAB[6+2*CASETAB]}OPTVAL_$OPTNAME=\"\$1\""
+		fi
+		SHORTPARSE="$SHORTPARSE
+${TAB[5+2*CASETAB]}else
+${TAB[6+2*CASETAB]}break
+${TAB[5+2*CASETAB]}fi
+${TAB[5+2*CASETAB]};;"
+		;;
+	    * )
+		if $FIRSTARG
+		then
+		    FIRSTARG=false
+		    OPTNAME="$i"
+		else
+		    SCANARGS=false
+		    DEFAULT="$i"
+		fi
+		;;
+	    esac
+	else
+	    DEFAULT="$DEFAULT $i"
+	fi
+    done
+    DEFVARS="${TAB[0]}$DEFVARS
+${TAB[0]}OPTARG_$OPTNAME=false"
+    if $3 ; then
+	DEFVARS="$DEFVARS
+${TAB[0]}unset OPTVAL_$OPTNAME"
+	if [[ ! -z "$DEFAULT" ]] ; then
+	    DEFVARS="$DEFVARS
+${TAB[0]}OPTVAL_$OPTNAME=( $DEFAULT )"
+	fi
+    else
+	DEFVARS="$DEFVARS
+${TAB[0]}OPTVAL_$OPTNAME=$DEFAULT"
+    fi
+    genhelp "$SHORTOPT" "$LONGOPT" "$2"
+}
+
+gen_switch()
+{
+    SHORTOPT=
+    LONGOPT=
+    FIRSTARG=true
+    for i in $1
+    do
+       case $i in
+       --* )
+	    $FIRSTARG && echo >&2 "Error: No OPTNAME in $1"
+	    FIRSTARG=false
+	    NO_ARG=true
+	    LONGOPT="$i"
+	    if $3
+	    then
+		OPTCNTMP="
+${TAB[3+CASETAB]}let OPTCNT_$OPTNAME++"
+	    else
+		OPTCNTMP=
+	    fi
+	    LONGPARSE="$LONGPARSE
+${TAB[2+CASETAB]}$i )
+${TAB[3+CASETAB]}OPTARG_$OPTNAME=true$OPTCNTMP
+${TAB[3+CASETAB]};;
+${TAB[2+CASETAB]}$i=* )
+${TAB[3+CASETAB]}opt_err_no_arg $i
+${TAB[3+CASETAB]};;"
+	    ;;
+       -* )
+	    $FIRSTARG && echo >&2 "Error: No OPTNAME in $1"
+	    FIRSTARG=false
+	    SHORTOPT="$i"
+	    if $3
+	    then
+		OPTCNTMP="
+${TAB[5+2*CASETAB]}let OPTCNT_$OPTNAME++"
+	    else
+		OPTCNTMP=
+	    fi
+	    SHORTPARSE="$SHORTPARSE
+${TAB[4+2*CASETAB]}${i:1:1} )
+${TAB[5+2*CASETAB]}OPTARG_$OPTNAME=true$OPTCNTMP
+${TAB[5+2*CASETAB]};;"
+	    ;;
+	* )
+	    if $FIRSTARG
+	    then
+		FIRSTARG=false
+		OPTNAME="$i"
+	    else
+		echo >&2 "No default allowed for @switch in $1"
+	    fi
+	    ;;
+	esac
+    done
+    if $3
+    then
+	OPTCNTMP="
+${TAB[0]}OPTCNT_$OPTNAME=0"
+    else
+	OPTCNTMP=
+    fi
+    DEFVARS="$DEFVARS
+${TAB[0]}OPTARG_$OPTNAME=false$OPTCNTMP"
+    genhelp "$SHORTOPT" "$LONGOPT" "$2"
+}
+
+genhelp()
+{
+OPTITA=
+OPTITB=
+    if [[ ! -z "$1" ]]
+    then
+	OPTITA=x
+    fi
+    if [[ ! -z "$2" ]]
+    then
+	OPTITB=y
+    fi
+    case "$OPTITA$OPTITB" in
+	"" )
+	    echo >&2 "Error: No options defined for for $2"
+	    ;;
+	x )
+	    if [[ -z "${1:2}" ]]
+	    then
+		OPTSTRING="${1:0:2}"
+	    else
+		OPTSTRING="${1:0:2} ${1:3}"
+	    fi
+	    ;;
+	y )
+		OPTSTRING="    $2"
+	    ;;
+	xy )
+		OPTSTRING="${1:0:2}, $2"
+	    ;;
+    esac
+    if [[ ${#OPTSTRING} -gt $HELPSIZE ]]
+    then HELPSIZE=${#OPTSTRING}
+    fi
+    HELP="$HELP
+usehelpi \"$OPTSTRING\"
+$REPLYTO"
+}
+
+usehelpi()
+{
+    OPTSTRING="$1$SPACES"
+    OPTSTRING="${OPTSTRING:0:$HELPSIZE}"
+    if [[ ${#1} -gt HELPSIZE-1 ]]
+    then
+	OPTSTRING="$1 "
+    fi
+    HELPFL=true
+}
+SPACES="                           "
+usehelp()
+{
+    if $HELPFL
+    then
+	echo "  $OPTSTRING${HELPS[$1]}"
+	HELPFL=false
+    else
+	echo "  ${SPACES:0:$HELPSIZE}${HELPS[$1]}"
+    fi
+}
+init_gen()
+{
+    if [[ $HELPSIZE -gt 24 ]]
+    then
+	HELPSIZE=27
+    else
+	HELPSIZE=$[HELPSIZE+2]
+    fi
+    REPLYTO="usehelp $HELPSC"
+    if $CAPITALIZE_HELPUSAGE ; then
+	HELPS[HELPSC++]='Display this help and exit.'
+    else
+	HELPS[HELPSC++]='display this help and exit'
+    fi
+    gen_switch "HELP -h --help" "$REPLYTO" false
+    REPLYTO="usehelp $HELPSC"
+    if $CAPITALIZE_HELPUSAGE ; then
+	HELPS[HELPSC++]='Output version information and exit.'
+    else
+	HELPS[HELPSC++]='output version information and exit'
+    fi
+    gen_switch "VERSION --version" "$REPLYTO" false
+}
+
+PROGRAM=
+VERSION=
+YEAR=
+AUTHOR=
+BUGSTO=
+USAGE=
+SHORT=
+DEFAULTS_TXT=
+DEFAULTS=
+FREECOPY=
+NLS=
+NLSINIT=
+
+DEFVARS=
+LONGPARSE=
+SHORTPARSE=
+HELP=
+HELPSIZE=0
+REQ_ARG=false
+NO_ARG=false
+REQ_SARG=false
+LINEUP_BRACE=""
+LINEUP_SEMIC=""
+FUNCKEY1=""
+FUNCKEY2="()"
+TAB[0]=$''
+TAB[1]=$'    '
+TAB[2]=$'\t'
+TAB[3]=$'\t    '
+TAB[4]=$'\t\t'
+TAB[5]=$'\t\t    '
+TAB[6]=$'\t\t\t'
+TAB[7]=$'\t\t\t    '
+TAB[8]=$'\t\t\t\t'
+CASETAB=0
+declare -a HELPS
+HELPSC=0
+OPTIONS_ONLY=false
+CAPITALIZE_HELPUSAGE=false
+
+readto()
+{
+    REPLYTO=
+    while :
+    do
+	read -r
+	if [[ -z "$REPLY" ]]
+	then break
+	fi
+    REPLYTO="$REPLYTO
+$REPLY"
+    done
+    if [[ ! -z "$1" ]]
+    then
+	eval $1\=\"\$REPLYTO\"
+    fi
+}
+readtoz()
+{
+    REPLYTO=
+    while :
+    do
+	read -r
+	if [[ -z "$REPLY" ]]
+	then break
+	fi
+	REPLYTO="$REPLYTO
+usehelp $HELPSC"
+	HELPS[HELPSC++]="$REPLY"
+    done
+}
+
+LINE=0
+while read -r
+do
+    if [[ "$REPLY" = @genopts ]]
+    then
+	break
+    else
+	echo "$REPLY"
+	let LINE++
+    fi
+done
+
+if [[ $LINE = 0 ]]
+then
+    echo '#! /bin/bash'
+fi
+
+while :
+do
+    read -r FUNC ARGS
+    case "$FUNC" in
+    @program )
+	PROGRAM="$ARGS"
+	;;
+    @version )
+	VERSION="$ARGS"
+	;;
+    @year )
+	YEAR="$ARGS"
+	;;
+    @author )
+	AUTHOR="$ARGS"
+	;;
+    @bugsto )
+	BUGSTO="
+Report bugs to $ARGS."
+	;;
+    @usage )
+	USAGE="$ARGS"
+	;;
+    @short )
+	readto SHORT
+	;;
+    @defaults )
+	readto DEFAULTS_TXT
+	if [[ ! -z "$ARGS" ]]
+	then
+	    DEFAULTS_TXT="$DEFAULTS_TXT
+Options can be stored in $ARGS environment variable."
+	    DEFAULTS="\$$ARGS "
+	fi
+	[[ ! -z DEFAULTS_TXT ]] && DEFAULTS_TXT="$DEFAULTS_TXT
+"
+	;;
+    @free_copy )
+	FREECOPY='
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.'
+	;;
+    @textdomain )
+	NLS='$'
+	NLSINIT="
+
+TEXTDOMAIN=$ARGS"
+	;;
+    @end )
+	init_gen
+	break
+	;;
+    "" )
+	;;
+    @switch )
+	readtoz
+	gen_switch "$ARGS" "$REPLYTO" false
+	;;
+    @cntswitch )
+	readtoz
+	gen_switch "$ARGS" "$REPLYTO" true
+	;;
+    @option )
+	readtoz
+	gen_option "$ARGS" "$REPLYTO" false
+	;;
+    @multioption )
+	readtoz
+	gen_option "$ARGS" "$REPLYTO" true
+	;;
+    @code_style )
+	for CODE in $ARGS
+	do
+	  case $CODE in
+	      line_up )
+		  LINEUP_BRACE=" "
+		  LINEUP_SEMIC=" ; "
+		  ;;
+	      function_keyword )
+		  FUNCKEY1="function "
+		  FUNCKEY2=""
+		  ;;
+	      tabs )
+		  TAB[0]=$''
+		  TAB[1]=$'\t'
+		  TAB[2]=$'\t\t'
+		  TAB[3]=$'\t\t\t'
+		  TAB[4]=$'\t\t\t\t'
+		  TAB[5]=$'\t\t\t\t\t'
+		  TAB[6]=$'\t\t\t\t\t\t'
+		  TAB[7]=$'\t\t\t\t\t\t\t'
+		  TAB[8]=$'\t\t\t\t\t\t\t\t'
+		  ;;
+	      casetab )
+		  CASETAB=1
+		  ;;
+	      * )
+		  echo >&2 "Warning: Unknown code_style $CODE."
+		  ;;
+	  esac
+	done
+	;;
+    @capitalize_helpusage )
+	CAPITALIZE_HELPUSAGE=true
+	;;
+    @options_only )
+	OPTIONS_ONLY=true
+	;;
+    * )
+	echo >&2 "Warning: Unknown token $FUNC."
+    esac
+done
+
+echo "#BEGIN genopts
+# This file is generated by genopts-1.2 from $1.gopts.$NLSINIT
+
+${TAB[0]}${FUNCKEY1}opt_err$FUNCKEY2${LINEUP_BRACE:-
+${TAB[0]}}{
+${TAB[1]}echo $NLS\"\$0: \$1
+Try \\\`\$0 --help' for more information.\" >&2
+${TAB[1]}exit 1
+${TAB[0]}}
+
+${TAB[0]}${FUNCKEY1}opt_err_bad_arg$FUNCKEY2${LINEUP_BRACE:-
+${TAB[0]}}{
+${TAB[1]}opt_err $NLS\"unrecognized option \\\`\$1'\"
+${TAB[0]}}
+
+${TAB[0]}${FUNCKEY1}opt_err_bad_sarg$FUNCKEY2${LINEUP_BRACE:-
+${TAB[0]}}{
+${TAB[1]}opt_err $NLS\"invalid option -- \$1\"
+${TAB[0]}}"
+
+if $REQ_ARG
+then echo "
+${TAB[0]}${FUNCKEY1}opt_err_req_arg$FUNCKEY2${LINEUP_BRACE:-
+${TAB[0]}}{
+${TAB[1]}opt_err $NLS\"option \\\`\$1' requires an argument\"
+${TAB[0]}}"
+fi
+
+if $NO_ARG
+then echo "
+${TAB[0]}${FUNCKEY1}opt_err_no_arg$FUNCKEY2${LINEUP_BRACE:-
+${TAB[0]}}{
+${TAB[1]}opt_err $NLS\"option \\\`\$1' doesn't allow an argument\"
+${TAB[0]}}"
+fi
+
+if $REQ_SARG
+then echo "
+${TAB[0]}${FUNCKEY1}opt_err_req_sarg$FUNCKEY2${LINEUP_BRACE:-
+${TAB[0]}}{
+${TAB[1]}opt_err $NLS\"option requires an argument -- \$1\"
+${TAB[0]}}"
+fi
+
+echo "
+${TAB[0]}${FUNCKEY1}opt_arg_version$FUNCKEY2${LINEUP_BRACE:-
+${TAB[0]}}{
+${TAB[1]}echo $NLS\"$PROGRAM $VERSION
+Written by $AUTHOR.
+
+Copyright (C) $YEAR $AUTHOR$FREECOPY\"
+${TAB[1]}exit 0
+${TAB[0]}}
+
+${TAB[0]}${FUNCKEY1}opt_arg_usage$FUNCKEY2${LINEUP_BRACE:-
+${TAB[0]}}{
+${TAB[1]}echo $NLS\"Usage: \$0 $USAGE$SHORT
+"
+eval "$HELP"
+echo "$DEFAULTS_TXT$BUGSTO\"
+${TAB[1]}exit 0
+${TAB[0]}}"
+
+if ! $OPTIONS_ONLY
+then
+    echo -n "
+${TAB[0]}declare -a ARGV"
+fi
+
+echo "$DEFVARS
+
+${TAB[0]}${FUNCKEY1}optarg_parse$FUNCKEY2${LINEUP_BRACE:-
+${TAB[0]}}{
+${TAB[1]}until [ \$# -eq 0 ]${LINEUP_SEMIC:-
+${TAB[1]}}do
+${TAB[2]}case \"\$1\" in$LONGPARSE"
+
+if ! $OPTIONS_ONLY
+then
+    echo "${TAB[2+CASETAB]}-- )
+${TAB[3+CASETAB]}shift
+${TAB[3+CASETAB]}ARGV=( \"\${ARGV[@]}\" \"\$@\" )
+${TAB[3+CASETAB]}break
+${TAB[3+CASETAB]};;"
+fi
+
+echo "${TAB[2+CASETAB]}--* )
+${TAB[3+CASETAB]}opt_err_bad_arg \$1
+${TAB[3+CASETAB]};;"
+
+if $OPTIONS_ONLY
+then
+    echo "${TAB[2+CASETAB]}- )
+${TAB[3+CASETAB]}opt_err_bad_arg \$1
+${TAB[3+CASETAB]};;"
+else
+    echo "${TAB[2+CASETAB]}- )
+${TAB[3+CASETAB]}ARGV=( \"\${ARGV[@]}\" \"\$1\" )
+${TAB[3+CASETAB]};;"
+fi
+
+echo "${TAB[2+CASETAB]}-* )
+${TAB[3+CASETAB]}OPTTMP=\"\${1:1}\"
+${TAB[3+CASETAB]}until [[ -z \"\$OPTTMP\" ]]${LINEUP_SEMIC:-
+${TAB[3+CASETAB]}}do
+${TAB[4+CASETAB]}case \"\${OPTTMP:0:1}\" in$SHORTPARSE
+${TAB[4+2*CASETAB]}* )
+${TAB[5+2*CASETAB]}opt_err_bad_sarg \${OPTTMP:0:1}
+${TAB[5+2*CASETAB]};;
+${TAB[4+CASETAB]}esac
+${TAB[4+CASETAB]}OPTTMP=\"\${OPTTMP:1}\"
+${TAB[3+CASETAB]}done
+${TAB[3+CASETAB]};;"
+
+if $OPTIONS_ONLY
+then
+    echo "${TAB[2+CASETAB]}* )
+${TAB[3+CASETAB]}opt_err_bad_arg \"\$1\"
+${TAB[3+CASETAB]};;"
+else
+    echo "${TAB[2+CASETAB]}* )
+${TAB[3+CASETAB]}ARGV=( \"\${ARGV[@]}\" \"\$1\" )
+${TAB[3+CASETAB]};;"
+fi
+
+echo "${TAB[2]}esac
+${TAB[2]}shift
+${TAB[1]}done
+}
+
+${TAB[0]}optarg_parse $DEFAULTS\"\$@\"
+
+${TAB[0]}\$OPTARG_HELP && opt_arg_usage
+${TAB[0]}\$OPTARG_VERSION && opt_arg_version
+
+${TAB[0]}unset opt_err opt_err_bad_arg opt_err_bad_sarg\\"
+
+if $REQ_ARG
+then echo -n "${TAB[0]} opt_err_req_arg"
+fi
+
+if $NO_ARG
+then echo -n "${TAB[0]} opt_err_no_arg"
+fi
+
+if $REQ_SARG
+then echo -n "${TAB[0]} opt_err_req_sarg"
+fi
+
+echo "${TAB[0]} opt_arg_version\\
+${TAB[0]} opt_arg_usage optarg_parse OPTTMP
+
+#END genopts parser
+"
+
+while read -r
+do
+    echo "$REPLY"
+done

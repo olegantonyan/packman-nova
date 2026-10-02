@@ -1,0 +1,13 @@
+name: libopenaptx
+kind: native
+enabled: true
+tier: 0
+tags: [codec, bluetooth]
+sources:
+  - file: libopenaptx-0.2.0.tar.gz
+    urls:
+      - https://github.com/pali/libopenaptx/releases/download/0.2.0/libopenaptx-0.2.0.tar.gz
+      - pmbs:libopenaptx/libopenaptx-0.2.0.tar.gz
+      - mirror-src:libopenaptx
+    sha256: 51a13a34bb188a87ab1deb64a090ab42a4755d7b02c2bdaf3b8136f749b71b84
+    size: 27760

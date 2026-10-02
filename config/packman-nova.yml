@@ -1,0 +1,65 @@
+workdir: ${PACKMAN_NOVA_WORKDIR}
+project_name: packman-nova
+vendor: packman-nova
+distro:
+  id: opensuse_tumbleweed
+  suse_version: 1699
+  arches: [x86_64]
+  repos:
+    - https://download.opensuse.org/tumbleweed/repo/oss/
+  snapshot_url: https://download.opensuse.org/tumbleweed/repo/oss/media.1/media
+release:
+  template: "%{suse_version}.%{run}.nova.1"
+prjconf:
+  base_url: https://api.opensuse.org/public/source/openSUSE:Factory/_config
+  base_fallback: prjconf/factory-base.conf
+  local: prjconf/packman-nova-macros.conf
+sources:
+  obs_api: https://api.opensuse.org/public
+  pmbs_api: https://pmbs.links2linux.de/public/source/Essentials
+  mirror_src_urls:
+    - https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Essentials/src/
+  http: { timeout_sec: 600, retries: 5 }
+container:
+  runtime: auto
+  image: localhost/packman-nova-builder:latest
+  containerfile: container/Containerfile
+  privileged: true
+  extra_args: []
+pbuild:
+  reponame: tumbleweed
+  buildjobs: 2
+  jobs: 8
+  checks: true
+  debuginfo: false
+  baselibs: false
+  repo_refresh: true
+  timeout_sec: 43200
+  extra_args: []
+signing:
+  gpg_private_key_base64: ${GPG_PRIVATE_KEY_BASE64}
+  public_key_file: keys/packman-nova.key
+  require_signature: true
+repository:
+  slug: packman-nova-essentials
+  path: opensuse_tumbleweed/essentials
+  public_url: ${PACKMAN_NOVA_PUBLIC_URL}
+  publish_srpms: true
+  publish_debuginfo: false
+  provider: localfs
+  localfs:
+    path: ${PACKMAN_NOVA_REPO_PATH}
+  s3:
+    bucket: ${CLOUDFLARE_R2_BUCKET}
+    path_in_bucket: ""
+    endpoint: ${CLOUDFLARE_R2_ENDPOINT}
+    access_key_id: ${CLOUDFLARE_R2_ACCESS_KEY_ID}
+    secret_access_key: ${CLOUDFLARE_R2_SECRET_ACCESS_KEY}
+    region: auto
+    force_path_style: true
+    cloudflare_zone_id: ${CLOUDFLARE_ZONE_ID}
+    cloudflare_api_token: ${CLOUDFLARE_API_TOKEN}
+site:
+  title: packman-nova Essentials for openSUSE Tumbleweed
+  description: Independent rebuild of the Packman Essentials repository from public sources.
+  source_url: ""

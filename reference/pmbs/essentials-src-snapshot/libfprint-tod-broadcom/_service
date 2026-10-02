@@ -1,0 +1,12 @@
+<services>
+ <service name="download_url">
+   <param name="protocol">http</param>
+   <param name="host">dell.archive.canonical.com</param>
+   <param name="path">updates/pool/public/libf/libfprint-2-tod1-broadcom/libfprint-2-tod1-broadcom_5.15.285-5.15.010.0.orig.tar.gz</param>
+ </service>
+ <service name="verify_file">
+   <param name="file">_service:download_url:libfprint-2-tod1-broadcom_5.15.285-5.15.010.0.orig.tar.gz</param>
+   <param name="verifier">sha256</param>
+   <param name="checksum">67dc8dd47a58e0f9005a42b9bb7048345831257bfd28f34ddd0db1ef07a0e9bc</param>
+ </service>
+</services>

@@ -1,0 +1,28 @@
+diff -rup a/src/wl/sys/wl_linux.c b/src/wl/sys/wl_linux.c
+--- a/src/wl/sys/wl_linux.c	2024-10-03 11:48:54.680119933 +0200
++++ b/src/wl/sys/wl_linux.c	2024-10-03 11:50:05.466867937 +0200
+@@ -1090,8 +1090,9 @@ wl_open(struct net_device *dev)
+ 	}
+ 	WL_UNLOCK(wl);
+ 
+-	if (!error)
++	if (!error) {
+ 		OLD_MOD_INC_USE_COUNT;
++	}
+ 
+ #if defined(USE_CFG80211)
+ 	if (wl_cfg80211_up(dev)) {
+@@ -2241,9 +2242,10 @@ wl_start(struct sk_buff *skb, struct net
+ 			if (!err) {
+ 				atomic_inc(&wl->callbacks);
+ 				wl->txq_dispatched = TRUE;
+-			} else
++			} else {
+ 				WL_ERROR(("wl%d: wl_start/schedule_work failed\n",
+ 				          wl->pub->unit));
++			}
+ 		}
+ 
+ 		TXQ_UNLOCK(wl);
+Only in b/src/wl/sys: wl_linux.c.orig
+Only in b/src/wl/sys: wl_linux.c.rej

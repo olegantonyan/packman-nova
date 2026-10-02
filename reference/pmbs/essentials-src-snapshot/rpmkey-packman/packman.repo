@@ -1,0 +1,7 @@
+[packman]
+name=Packman for openSUSE $releasever - $basearch
+mirrorlist=http://packman.links2linux.de/mirrorlists/suse
+enabled=1
+gpgcheck=1
+gpgkey=file://Sr/lib/rpm/gnupg/packman-signing.asc
+	file://Sr/lib/rpm/gnupg/packman-signing-alt.asc

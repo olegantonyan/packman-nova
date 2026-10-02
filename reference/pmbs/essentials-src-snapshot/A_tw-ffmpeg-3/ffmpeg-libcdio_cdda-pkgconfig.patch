@@ -1,0 +1,21 @@
+---
+ configure |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+Index: ffmpeg-3.4/configure
+===================================================================
+--- ffmpeg-3.4.orig/configure
++++ ffmpeg-3.4/configure
+@@ -6198,8 +6198,10 @@ enabled jack && check_lib jack jack/jack
+ enabled sndio && check_lib sndio sndio.h sio_open -lsndio
+ 
+ if enabled libcdio; then
+-    check_lib libcdio "cdio/cdda.h cdio/paranoia.h" cdio_cddap_open -lcdio_paranoia -lcdio_cdda -lcdio ||
+-    check_lib libcdio "cdio/paranoia/cdda.h cdio/paranoia/paranoia.h" cdio_cddap_open -lcdio_paranoia -lcdio_cdda -lcdio ||
++# cdio_cdda needs -lrt, get it from pkg-config from the external pkg
++    l=$(pkg-config --libs libcdio_paranoia libcdio_cdda libcdio)
++    check_lib libcdio "cdio/cdda.h cdio/paranoia.h" cdio_cddap_open $l ||
++    check_lib libcdio "cdio/paranoia/cdda.h cdio/paranoia/paranoia.h" cdio_cddap_open $l ||
+     die "ERROR: No usable libcdio/cdparanoia found"
+ fi
+ 

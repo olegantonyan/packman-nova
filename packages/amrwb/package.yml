@@ -1,0 +1,20 @@
+name: amrwb
+kind: native
+enabled: true
+tier: 0
+tags: [codec]
+sources:
+  - file: amrwb-11.0.0.0.tar.bz2
+    urls:
+      - pmbs:amrwb/amrwb-11.0.0.0.tar.bz2
+      - mirror-src:amrwb
+    sha256: 5caf59b14480b0cd2a7babb8be472c4af39ff4c7c95f1278116557049a4dd5dc
+    size: 240170
+  - file: 26204-b00.zip
+    urls:
+      - https://www.3gpp.org/ftp/Specs/archive/26_series/26.204/26204-b00.zip
+      - pmbs:amrwb/26204-b00.zip
+      - mirror-src:amrwb
+    sha256: c885c44483fd4502d354ec9656f2cdc0469050015052f8f3ecc1d5e08c869fec
+    size: 385394
+notes: "Spec Source0 host ftp.penguin.cz no longer resolves (2026-09-29): PMBS/mirror only. 3gpp.org answers 403 to curl's default User-Agent but serves other agents."

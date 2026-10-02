@@ -1,0 +1,6 @@
+<jobhistlist>
+  <jobhist package="ffmpeg-mini" srcmd5="4c7eb4e492b62adf5f4167ba8f73f5ac" readytime="1790666356" starttime="1790666356" endtime="1790666432" code="succeeded" hostarch="x86_64" reason="new build" />
+  <jobhist package="fdk-aac" srcmd5="c4e39c5568cb2b7270d1e8a4be7e4c79" readytime="1790666356" starttime="1790666356" endtime="1790666465" code="succeeded" hostarch="x86_64" reason="new build" />
+  <jobhist package="fdk-aac" srcmd5="c4e39c5568cb2b7270d1e8a4be7e4c79" readytime="1790666675" starttime="1790666675" endtime="1790666744" code="succeeded" hostarch="x86_64" reason="forced rebuild" />
+  <jobhist package="wp2-fails" srcmd5="7e0e963922b7d3ad431744800e07f064" readytime="1790666770" starttime="1790666770" endtime="1790666805" code="failed" hostarch="x86_64" reason="new build" />
+</jobhistlist>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="{{ description | escape }}">
+<title>{{ title | escape }}</title>
+<style>
+{{ style }}</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>{{ title | escape }}</h1>
+  <p>An independent rebuild of the Packman Essentials package set for openSUSE Tumbleweed from public sources: openSUSE Factory spec files plus Packman's project configuration. Packages are built on GitHub Actions in containers. Not affiliated with Packman or openSUSE.</p>
+  <p>Packman <a href="https://lists.links2linux.de/pipermail/packman/2026-August/018314.html">announced</a> that it shuts down on 2026-12-31 unless someone takes it over. This repository keeps the same packages available after that date.</p>
+  <nav><a href="#install">Install</a><a href="#signing-key">Signing key</a><a href="#repository">Repository</a><a href="#packages">Packages</a></nav>
+</header>
+
+<main>
+<section id="install">
+  <h2>Install</h2>
+  <ol class="steps">
+{%- for command in commands %}
+    <li>
+      <p class="step-label">{{ command.label | escape }}</p>
+      <div class="code-block">
+        <pre id="{{ command.id }}"><code>{{ command.text | escape }}</code></pre>
+        <button type="button" class="copy-btn" data-target="{{ command.id }}" hidden>Copy</button>
+      </div>
+    </li>
+{%- endfor %}
+  </ol>
+  <p class="note"><code>--allow-vendor-change</code> replaces installed packages from other vendors (openSUSE, Packman) with the builds from this repository. The <code>packman-nova-keyring</code> package in this repository installs the signing key and the repo file.</p>
+</section>
+
+<section id="signing-key">
+  <h2>Signing key</h2>
+{%- if key %}
+  <dl class="facts">
+    <dt>Key ID</dt><dd><code>{{ key.id | escape }}</code></dd>
+    <dt>Fingerprint</dt><dd><code>{{ key.fingerprint | escape }}</code></dd>
+    <dt>Public key</dt><dd><a href="{{ key_url | escape }}">{{ key_url | escape }}</a></dd>
+  </dl>
+{%- else %}
+  <p>No signing key is recorded for this repository.</p>
+  <p class="note">Public key location: <a href="{{ key_url | escape }}">{{ key_url | escape }}</a></p>
+{%- endif %}
+</section>
+
+<section id="repository">
+  <h2>Repository</h2>
+  <dl class="facts">
+    <dt>Repo file</dt><dd><a href="{{ repo_file_url | escape }}">{{ repo_file_url | escape }}</a></dd>
+{%- for baseurl in baseurls %}
+    <dt>Base URL ({{ baseurl.arch | escape }})</dt><dd><code>{{ baseurl.url | escape }}</code></dd>
+{%- endfor %}
+    <dt>Tumbleweed snapshot</dt><dd>{% if tumbleweed_snapshot %}{{ tumbleweed_snapshot | escape }}{% else %}unknown{% endif %}</dd>
+    <dt>Last update</dt><dd>{% if generated_at %}<time datetime="{{ generated_at_iso | escape }}">{{ generated_at | escape }}</time>{% else %}unknown{% endif %}</dd>
+    <dt>Build run</dt><dd>{{ run | escape }}{% if release %} (release <code>{{ release | escape }}</code>){% endif %}</dd>
+    <dt>Packages</dt><dd>{{ totals.packages }} source packages: {{ totals.succeeded }} built in their last run, {{ totals.not_succeeded }} not</dd>
+    <dt>Files</dt><dd>{{ totals.binary_rpms }} binary rpms, {{ totals.source_rpms }} source rpms, {{ totals.size }}</dd>
+    <dt>Machine-readable</dt><dd><a href="packages.json">packages.json</a></dd>
+  </dl>
+</section>
+
+<section id="packages">
+  <h2>Packages</h2>
+  <table>
+    <thead>
+      <tr><th>Package</th><th>Version</th><th>Origin</th><th>Status</th><th>Built</th><th>Files</th></tr>
+    </thead>
+    <tbody>
+{%- for package in packages %}
+      <tr id="{{ package.anchor }}">
+        <td data-label="Package"><a class="name" href="#{{ package.anchor }}">{{ package.name | escape }}</a></td>
+        <td data-label="Version">{% if package.evr %}<code>{{ package.evr | escape }}</code>{% else %}<span class="muted">unknown</span>{% endif %}</td>
+        <td data-label="Origin"><div>{% if package.origin_url %}<a href="{{ package.origin_url | escape }}">{{ package.origin | escape }}</a>{% elsif package.origin %}{{ package.origin | escape }}{% else %}own sources{% endif %}<span class="kind">{{ package.kind | escape }}</span></div></td>
+        <td data-label="Status"><div><span class="status status-{{ package.status_class }}">{{ package.status | escape }}</span>{% if package.last_run %} <span class="muted">run {{ package.last_run | escape }}</span>{% endif %}{% if package.reason %}<span class="reason">{{ package.reason | escape }}</span>{% endif %}</div></td>
+        <td data-label="Built">{% if package.built_at %}<time datetime="{{ package.built_at_iso | escape }}">{{ package.built_at | escape }}</time>{% else %}<span class="muted">never</span>{% endif %}</td>
+        <td data-label="Files"><div>{% if package.files.size > 0 %}<details><summary>{{ package.files.size }} rpms</summary><ul>{% for file in package.files %}<li><a href="{{ file.url | escape }}">{{ file.name | escape }}</a> <span class="muted">{{ file.size }}</span></li>{% endfor %}</ul></details>{% else %}<span class="muted">none published</span>{% endif %}{% if package.retained %}<span class="reason">kept from the last successful build</span>{% endif %}</div></td>
+      </tr>
+{%- endfor %}
+    </tbody>
+  </table>
+</section>
+</main>
+
+<footer>
+  <p>Some codecs in this repository may be covered by patents in some jurisdictions; you are responsible for complying with the laws that apply to you.</p>
+{%- if source_url %}
+  <p>Source: <a href="{{ source_url | escape }}">{{ source_url | escape }}</a></p>
+{%- endif %}
+  <p>Generated {% if generated_at %}{{ generated_at | escape }}{% else %}at an unknown time{% endif %} from build run {{ run | escape }}.</p>
+</footer>
+</div>
+<script>
+if (navigator.clipboard) {
+  document.querySelectorAll('.copy-btn').forEach(function (button) {
+    button.hidden = false;
+    button.addEventListener('click', function () {
+      var text = document.getElementById(button.dataset.target).textContent;
+      navigator.clipboard.writeText(text).then(function () {
+        button.textContent = 'Copied';
+        button.classList.add('copied');
+        setTimeout(function () {
+          button.textContent = 'Copy';
+          button.classList.remove('copied');
+        }, 1500);
+      });
+    });
+  });
+}
+</script>
+</body>
+</html>

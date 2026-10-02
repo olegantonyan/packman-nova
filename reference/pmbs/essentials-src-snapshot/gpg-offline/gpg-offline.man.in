@@ -1,0 +1,99 @@
+.TH gpg-offline "1" "November 2012" "GPG Offline" "GPG Offline Keyring Manipulation"
+.SH NAME
+gpg-offline \- trusted GPG offline keyring manipulation tool
+.SH SYNOPSIS
+.B gpg-offline
+\fI[OPTION]\fR \fI[ARGUMENT]\fR...
+Meaning of \fI[ARGUMENT]\fR depends on the mode of operations.
+.SH DESCRIPTION
+Offline gpg verification tool can verify signatures in ARGUMENT list
+and manipulate with selected signatures in offline keyrings.
+.PP
+Mandatory arguments to long options are mandatory for short options too.
+.TP
+\fB\-p\fR, \fB\-\-package\fR=\fIPACKAGE\fR
+specify the package (either \fB\-\-package\fR or \fB\-\-keyring\fR are mandatory)
+Tool will access file named
+\fIPACKAGE\fR.keyring
+in the directory specified by \fB\-\-package\fR.
+.TP
+\fB\-\-directory\fR \fIDIR\fR
+specifies directory where
+\fIPACKAGE\fR.keyring
+will be searched.
+.TP
+\fB\-f\fR, \fB\-\-keyring\fR=\fIFILE\fR
+specifies the keyring file.
+.IP
+Either \fB\-\-package\fR or \fB\-\-keyring\fR are mandatory.
+If you specify both, \fB\-\-keyring\fR takes precedence over
+\fB\-\-package\fR.
+.TP
+\fB\-a\fR, \fB\-\-add\fR \fIKEY_ID\fR...
+adds signing key(s) KEY_ID of upstream package for inclusion to the
+keyring file. If the file does not exist, it is created and needed
+lines are proposed for inclusion to \fIPACKAGE\fR.spec. If
+\fB\-\-offline\fR is specified, check only local keyring for keys.
+
+.IP
+This command needs correctly configured gnupg and may need to contact
+keyring servers on Internet.
+.TP
+\fB\-d\fR, \fB\-\-delete\fR \fIKEY_ID\fR...
+removes signing key(s) KEY_ID of upstream package from the keyring
+file.
+.TP
+\fB\-c\fR, \fB\-\-verify\fR \fIGPG_ARGS\fR...
+verifies that the signature is valid. Signature is validated only
+against keys included in the keyring file. Any other keys are not
+accepted.
+.IP
+Verification is safe in offline environment without network access.
+.TP
+\fB\-c\fR, \fB\-\-review\fR
+reviews the keyring file: Checks that the human readable header
+corresponds to its contents. If \fB\-\-offline\fR is not specified,
+check online for keys updates.
+.TP
+\fB\-c\fR, \fB\-\-refresh\fR
+refreshes the keyring file: Update the human readable header according
+to its contents. If \fB\-\-offline\fR is not specified, check online
+for keys updates.
+.TP
+\fB\-v\fR, \fB\-\-offline\fR
+skips online checks in \fB\-\-add\fR, \fB\-\-review\fR and
+\fB\-\-refresh\fR.
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+explains what is being done. Use twice to see even more.
+.TP
+\fB\-\-help\fR
+displays help and exits.
+.TP
+\fB\-\-version\fR
+outputs version information and exits.
+.PP
+The keyring file contains trusted keyring for particular package and
+contains keys that can be used for signing source tarballs of the
+package. Signature is considered as valid only if its signing key is
+part of trusted keyring for the package in question.
+.PP
+.B gpg-offline
+keyrings are standard armored GPG keyrings that contains text header
+that must exactly match to the keyring contents.
+.SH FILES
+@docdir@/PACKAGING.HOWTO
+Instructions for packagers.
+.SH AUTHOR
+Written by Stanislav Brabec, SUSE Linux
+.SH "REPORTING BUGS"
+Report bugs to sbrabec@suse.cz
+.SH COPYRIGHT
+Copyright \(co 2012 Stanislav Brabec, SUSE Linux
+.br
+License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>.
+.br
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+.SH "SEE ALSO"
+.BR gpg2 (1)

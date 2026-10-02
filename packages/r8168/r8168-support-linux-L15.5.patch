@@ -1,0 +1,56 @@
+---
+ src/r8168_n.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+--- src/r8168_n.c
++++ src/r8168_n.c	2024-03-13 12:10:07.947820999 +0000
+@@ -7234,7 +7234,7 @@ rtl8168_set_ring_size(struct rtl8168_pri
+ }
+ 
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,17,0)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+ static void rtl8168_get_ringparam(struct net_device *dev,
+                                   struct ethtool_ringparam *ring,
+                                   struct kernel_ethtool_ringparam *kernel_ring,
+@@ -7242,7 +7242,7 @@ static void rtl8168_get_ringparam(struct
+ #else
+ static void rtl8168_get_ringparam(struct net_device *dev,
+                                   struct ethtool_ringparam *ring)
+-#endif //LINUX_VERSION_CODE >= KERNEL_VERSION(5,17,0)
++#endif //LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+ {
+         struct rtl8168_private *tp = netdev_priv(dev);
+ 
+@@ -7252,7 +7252,7 @@ static void rtl8168_get_ringparam(struct
+         ring->tx_pending = tp->tx_ring[0].num_tx_desc;
+ }
+ 
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,17,0)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+ static int rtl8168_set_ringparam(struct net_device *dev,
+                                  struct ethtool_ringparam *ring,
+                                  struct kernel_ethtool_ringparam *kernel_ring,
+@@ -7260,7 +7260,7 @@ static int rtl8168_set_ringparam(struct
+ #else
+ static int rtl8168_set_ringparam(struct net_device *dev,
+                                  struct ethtool_ringparam *ring)
+-#endif //LINUX_VERSION_CODE >= KERNEL_VERSION(5,17,0)
++#endif //LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+ {
+         struct rtl8168_private *tp = netdev_priv(dev);
+         u32 new_rx_count, new_tx_count;
+@@ -26737,11 +26737,11 @@ rtl8168_release_board(struct pci_dev *pd
+ static void
+ rtl8168_hw_address_set(struct net_device *dev, u8 mac_addr[MAC_ADDR_LEN])
+ {
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,17,0)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+         eth_hw_addr_set(dev, mac_addr);
+ #else
+         memcpy(dev->dev_addr, mac_addr, MAC_ADDR_LEN);
+-#endif //LINUX_VERSION_CODE >= KERNEL_VERSION(5,17,0)
++#endif //LINUX_VERSION_CODE >= KERNEL_VERSION(5,14,0)
+ }
+ 
+ static int

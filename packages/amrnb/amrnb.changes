@@ -1,0 +1,41 @@
+-------------------------------------------------------------------
+Fri Jul 26 01:30:12 UTC 2013 - i@margueirte.su
+
+- update 11.0.0.0 
+
+-------------------------------------------------------------------
+Sun Apr 15 00:00:00 UTC 2012 - Manfred.Tremmel@iiv.de
+
+- update to 10.0.0.0
+
+-------------------------------------------------------------------
+Tue Jun 29 19:20:42 UTC 2010 - ludwig.nussel@gmx.de
+
+- cleanup: remove .la files, replace %run_ldconfig macro
+
+-------------------------------------------------------------------
+Fri Aug 21 00:00:00 UTC 2009 - Manfred.Tremmel@iiv.de
+
+- cleanups where rpmlint wasn't so happy
+
+-------------------------------------------------------------------
+Fri May 23 00:00:00 UTC 2008 - Manfred.Tremmel@iiv.de
+
+- update to 7.0.0.2
+
+-------------------------------------------------------------------
+Thu Mar 27 00:00:00 UTC 2008 - Manfred.Tremmel@iiv.de
+
+- update to 7.0.0.1
+
+-------------------------------------------------------------------
+Sat Aug 25 00:00:00 UTC 2007 - Manfred.Tremmel@iiv.de
+
+- update to 7.0.0.0
+
+-------------------------------------------------------------------
+Sun Jul  1 00:00:00 UTC 2007 - Manfred.Tremmel@iiv.de
+
+- first spec file for packman, based on the specfile included
+  in the tarball and the work of Dmitry Serpokryl
+

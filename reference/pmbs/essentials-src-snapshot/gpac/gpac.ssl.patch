@@ -1,0 +1,29 @@
+Index: gpac-1.0.0/src/utils/downloader.c
+===================================================================
+--- gpac-1.0.0.orig/src/utils/downloader.c
++++ gpac-1.0.0/src/utils/downloader.c
+@@ -406,8 +406,7 @@ Bool gf_ssl_init_lib() {
+ #if OPENSSL_VERSION_NUMBER < 0x10100000L
+ 	SSL_library_init();
+ 	SSL_load_error_strings();
+-	SSLeay_add_all_algorithms();
+-	SSLeay_add_ssl_algorithms();
++	OpenSSL_add_all_algorithms();
+ #endif
+ 
+ 	_ssl_is_initialized = GF_TRUE;
+@@ -444,13 +443,13 @@ static int ssl_init(GF_DownloadManager *
+ 	case 1:
+ 		meth = SSLv2_client_method();
+ 		break;
+-#endif
+ 	case 2:
+ 		meth = SSLv3_client_method();
+ 		break;
+ 	case 3:
+ 		meth = TLSv1_client_method();
+ 		break;
++#endif
+ #else /* for openssl 1.1+ this is the preferred method */
+ 	case 0:
+ 		meth = TLS_client_method();

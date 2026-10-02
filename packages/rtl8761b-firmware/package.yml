@@ -1,0 +1,13 @@
+name: rtl8761b-firmware
+kind: native
+enabled: true
+tier: 0
+tags: [firmware, proprietary]
+sources:
+  - file: mpow_MPBH456AB_driver+for+Linux.tgz
+    urls:
+      - pmbs:rtl8761b-firmware/mpow_MPBH456AB_driver+for+Linux.tgz
+      - mirror-src:rtl8761b-firmware
+    sha256: 74001cd412363485751a8e11dda7de54919de51a74d7f060ce489d0a9291040b
+    size: 3228216
+notes: "Spec Source0 https://mpow.s3-us-west-1.amazonaws.com/mpow_MPBH456AB_driver+for+Linux.tgz returns 403 (2026-09-29): PMBS/mirror only."

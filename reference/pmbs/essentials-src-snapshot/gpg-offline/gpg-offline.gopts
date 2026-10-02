@@ -1,0 +1,318 @@
+#!/bin/bash
+
+# Trusted GPG offline keyring manipulation tool
+# Copyright (C) 2012  Stanislav Brabec <sbrabec@suse.cz>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+#
+
+@genopts
+
+@code_style line_up function_keyword tabs casetab
+
+@program gpg-upstream-check
+
+@version 0.1
+
+@year 2012
+
+@author Stanislav Brabec, SUSE Linux
+
+@bugsto Stanislav Brabec <sbrabec@suse.cz>
+
+@free_copy
+
+@usage [OPTION]... [ARGUMENT]...
+
+@short
+Trusted GPG offline keyring manipulation tool
+Offline verify files in packages that they are signed by selected signatures.
+Manipulate selected signatures in keyring.
+
+@option PACKAGE -p --package=PACKAGE
+specifies package name (i. e. file name without suffix, equivalent to --keyring="${DIR:-$PWD}/$PACKAGE.keyring")
+
+@option DIRECTORY --directory=DIR
+--package searches for keyring in DIR
+
+@option FILE -f --keyring=FILE
+specifies keyring file
+
+@switch ADD -a --add
+Adds keys specified in ARGUMENT for inclusion to the package trusted keyring
+(run in the source directory)
+
+@switch DELETE -d --delete
+Deletes keys specified in ARGUMENT from the package trusted keyring
+(run in the source directory)
+
+@switch REVIEW -r --review
+reviews the keyring and its human readable corresponds with the contents
+
+@switch REFRESH -R --refresh
+refreshes the keyring and its human readable corresponds with the contents
+
+@switch LIST -l --list
+lists keyring contents (exactly equal to --review --offline)
+
+@switch VERIFY -c --verify
+verifies selected signatures files
+
+@switch OFFLINE -O --offline
+does not verify up-to-date status online (use with --add, --review or --refresh)
+
+@cntswitch VERBOSE -v --verbose
+be verbose
+
+@end
+
+shopt -s nullglob
+
+
+# vvrun comment command args
+# verbose level 0: run command and redirect stderr to /dev/null
+# verbose level 1: run command
+# verbose level >=2: echo and run command
+function vrun2 {
+	if $OPTARG_VERBOSE ; then
+		if test $OPTCNT_VERBOSE -gt 1 ; then
+			echo >&2 -e "\\n$1"
+			shift
+			echo >&2 "  $*"
+		else
+			shift
+		fi
+		"$@"
+	else
+		shift
+		"$@" 2>/dev/null
+	fi
+}
+
+# vvrun comment command args
+# verbose level <2: run command
+# verbose level >=2: echo and run command
+function vvrun {
+	if $OPTARG_VERBOSE ; then
+		if test $OPTCNT_VERBOSE -gt 1 ; then
+			echo >&2 -e "\\n$1"
+			shift
+			echo >&2 "  $*"
+		else
+			shift
+		fi
+	else
+		shift
+	fi
+	"$@"
+}
+
+function temp_setup {
+	TEMP=~/.gpg-offline/
+	# Note: we use ~/.gnupg to prevent problems inside osc generated paths containing ":".
+	rm -rf ${TEMP}key.$$ ${TEMP}keyring.$$ ${TEMP}keyringdesc.$$ ${TEMP}keyringdesc.no-expired-string.$$ ~/.gnupg/gpg-offline.$$*
+	mkdir -p ~/.gpg-offline
+	trap "eval rm -rf ${TEMP}key.$$ ${TEMP}keyring.$$ ${TEMP}keyringdesc.$$ ${TEMP}keyringdesc.no-expired-string.$$ ~/.gnupg/gpg-offline.$$* \$TEMP_FILES ; rmdir --ignore-fail-on-non-empty ~/.gpg-offline" EXIT
+}
+
+# keyring_add keyring_op keyring_from keyring_to
+# Add command line arguments to  keyring_from and create keyring_to
+# keyring_from file can be missing
+# keyring_from can be equal to keyring_to
+function keyring_op {
+	temp_setup
+
+	if test -f $2 ; then
+		vrun2 "Import existing keyring to the temporary keyring:"\
+			gpg --no-default-keyring --keyring gpg-offline.$$ --import <$2
+	fi
+
+	keyring_op_$1
+
+	vvrun "Export the keyring in ASCII form:"\
+	gpg --no-default-keyring --keyring gpg-offline.$$ --armor --export-options no-export-attributes,export-clean,export-minimal --export >${TEMP}keyring.$$
+	# Set locale to C for byte-to-byte reproducibility, but keep UTF-8 CTYPE to get international characters readable.
+	LC_ALL= LANG=C LC_CTYPE=en_US.UTF-8 vvrun "List the human readable contents of the keyring:"\
+	gpg --no-default-keyring --list-options show-unusable-uids,show-unusable-subkeys --keyring gpg-offline.$$ --list-keys |
+		sed '1,/^--/d' >${TEMP}keyringdesc.$$
+	# Make sure that description is time independent. Convert "expired" to "expires".
+	sed 's/ \[expired/ [expires/' <${TEMP}keyringdesc.$$ >${TEMP}keyringdesc.no-expired-string.$$
+
+	vvrun "Create new keyring and prepare spec:"\
+	cat ${TEMP}keyringdesc.no-expired-string.$$ ${TEMP}keyring.$$ >$3
+}
+
+# keyring_op: Add keys specified in the command line arguments.
+function keyring_op_add {
+	TEMP_FILES="${TEMP}key.$$"
+	if $OPTARG_OFFLINE ; then
+		AUTO_KEY_RETRIEVE="no-"
+	else
+		AUTO_KEY_RETRIEVE=""
+	fi
+
+	vvrun "Extract minimal form of the key $ID in binary form:"\
+		gpg --keyserver-options=${AUTO_KEY_RETRIEVE}auto-key-retrieve --armor --export-options no-export-attributes,export-clean,export-minimal --export "${ARGV[@]}" >${TEMP}key.$$
+	vvrun "Import the new key to the temporary keyring:"\
+		gpg --no-default-keyring --keyring gpg-offline.$$ --import <${TEMP}key.$$
+}
+
+function keyring_op_delete {
+	TEMP_FILES=""
+	vvrun "Delete specified keys from the temporary keyring:"\
+		gpg --no-default-keyring --keyring gpg-offline.$$ --delete-keys "${ARGV[@]}"
+}
+
+function keyring_op_review {
+	TEMP_FILES="${TEMP}review.$$ ${TEMP}keyringdesc.no-expire-info.$$ ${TEMP}keyringdesc.extracted.no-expire-info.$$ ${TEMP}keyringdesc.extracted.$$"
+
+	if ! $OPTARG_OFFLINE ; then
+		vvrun "Refreshing keys from the key server:"\
+			gpg --trust-model=always --no-default-keyring --keyring gpg-offline.$$ --refresh-keys
+	fi
+}
+
+function filespec_required {
+	if $OPTARG_FILE ; then
+		KEYRING="$OPTVAL_FILE"
+	else
+		if $OPTARG_PACKAGE ; then
+			if $OPTARG_DIRECTORY ; then
+				KEYRING="$OPTVAL_DIRECTORY/$OPTVAL_PACKAGE.keyring"
+			else
+				KEYRING="$OPTVAL_PACKAGE.keyring"
+			fi
+		else
+			echo >&2 "$0: You must specify either --package or --file to use this command."
+			exit 1
+		fi
+	fi
+}
+
+function keyring_required {
+	if ! test -f "$KEYRING" ; then
+		echo >&2 "$0: Keyring \"$KEYRING\" not found."
+		exit 1
+	fi
+}
+
+if $OPTARG_ADD ; then
+	filespec_required
+	if test -f "$KEYRING"  ; then
+		SPEC_MODIFY=false
+	else
+		SPEC_MODIFY=true
+	fi
+	keyring_op add "$KEYRING" "$KEYRING"
+	RC=$?
+	if $SPEC_MODIFY ; then
+		echo -e "\\nIf not yet done, please add following lines to $OPTVAL_PACKAGE.spec and submit:\\n"
+		echo "Source2:        %{name}.keyring"
+		echo "BuildRequires:  gpg-offline"
+		echo ""
+		echo "And in %prep section:"
+		echo ""
+		echo "%gpg_verify %{S:1}"
+		echo ""
+		echo "(where %{S:1} is the signature)"
+		echo "
+By submitting this change, you certify, that you verified, that the
+submitted signature is an original signing key used for the upstream
+project. You should do it by comparing the signing key with the web
+page, or even better, by checking the project time line and checking,
+that the same key is consistently used for longer time."
+	fi
+	exit $RC
+fi
+
+if $OPTARG_DELETE ; then
+	filespec_required
+	keyring_required
+	keyring_op delete "$KEYRING" "$KEYRING"
+	exit $?
+fi
+
+if $OPTARG_VERIFY ; then
+	filespec_required
+	keyring_required
+
+	rm -rf ~/.gnupg/gpg-offline.$$*
+	trap "rm -rf ~/.gnupg/gpg-offline.$$*" EXIT
+	vvrun "Import armored $KEYRING to the temporary keyring:"\
+		gpg --no-default-keyring --keyring gpg-offline.$$ --import <"$KEYRING"
+	# "--trust-model=always" always generates warning "Using untrusted key!". "--quiet" suppresses it.
+	if ! vvrun "Verifying $SIGNATURE against the temporary keyring only:"\
+		gpg --quiet --trust-model=always --keyserver-options=no-auto-key-retrieve --no-default-keyring --keyring=gpg-offline.$$ --verify "${ARGV[@]}" ; then
+		exit 1
+	fi
+	exit 0
+fi
+
+if test $OPTARG_REVIEW -o $OPTARG_REFRESH -o $OPTARG_LIST ; then
+	if $OPTARG_LIST ; then
+		OPTARG_OFFLINE=true
+	fi
+	filespec_required
+	keyring_required
+	if $OPTARG_REFRESH ; then
+		REVIEW="$KEYRING.new"
+	else
+		TEMP=~/.gpg-offline/
+		REVIEW=${TEMP}review.$$
+	fi
+	temp_setup
+	keyring_op review "$KEYRING" "$REVIEW"
+
+	cat ${TEMP}keyringdesc.$$
+
+	if cmp -s "$KEYRING" "$REVIEW" ; then
+		# Keyrings are bit-to-bit equal. Everything is OK.
+		if $OPTARG_REFRESH ; then
+			echo >&2 -e "$KEYRING is already up to date and needs no refresh."
+		else
+			if ! $OPTARG_LIST ; then
+				echo >&2 -e "$KEYRING is a valid armored GPG keyring\\nand the human readable description corresponds to its contents."
+			fi
+		fi
+		rm "$REVIEW"
+		exit 0
+	else
+		# Keyrings are different.
+		sed '/^-----BEGIN PGP PUBLIC KEY BLOCK-----$/,$d' <"$KEYRING" >${TEMP}keyringdesc.extracted.$$
+		sed 's/ \[\(expire\|revoked\)[^]]*\]$//;s/^\(uid *\)\[ revoked\]/\1          /' <${TEMP}keyringdesc.extracted.$$ >${TEMP}keyringdesc.extracted.no-expire-info.$$
+		sed 's/ \[\(expire\|revoked\)[^]]*\]$//;s/^\(uid *\)\[ revoked\]/\1          /' <${TEMP}keyringdesc.no-expired-string.$$ >${TEMP}keyringdesc.no-expire-info.$$
+
+		if cmp -s ${TEMP}keyringdesc.extracted.no-expire-info.$$ ${TEMP}keyringdesc.no-expire-info.$$ ; then
+			# It seems that the author only extended the signature validity or revoked.
+			echo >&2 -e "ERROR: $KEYRING is a valid armored GPG keyring\\nand the human readable description corresponds to its contents,\\nbut there is a validity info update."
+		else
+			echo >&2 -e "ERROR: $KEYRING is a valid armored GPG keyring,\\nbut the the human readable description does not correspond to its contents.\\nIt could be only a cosmetic change, but it may also indicate malicious keyring."
+		fi
+		diff ${TEMP}keyringdesc.extracted.$$ ${TEMP}keyringdesc.no-expired-string.$$
+
+		if $OPTARG_REFRESH ; then
+			# We do not force-perform this action. There may be race condition change of upstream keyring between --review and --refresh.
+			echo >&2 -e "If you really want to accept these changes, please finish it by call:\\nmv $REVIEW $KEYRING"
+		else
+			echo >&2 -e "If you are sure that it is OK, and you can perform keyring change,\\nplease call:\\n$0 -f $KEYRING --refresh\\nand then follow hints."
+		fi
+		# We always return 1 here. Offline tests should never have problem with revocation or key expiration change,
+		# online tests should consider it as an error.
+		exit 1
+	fi
+fi
+
+echo "$0: No operation specified."
+exit 1

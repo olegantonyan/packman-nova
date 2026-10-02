@@ -1,0 +1,45 @@
+<services>
+	<service name="tar_scm" mode="manual">
+		<param name="exclude">.gitignore</param>
+		<param name="exclude">.hgignore</param>
+		<param name="exclude">.hgtags</param>
+		<param name="exclude">.readthedocs.yaml</param>
+		<param name="exclude">build/README.txt</param>
+		<param name="exclude">build/aarch64-darwin</param>
+		<param name="exclude">build/aarch64-linux-clang</param>
+		<param name="exclude">build/ms*</param>
+		<param name="exclude">build/vc*</param>
+		<param name="exclude">build/xcode</param>
+		<param name="exclude">build</param>
+		<param name="exclude">doc/intra</param>
+		<param name="exclude">doc/reST/Makefile</param>
+		<param name="exclude">doc/reST/api.rst</param>
+		<param name="exclude">doc/reST/cli.rst</param>
+		<param name="exclude">doc/reST/conf.py</param>
+		<param name="exclude">doc/reST/index.rst</param>
+		<param name="exclude">doc/reST/introduction.rst</param>
+		<param name="exclude">doc/reST/lossless.rst</param>
+		<param name="exclude">doc/reST/presets.rst</param>
+		<param name="exclude">doc/reST/svthevc.rst</param>
+		<param name="exclude">doc/reST/threading.rst</param>
+		<param name="exclude">doc/reST/x265.rst</param>
+		<param name="exclude">doc/requirements.txt</param>
+		<param name="exclude">doc/uncrustify</param>
+		<param name="exclude">readme.rst</param>
+		<param name="exclude">source/common/ppc</param>
+		<param name="exclude">source/compat</param>
+		<param name="exclude">source/profile</param>
+		<param name="exclude">source/test</param>
+		<param name="filename">x265</param>
+		<param name="revision">32e25ffcf810c5fe284901859b369270824c4596</param>
+		<param name="scm">git</param>
+		<param name="submodules">disable</param>
+		<param name="url">https://bitbucket.org/multicoreware/x265_git.git</param>
+		<param name="versionformat">@PARENT_TAG@</param>
+		<param name="versionrewrite-pattern">[v]?([^\+]+)(.*)</param>
+		<param name="versionrewrite-replacement">\1</param>
+	</service>
+	<service name="set_version" mode="manual">
+		<param name="basename">x265</param>
+	</service>
+</services>

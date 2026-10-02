@@ -1,0 +1,85 @@
+-------------------------------------------------------------------
+Thu Mar 17 06:27:15 UTC 2022 - jslaby@suse.cz
+
+- Update to version 22.02.21+6:
+  * Rename default_skin to default (#22)
+  * Rename blue_skin to blue (#24)
+  * Rename breath to breath_dark (#25)
+  * Rename the_orange to orange (#26)
+  * Rename black_theme to black (#27)
+  * Move all images in images folder of each skin (#21)
+  * Updated Dark and Breath_Dark skins. Fixed toolbuttons
+  * Updated Dark and Breath_Dark skins. Changed scrollbars
+  * Harmonization of skins + English new skin (#20)
+  * Updated Breath_Dark and Dark skins. Used better empty image value than empty url to avoid extra warnings
+  * Harmonization of skins (#18)
+  * and many more
+
+-------------------------------------------------------------------
+Tue Sep 24 05:52:54 UTC 2019 - jslaby@suse.cz
+
+- Update to version 19.02.20+1:
+  * Fixed LunaCat css styles
+  * add U+0001f642 to Emoji
+  * Added pingvin system iconset from Levan
+  * iconpacks: add Dino icon
+  * iconpacks updated with yaxim and movim
+  * Added new yaxim (yak) icons.
+  * Force cursor:pointer on links in lunnaCat theme
+  * Fixed spelling errors
+  * Fixed html messages rendering in LunaCat
+  * Removed old new_classic
+  * Fixed LunaCat theme
+
+-------------------------------------------------------------------
+Thu May 25 07:37:24 UTC 2017 - jslaby@suse.com
+
+- switch to new, sane, versioning, following upstream versions
+- Update to version 16.02.03+4:
+  * * fixed fingerprint.jisp
+  * * fix again fingerprint.jisp
+  * Added Emojis smileypack
+  * Emojis updated to the latest version
+  * Add minimal pack of client icons
+  * Fix file permissions
+  * Fixed Emojis smiles. Version up to 1.1
+  * Added chess.jisp affilication iconset (thanks to Леван)
+  * Added simple.jisp emoticons by Lyn
+  * Removed msn and yaonline icons from fingerprint.jisp
+- icons from the main repo are now installed with psi+ natively,
+  so drop main from here completely
+
+-------------------------------------------------------------------
+Mon Feb  6 16:28:55 UTC 2017 - olaf@aepfle.de
+
+- update to 20170108
+
+-------------------------------------------------------------------
+Sat Apr 23 08:16:42 UTC 2016 - jslaby@suse.cz
+
+- update to 20160408
+  * some icons were pushed to upstream, so we need to carry less of
+    them
+- _service: put only iconsets into tarballs
+
+-------------------------------------------------------------------
+Wed Mar  9 11:50:54 UTC 2016 - jslaby@suse.cz
+
+- update to 20160309
+  * resources were refreshed
+
+-------------------------------------------------------------------
+Mon Nov 10 12:28:05 UTC 2014 - jslaby@suse.cz
+
+- update to 20141106
+  * resources were refreshed
+- rename service to _service 
+  * pmbs is new enough, so supports "localonly" mode
+- fix license string to conform checker
+
+-------------------------------------------------------------------
+Wed Jan  9 15:17:10 UTC 2013 - jslaby@suse.com
+
+- split the packages
+- iconsets now contains non-free icons
+

@@ -1,0 +1,13 @@
+name: libaacs
+kind: native
+enabled: true
+tier: 0
+tags: [bluray]
+sources:
+  - file: _service:download_files:libaacs-0.12.0.tar.bz2
+    urls:
+      - https://download.videolan.org/videolan/libaacs/0.12.0/libaacs-0.12.0.tar.bz2
+      - pmbs:libaacs/_service:download_files:libaacs-0.12.0.tar.bz2
+      - mirror-src:libaacs
+    sha256: 1996673a9fc45ee4a364c66ffa84756629bf3923e52346c7358b71becb8e4419
+    size: 375051

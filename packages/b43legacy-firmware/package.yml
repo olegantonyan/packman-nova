@@ -1,0 +1,14 @@
+name: b43legacy-firmware
+kind: native
+enabled: true
+tier: 0
+tags: [firmware, proprietary]
+sources:
+  - file: wl_apsta-3.130.20.0.o
+    urls:
+      - https://downloads.openwrt.org/sources/wl_apsta-3.130.20.0.o
+      - pmbs:b43legacy-firmware/wl_apsta-3.130.20.0.o
+      - mirror-src:b43legacy-firmware
+    sha256: 7dba610b1d96dd14e901bcbce14cd6ecd1b1ac6f5c0035b0d6b6dc46a7c3ef90
+    size: 652866
+notes: "Spec Source0 is a bare file name; the OpenWrt sources mirror serves the identical blob. %post extracts it with b43-fwcutter."

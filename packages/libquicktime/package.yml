@@ -1,0 +1,10 @@
+name: libquicktime
+kind: obs-link
+enabled: true
+tier: 3
+tags: [codec]
+origin:
+  project: openSUSE:Factory
+  package: libquicktime
+  pin: null
+notes: "Plain Factory link, no rules (PMBS A_tw-libquicktime)."

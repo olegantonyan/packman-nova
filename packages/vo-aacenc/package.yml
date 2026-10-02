@@ -1,0 +1,13 @@
+name: vo-aacenc
+kind: native
+enabled: true
+tier: 0
+tags: [codec]
+sources:
+  - file: vo-aacenc-0.1.3.tar.gz
+    urls:
+      - https://downloads.sourceforge.net/project/opencore-amr/vo-aacenc/vo-aacenc-0.1.3.tar.gz
+      - pmbs:vo-aacenc/vo-aacenc-0.1.3.tar.gz
+      - mirror-src:vo-aacenc
+    sha256: e51a7477a359f18df7c4f82d195dab4e14e7414cbd48cf79cc195fc446850f36
+    size: 612463

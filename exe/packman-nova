@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+$LOAD_PATH.unshift(::File.expand_path('../lib', __dir__))
+
+require 'packman_nova'
+
+begin
+  exit(::PackmanNova::Cli.new(argv: ::ARGV).call)
+rescue ::Interrupt
+  warn('interrupted')
+  exit(130)
+rescue ::StandardError => e
+  warn("#{e.class}: #{e.message}")
+  exit(1)
+end

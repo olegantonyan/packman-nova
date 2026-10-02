@@ -1,0 +1,23 @@
+<project name="build-compare">
+  <title></title>
+  <description>
+Grab a copy of build-compare.noarch.rpm from OBS, to avoid building this pkg in PMBS.
+  </description>
+  <person userid="manfred-h" role="maintainer"/>
+  <build>
+    <disable/>
+  </build>
+  <publish>
+    <disable/>
+  </publish>
+  <debuginfo>
+    <disable/>
+  </debuginfo>
+  <repository name="bc">
+    <arch>aarch64</arch>
+    <arch>armv6l</arch>
+    <arch>armv7l</arch>
+    <arch>i586</arch>
+    <arch>x86_64</arch>
+  </repository>
+</project>

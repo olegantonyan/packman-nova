@@ -1,0 +1,22 @@
+From b6e3225a3c9f3aa7b218f1c31a6666e3026092ca Mon Sep 17 00:00:00 2001
+From: M4rQu1Nh0S <blogmrcs@gmail.com>
+Date: Thu, 12 May 2022 11:32:17 -0300
+Subject: [PATCH] Add files via upload
+
+Added Device ID 10ec:8136 (0x8136)
+---
+ src/r8168_n.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/r8168_n.c b/src/r8168_n.c
+index 28d7636..cbf43d1 100755
+--- a/src/r8168_n.c
++++ b/src/r8168_n.c
+@@ -426,6 +426,7 @@ static const struct {
+ 
+ static struct pci_device_id rtl8168_pci_tbl[] = {
+         { PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8168), },
++        { PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8136), },
+         { PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x8161), },
+         { PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x2502), },
+         { PCI_DEVICE(PCI_VENDOR_ID_REALTEK, 0x2600), },

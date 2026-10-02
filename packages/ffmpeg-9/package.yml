@@ -1,0 +1,12 @@
+name: ffmpeg-9
+kind: obs-link
+enabled: true
+tier: 2
+tags: [codec]
+origin:
+  project: openSUSE:Factory
+  package: ffmpeg-9
+  pin: null
+link:
+  delete: [_multibuild, ffmpeg-9.changes]
+notes: "Link deletes Factory's mini flavor (PMBS parity); ffmpeg-mini stub covers the solver. Builds the default ffmpeg CLI."

@@ -1,0 +1,12 @@
+diff -rup a/src/filters/dec_ac52.c b/src/filters/dec_ac52.c
+--- a/src/filters/dec_ac52.c	2023-10-18 16:38:32.366245519 +0200
++++ b/src/filters/dec_ac52.c	2023-10-18 16:39:54.312908594 +0200
+@@ -83,7 +83,7 @@ static GF_Err a52dec_configure_pid(GF_Fi
+ #if !defined (GPAC_CONFIG_IOS) && !defined (GPAC_CONFIG_ANDROID)
+ //		flags |= MM_ACCEL_X86_MMX | MM_ACCEL_X86_3DNOW | MM_ACCEL_X86_MMXEXT;
+ #endif
+-		ctx->codec = a52_init();
++		ctx->codec = a52_init(0);
+ 		if (!ctx->codec) {
+ 			GF_LOG(GF_LOG_ERROR, GF_LOG_CODEC, ("[A52] Error initializing decoder\n"));
+ 			return GF_IO_ERR;

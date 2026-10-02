@@ -1,0 +1,32 @@
+-------------------------------------------------------------------
+Sun Sep 29 17:21:51 UTC 2024 - Bjørn Lie <bjorn.lie@gmail.com>
+
+- Use autosetup macro, rpm 4.20 does not support the old patch
+  format
+
+-------------------------------------------------------------------
+Fri Jan 12 11:28:18 UTC 2018 - sagiben@gmail.com
+
+- Version Update to ce80e00 20160101 
+
+-------------------------------------------------------------------
+Fri Jul  1 17:19:01 UTC 2016 - toddrme2178@gmail.com
+
+- Fix Group tag.
+
+-------------------------------------------------------------------
+Mon Feb  9 15:34:01 UTC 2015 - olaf@aepfle.de
+
+- Require pkgconfig(ao) >= 1.1.0 as per configure.ac
+
+-------------------------------------------------------------------
+Fri Feb  6 14:49:32 UTC 2015 - olaf@aepfle.de
+
+- systemd support is optional for old dists
+
+-------------------------------------------------------------------
+Thu Oct 30 12:12:43 UTC 2014 - jpupava@suse.com
+
+- New package for AirPlay server
+- Added package shairplay.service 
+- Added new patch for src/Makefile.am: fix RPATH

@@ -1,0 +1,14 @@
+name: SVT-AV1
+kind: native
+enabled: false
+tier: 0
+tags: [codec]
+sources:
+  - file: SVT-AV1-v3.0.1.tar.gz
+    urls:
+      - https://gitlab.com/AOMediaCodec/SVT-AV1/-/archive/v3.0.1/SVT-AV1-v3.0.1.tar.gz
+      - pmbs:A_tw-SVT-AV1/SVT-AV1-v3.0.1.tar.gz
+      - mirror-src:SVT-AV1
+    sha256: 9a49f13c2f9dd8140e5960d44d9bd66063f7338301e4cce5acbc72c573df6fdd
+    size: 10898820
+notes: "Disabled: Factory has SVT-AV1 4.2.0 (libSvtAv1Enc4) on 2026-09-29, newer than this 3.0.1 copy. Only ffmpeg-6 needed it; ffmpeg-6 now builds without libsvtav1 (local bcond). Enabling this would shadow Factory's SVT-AV1-devel for every ffmpeg build (local-first precedence)."

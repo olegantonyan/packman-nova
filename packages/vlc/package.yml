@@ -1,0 +1,10 @@
+name: vlc
+kind: obs-link
+enabled: true
+tier: 3
+tags: [player, codec]
+origin:
+  project: openSUSE:Factory
+  package: vlc
+  pin: null
+notes: "Yields vlc-codecs (x264/x265 plugins) against our ffmpeg-8. Factory ships an obs_scm cpio of ~134 MB."

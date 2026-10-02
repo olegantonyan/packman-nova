@@ -1,0 +1,77 @@
+-------------------------------------------------------------------
+Thu Jul  2 17:31:04 UTC 2026 - Bjørn Lie <zaitor@opensuse.org>
+
+- Remove DATE/TIME, make build more reproducible.
+- Use ldconfig_scriptlets macro for post(un) handling.
+
+-------------------------------------------------------------------
+Tue May 26 16:35:43 UTC 2026 - Bjørn Lie <zaitor@opensuse.org>
+
+- Update to version 2.0.3:
+  + Minor upstream updates
+  + Fixed one case of a failed assert in SBR encoding
+  + Added build support for s390x
+
+-------------------------------------------------------------------
+Sun Jul 25 17:02:42 UTC 2021 - Bjørn Lie <zaitor@opensuse.org>
+
+- Update to version 2.0.2:
+  + This version adds files for building with CMake in addition to
+    autotools, and contains a small number of upstream fixes and
+    local fuzzing fixes.
+
+-------------------------------------------------------------------
+Tue Mar 24 17:47:21 UTC 2020 - Bjørn Lie <zaitor@opensuse.org>
+
+- Update to version 2.0.1:
+  * Minor release with a number of crash/fuzz fixes, primarily for
+    the decoder.
+- Modernize spec, replace gcc-c++ with generic c++_compiler
+  BuildRequires, use current macros.
+
+-------------------------------------------------------------------
+Sat Aug 10 14:05:45 UTC 2019 - Luigi Baldoni <aloisio@gmx.com>
+
+- Update to version 2.0.0
+  * Major update in the upstream source base, with support for
+    new profiles and features, and numerous crash/fuzz fixes.
+    The new upstream version is referred to as FDKv2, thus
+    skipping the major version 1 and syncing the fdk-aac major
+    version number to 2.
+
+-------------------------------------------------------------------
+Tue May  1 12:17:21 UTC 2018 - zaitor@opensuse.org
+
+- Update to version 1.6.0:
+  + This version is a minor update with a number of crash/fuzz
+    fixes only.
+- Run spec-cleaner, modernize spec.
+
+-------------------------------------------------------------------
+Fri Jan 20 16:50:14 UTC 2017 - zaitor@opensuse.org
+
+- Update to proper 1.5.0 version.
+- Drop _service now that there is a upstream release.
+
+-------------------------------------------------------------------
+Fri Nov 04 16:06:00 UTC 2016 - neutrino8@opensuse.org
+
+- Use a _service file due to no stable tag
+- Add baselibs.conf
+
+-------------------------------------------------------------------
+Sat Oct 29 09:45:00 UTC 2016 - neutrino8@gmail.com
+
+- Update to version 0.1.5
+- Drop fdk-aac-cpp98 patch. No longer needed
+
+-------------------------------------------------------------------
+Wed Nov 19 18:08:36 UTC 2014 - i@margueirte.su
+
+- fix __DATE__ and __TIME__ warning
+
+-------------------------------------------------------------------
+Wed Nov 12 17:39:04 UTC 2014 - i@margueirte.su
+
+- initial version 0.1.4
+

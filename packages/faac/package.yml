@@ -1,0 +1,13 @@
+name: faac
+kind: native
+enabled: true
+tier: 0
+tags: [codec]
+sources:
+  - file: _service:obs_scm:faac-1.50.obscpio
+    urls:
+      - pmbs:faac/_service:obs_scm:faac-1.50.obscpio
+      - mirror-src:faac
+    sha256: 301960ed9fcfa475056048056afdd6cdd6a8a55ea0c4ea7f40cb662ca7d1957a
+    size: 429067
+notes: "obs_scm of github.com/knik0/faac rev 79329efe; buildtime tar/set_version services unpack it. No upstream URL for the cpio."

@@ -1,0 +1,169 @@
+-------------------------------------------------------------------
+Thu Sep 10 12:05:09 UTC 2026 - Bjørn Lie <zaitor@opensuse.org>
+
+- Update to version 0.12.0:
+  * Add aacs2_get_bdj_root_cert_hash().
+  * Add a tool to dump the content of a CCI file.
+  * Allow overriding the configuration directory with the AACS_HOME
+    environment variable.
+  * aacs_info: add support for unmounted discs.
+  * Honor the configfile_path parameter when reading MK and VID.
+  * Error out on discs using an unsupported AACS version
+    (AACS_ERROR_UNSUPPORTED_DISC).
+  * Improve error handling and resilience (key derivation, MMC and
+    cache errors).
+  * Fix several memory leaks.
+  * Fix incorrect memory allocation for encrypted unit keys.
+  * Fix reading drive certificate with some drives.
+  * Prefer pkg-config when detecting libgcrypt and gpg-error.
+
+-------------------------------------------------------------------
+Sun Apr 10 19:27:31 UTC 2022 - enzokiel@kabelmail.de
+
+- Update to version 0.11.1
+  * Faster start with MacOS when disc does not use bus encryption.
+  * Improve error logging.
+  * Improve error resilience.
+
+-------------------------------------------------------------------
+Sat Sep  5 08:52:47 UTC 2020 - Luigi Baldoni <aloisio@gmx.com>
+
+2020-07-22: Version 0.11.0
+  * Add more AACS2 support (still not complete).
+  * Add support for partial unit keys in KEYDB.CFG.
+  * Improve opening of UHD discs (~ 10 seconds faster).
+  * Improve large KEYDB.CFG parsing (~ 4 times faster).
+  * Improve error resilience.
+  * Reduce memory usage (does not depend on config file size
+    anymore).
+  * Fix segfault on macOS when MMC opening fails.
+  * Fix memory leak with multiple UK entries in KEYDB.cfg file.
+  * Fix AACS2 with multiple unit keys.
+  * Fix include flags order (do not include wrong headers
+    outside of source tree).
+
+-------------------------------------------------------------------
+Mon Apr 27 18:50:11 UTC 2020 - Luigi Baldoni <aloisio@gmx.com>
+
+- Update to version 0.10.0
+  * Add support for AACS2 content certificate.
+  * Add aacs_set_key_caching().
+  * Add aacs_error_str().
+  * Issue a warning when using AACS2 capable drive.
+  * Fix parsing title entries from multiple KEYDB.cfg files.
+  * Fix memory leak with multiple KEYDB.cfg files.
+  * Fix data corruption when structs are not packed.
+- Spec cleanup
+
+-------------------------------------------------------------------
+Tue May 16 11:29:17 UTC 2017 - joerg.lorenzen@ki.tng.de
+
+- update to 0.9.0
+  * Add aacs_decrypt_bus().
+  * Add aacs_get_bdj_root_cert_hash().
+  * Add aacs_get_content_cert_id().
+  * Add support for unencrypted content in AACS-enabled discs.
+  * Improve error resilience.
+  * Improve support for broken discs (use on-disc backup files).
+  * Verify content certificate signature.
+  * Load and merge multiple KEYDB.cfg files.
+  * Fix build with gcrypt < 1.6.0.
+  * Fix possible crash (debug log output that includes discid).
+  * Fix config file path issues in Windows (non-ASCII paths).
+  * Fix dll exports in Windows.
+  * Fix resource leaks.
+  * Reduced memory footprint.
+
+-------------------------------------------------------------------
+Wed Feb 22 13:51:59 UTC 2017 - scarabeus@opensuse.org
+
+- Cleanup a bit with spec-cleaner
+- Remove sle11 support
+- Drop no longer needed patch libaacs-0.6.0-bison-2.3-compatibility.patch
+
+-------------------------------------------------------------------
+Sun Mar 15 13:12:59 UTC 2015 - joerg.lorenzen@ki.tng.de
+
+- update to 0.8.1
+ * Accept NULL mount / device path when application handles file system access.
+ * Fix FreeBSD build.
+ * Do not require pthread with gcrypt >= 1.6.0.
+
+-------------------------------------------------------------------
+Tue Jan 27 12:39:43 UTC 2015 - joerg.lorenzen@ki.tng.de
+
+- update to 0.8.0
+ * Add improved file system interface
+ * Support opening raw devices
+ * Reduce log level of failed PMSN query
+ * Optimizations
+
+-------------------------------------------------------------------
+Wed Dec 17 14:57:22 UTC 2014 - joerg.lorenzen@ki.tng.de
+
+- update to 0.7.1
+ * Add support for gcrypt 1.6.0.
+ * Do not retrieve MKB using MMC commands during AACS-Auth.
+
+-------------------------------------------------------------------
+Fri Apr 25 15:29:24 UTC 2014 - dnh@opensuse.org
+
+- update to 0.7.0
+ * Add aacs_get_device_binding_id() and aacs_get_device_nonce().
+ * Add aacs_get_mk().
+ * Add support for bus encryption.
+ * Add support for device keys.
+ * Add support for internal keys.
+ * Fix reading PMSN.
+ * Fix reporting AACS version from AACS drive feature.
+ * Calculate bus key and use it to verify message authentication codes.
+ * Do not fail if VID is known but config file does not exist.
+ * Improve validating keys in KEYDB.cfg.
+ * Update KEYDB.cfg format (still backwards compatible):
+   * Host nonce and host key point are optional.
+   * Add device key UV values and masks.
+ * Build system updates.
+ * Drop support for compile-time PATCHED_DRIVE flag.
+
+-------------------------------------------------------------------
+Sat Mar 16 11:20:34 UTC 2013 - obs@botter.cc
+
+- update to 0.6.0
+ * Added reading of PMSN (Pre-recorded Media Serial Number)
+ * Fix resource leak
+ * Use proper paths to search for keydb and friends on Darwin.
+ * Build fixes and improvements
+
+- 0.5.0
+ * Support for Mac OS X using IOKit
+ * Fix AACS detection failure in some Win32 systems
+
+- 0.4.0
+ * Added aacs_open2() and error codes
+ * Renamed libaacs_test to aacs_info
+ * Added aacs_get_mkb_version()
+ * Fixed memory leaks
+ * Fixed buffer overflow
+ * Added revocation list caching
+ * Check host certificates against latest seen revocation list
+
+- 0.3.1
+ * Added configure option for libgcrypt prefix
+ * Fixed building Win32 DLL
+ * Fixed segfault when mount point path can't be resolved
+ * Do not export internal symbols from generated parser/lexer
+ * Do not distribute generated parser files
+ * Check for libgpg-error. Link against it when needed.
+ * Distribute README.txt
+ * Added ChangeLog
+
+-------------------------------------------------------------------
+Sat Dec  3 22:54:44 UTC 2011 - pascal.bleser@opensuse.org
+
+- update to 0.3.0 (first proper release)
+
+-------------------------------------------------------------------
+Wed Nov 16 19:47:48 UTC 2011 - dimstar@opensuse.org
+
+- Initial package, git snapshot 2011-11-16.
+

@@ -1,0 +1,12 @@
+<services>
+ <service name="download_url">
+   <param name="protocol">http</param>
+   <param name="host">dell.archive.canonical.com</param>
+   <param name="path">updates/pool/public/libf/libfprint-2-tod1-goodix/libfprint-2-tod1-goodix_0.0.6.orig.tar.gz</param>
+ </service>
+ <service name="verify_file">
+   <param name="file">_service:download_url:libfprint-2-tod1-goodix_0.0.6.orig.tar.gz</param>
+   <param name="verifier">sha256</param>
+   <param name="checksum">95e3b333709089f974106058cdd88aca4366e3f9cb3ab04940b44d4cebb6007d</param>
+ </service>
+</services>
