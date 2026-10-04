@@ -139,8 +139,8 @@ Source endpoints verified 2026-09-29: OBS serves link packages' files with `?rev
 ## GitHub Actions
 
 - `.github/workflows/ci.yml`: on push and pull request, Ruby from `.ruby-version`, `bundle exec rake`.
-- `.github/workflows/build-publish.yml`, "build-publish (draft, disabled)": `workflow_dispatch` only; the 6-hourly cron is commented out, and the job runs only when the repository variable `PACKMAN_NOVA_BUILD_ENABLED` is `true`. Steps on ubuntu-26.04: install podman and zstd, free disk, write `.env` from secret `PACKMAN_NOVA_DOTENV` (the full `.env`: `GPG_PRIVATE_KEY_BASE64`, `PACKMAN_NOVA_PUBLIC_URL`, `CLOUDFLARE_R2_*`, `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_API_TOKEN`), write `packman-nova.yml` with `buildjobs: 1, jobs: 4` (14 GB runner disk), `image build`, `check`, `state pull --allow-missing`, `run --provider s3`, `state push` (also after a failed run), upload `logs/`. Concurrency group `packman-nova-tumbleweed-x86_64` without cancel; timeout 350 min.
-- Before enabling: create the R2 bucket and custom domain, set the secret and variable, seed `_state/` with `state push` from a local full build (a cold full build does not fit 350 min on a 4-core runner), verify `state pull` + `run` on a dispatch.
+- `.github/workflows/build-publish.yml`: manual `workflow_dispatch` only, ubuntu-26.04. Installs podman and zstd, writes `.env` from secret `PACKMAN_NOVA_DOTENV` (the full local `.env`; the job sets `PACKMAN_NOVA_WORKDIR`, which wins over `.env`), then `image build`, `state pull --allow-missing`, `run --provider s3`, `state push` (also after a failed run), uploads `logs/`. pbuild uses the config defaults (2 builders x 8 jobs). Concurrency group without cancel; timeout 350 min.
+- Before the first dispatch: set the secret, seed `_state/` with `state push` from a local full build (a cold full build does not fit 350 min on a 4-core runner), verify `state pull` + `run` on a dispatch.
 
 ## Code map
 

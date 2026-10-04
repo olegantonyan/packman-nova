@@ -53,6 +53,6 @@ with the new key; users accept it on the next `zypper ref`.
 - `prjconf/` Factory config fallback and the Packman macro set.
 - `container/` builder image (Tumbleweed + pbuild).
 - `docs/` findings and tool docs; `reference/` raw evidence from PMBS, OBS and mirrors; `tools/` helper scripts.
-- `.github/workflows/` tests, and the build-publish workflow (disabled draft).
+- `.github/workflows/` tests, and build-publish (manual trigger).
 
 "Packman" is their name: never reuse it for the repo, vendor string or key.

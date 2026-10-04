@@ -1,9 +1,7 @@
-name: build-publish (draft, disabled)
+name: build-publish
 
 on:
   workflow_dispatch:
-#  schedule:
-#    - cron: '17 */6 * * *'
 
 permissions:
   contents: read
@@ -14,7 +12,6 @@ concurrency:
 
 jobs:
   build-publish:
-    if: vars.PACKMAN_NOVA_BUILD_ENABLED == 'true'
     runs-on: ubuntu-26.04
     timeout-minutes: 350
     env:
@@ -24,26 +21,9 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
-      - name: Install podman
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y podman zstd
-          podman --version
-      - name: Free disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
-          df -h "$GITHUB_WORKSPACE"
-      - name: Write .env
-        env:
-          PACKMAN_NOVA_DOTENV: ${{ secrets.PACKMAN_NOVA_DOTENV }}
-        run: |
-          umask 077
-          printf '%s\n' "$PACKMAN_NOVA_DOTENV" > .env
-      - name: Write runner config
-        run: |
-          printf 'pbuild:\n  buildjobs: 1\n  jobs: 4\n' > packman-nova.yml
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq podman zstd
+      - run: echo "${{ secrets.PACKMAN_NOVA_DOTENV }}" > .env
       - run: bundle exec exe/packman-nova image build
-      - run: bundle exec exe/packman-nova check
       - run: bundle exec exe/packman-nova state pull --allow-missing
       - id: run
         run: bundle exec exe/packman-nova run --provider s3
@@ -55,5 +35,3 @@ jobs:
           name: logs
           path: ${{ env.PACKMAN_NOVA_WORKDIR }}/logs/
           retention-days: 14
-      - if: always()
-        run: rm -f .env
