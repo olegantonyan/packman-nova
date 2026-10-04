@@ -79,10 +79,19 @@ describe ::PackmanNova::Manifest do
     end
 
     it 'parses local path sources' do
-      source = native.sources.last
+      source = native.sources[1]
 
       assert_predicate source, :local?
-      assert_equal 'keys/packman-nova.key', source.path
+      refute_predicate source, :remote?
+      assert_equal 'docs/README.SUSE', source.path
+    end
+
+    it 'parses generated sources' do
+      source = native.sources.last
+
+      assert_predicate source, :generated?
+      refute_predicate source, :remote?
+      assert_equal 'public-key', source.generated
     end
 
     it 'lists vendored files without manifest, provenance and source files' do
@@ -124,6 +133,13 @@ describe ::PackmanNova::Manifest do
       assert_match(/package pkg: sources\[0\]\.sha256: missing/, error.message)
     end
 
+    it 'rejects unknown generated sources and mixed source kinds' do
+      assert_match(/sources\[0\]\.generated: must be one of public-key/, manifest_error("name: pkg\nkind: native\nsources:\n  - file: a\n    generated: x\n").message)
+      error = manifest_error("name: pkg\nkind: native\nsources:\n  - file: a\n    path: a\n    generated: public-key\n")
+
+      assert_match(/sources\[0\]: needs exactly one of urls, path or generated/, error.message)
+    end
+
     it 'rejects unsupported url schemes' do
       error = manifest_error("name: pkg\nkind: native\nsources:\n  - file: a\n    urls: [ftp://x/a]\n    sha256: #{'a' * 64}\n")
 
@@ -138,10 +154,10 @@ describe ::PackmanNova::Manifest do
       assert_match(/unknown key\(s\) sources/, manifest_error("name: pkg\nkind: obs-link\nsources: []\n").message)
     end
 
-    it 'requires exactly one of urls or path' do
+    it 'requires exactly one of urls, path or generated' do
       error = manifest_error("name: pkg\nkind: native\nsources:\n  - file: a\n")
 
-      assert_match(/sources\[0\]: needs exactly one of urls or path/, error.message)
+      assert_match(/sources\[0\]: needs exactly one of urls, path or generated/, error.message)
     end
 
     it 'rejects non-boolean enabled' do

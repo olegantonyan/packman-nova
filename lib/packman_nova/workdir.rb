@@ -26,6 +26,7 @@ module PackmanNova
     def cache_dir = join('cache')
     def obs_cache_dir(project:, package:) = ::File.join(cache_dir, 'obs', project, package)
     def prjconf_cache_dir = ::File.join(cache_dir, 'prjconf')
+    def public_key_file = ::File.join(cache_dir, 'public-key.asc')
     def state_dir = join('state')
     def state_file(name) = ::File.join(state_dir, name)
     def builds_dir = ::File.join(state_dir, 'builds')

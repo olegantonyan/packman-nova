@@ -39,10 +39,6 @@ module PackmanNova
       def short_id
         key_id[-8..].downcase
       end
-
-      def same_key?(other)
-        fingerprint.casecmp?(other.fingerprint)
-      end
     end
   end
 end

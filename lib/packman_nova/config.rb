@@ -24,7 +24,7 @@ module PackmanNova
         reponame: ::String, buildjobs: ::Integer, jobs: ::Integer, checks: BOOLEAN, debuginfo: BOOLEAN,
         baselibs: BOOLEAN, repo_refresh: BOOLEAN, timeout_sec: ::Integer, extra_args: STRINGS
       },
-      signing: { gpg_private_key_base64: ::String, public_key_file: ::String, require_signature: BOOLEAN },
+      signing: { gpg_private_key_base64: ::String, require_signature: BOOLEAN },
       repository: {
         slug: ::String, path: ::String, public_url: ::String, publish_srpms: BOOLEAN, publish_debuginfo: BOOLEAN,
         provider: ::String,

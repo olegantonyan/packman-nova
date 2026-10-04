@@ -15,15 +15,14 @@ concurrency:
 jobs:
   build-publish:
     if: vars.PACKMAN_NOVA_BUILD_ENABLED == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 350
     env:
       PACKMAN_NOVA_WORKDIR: ${{ github.workspace }}/../workdir
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.4'
           bundler-cache: true
       - name: Install podman
         run: |
@@ -51,7 +50,7 @@ jobs:
       - if: always() && steps.run.outcome != 'skipped'
         run: bundle exec exe/packman-nova state push
       - if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: logs
           path: ${{ env.PACKMAN_NOVA_WORKDIR }}/logs/

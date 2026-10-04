@@ -5,5 +5,5 @@ tier: 0
 tags: [keyring]
 sources:
   - file: packman-nova.key
-    path: keys/packman-nova.key
-notes: "Authored. Installs the public signing key and /etc/zypp/repos.d/packman-nova.repo; %post imports the key. keys/packman-nova.key is created by `packman-nova gpg export-public`."
+    generated: public-key
+notes: "Authored. Installs the public signing key and /etc/zypp/repos.d/packman-nova.repo; %post imports the key. sync derives packman-nova.key from GPG_PRIVATE_KEY_BASE64."

@@ -99,6 +99,26 @@ describe ::PackmanNova::Sync do
     assert_equal %w[demo hello], report.changed.map(&:name).sort
   end
 
+  def sync_keyring(private_key)
+    gpg = ::Object.new
+    gpg.define_singleton_method(:public_key_from_private) { |encoded| "public of #{encoded}\n" }
+    keyed = with_env('GPG_PRIVATE_KEY_BASE64' => private_key) { sync_config(dir, server) }
+    services = ::PackmanNova::Sync::Services.from_config(config: keyed, logger: null_logger, workdir: keyed.workdir, gpg: gpg)
+    write_package(packages_dir, { 'name' => 'keyring', 'kind' => 'native', 'sources' => [{ 'file' => 'k.key', 'generated' => 'public-key' }] },
+                  'keyring.spec' => "Name: keyring\n")
+    ::PackmanNova::Sync.new(config: keyed, logger: null_logger, packages_dir: packages_dir, services: services).call(packages: ['keyring'])
+  end
+
+  it 'derives generated public key sources from the private key' do
+    sync_keyring('cHJpdmF0ZQ==')
+
+    assert_equal "public of cHJpdmF0ZQ==\n", ::File.read(::File.join(workdir.package_dir('keyring'), 'k.key'))
+  end
+
+  it 'fails a generated public key source without a private key' do
+    assert_match(/GPG_PRIVATE_KEY_BASE64 is empty/, sync_keyring(nil).failed.fetch('keyring'))
+  end
+
   it 'flags rebuild_all_required when the local config changes' do
     sync.call
     ::File.write(config.prjconf.local, "Prefer: bar\n")

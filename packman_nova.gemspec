@@ -11,10 +11,10 @@ require_relative 'lib/packman_nova/version'
   spec.summary = 'Rebuilds Packman Essentials for openSUSE Tumbleweed with pbuild and publishes a signed rpm-md repo'
   spec.homepage = 'https://packman.omnipackage.org'
   spec.license = 'MIT'
-  spec.required_ruby_version = '>= 3.2'
+  spec.required_ruby_version = '>= 4.0'
   spec.metadata['rubygems_mfa_required'] = 'true'
 
-  spec.files = ::Dir.glob('{exe,lib,config,container,prjconf,keys}/**/*', base: __dir__).select { |f| ::File.file?(::File.join(__dir__, f)) }
+  spec.files = ::Dir.glob('{exe,lib,config,container,prjconf}/**/*', base: __dir__).select { |f| ::File.file?(::File.join(__dir__, f)) }
   spec.bindir = 'exe'
   spec.executables = ['packman-nova']
   spec.require_paths = ['lib']

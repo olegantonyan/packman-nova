@@ -38,7 +38,6 @@ pbuild:
   extra_args: []
 signing:
   gpg_private_key_base64: ${GPG_PRIVATE_KEY_BASE64}
-  public_key_file: keys/packman-nova.key
   require_signature: true
 repository:
   slug: packman-nova-essentials

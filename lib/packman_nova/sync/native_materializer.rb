@@ -33,7 +33,7 @@ module PackmanNova
       end
 
       def plain_files
-        vendored_files + local_files
+        vendored_files + local_files + generated_files
       end
 
       def package_dir
@@ -53,8 +53,12 @@ module PackmanNova
         end
       end
 
+      def generated_files
+        @generated_files ||= manifest.sources.select(&:generated?).map { |source| plain_file(source.file, services.public_key.path) }
+      end
+
       def remote_sources
-        manifest.sources.reject(&:local?)
+        manifest.sources.select(&:remote?)
       end
 
       def remote_files

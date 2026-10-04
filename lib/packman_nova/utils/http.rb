@@ -50,13 +50,13 @@ module PackmanNova
 
       attr_reader :logger, :timeout_sec, :retries, :offline, :sleeper
 
-      def request(method, url, &handler)
+      def request(method, url, &)
         raise ::PackmanNova::DownloadError.new("offline, not fetching #{url}", url: url, attempts: 0) if offline
 
         attempt = 0
         loop do
           attempt += 1
-          outcome, value = perform_once(method, url, &handler)
+          outcome, value = perform_once(method, url, &)
           return value if outcome == :ok
           raise ::PackmanNova::DownloadError.new("#{url}: #{value}", url: url, attempts: attempt) if outcome == :fail || attempt > retries
 
@@ -79,10 +79,10 @@ module PackmanNova
         follow(method, value, redirects_left - 1, &)
       end
 
-      def fetch(method, uri, &handler)
+      def fetch(method, uri, &)
         result = nil
         ::Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https', open_timeout: OPEN_TIMEOUT_SEC, read_timeout: timeout_sec) do |http|
-          http.request(build_request(method, uri)) { |response| result = classify(response, uri, &handler) }
+          http.request(build_request(method, uri)) { |response| result = classify(response, uri, &) }
         end
         result
       end

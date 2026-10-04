@@ -34,18 +34,11 @@ describe ::PackmanNova::Cli::Gpg do
     assert_raises(::OptionParser::MissingArgument) { run_gpg('generate') }
   end
 
-  it 'shows info for the configured key and whether the public key file matches' do
-    with_tmpdir do |dir|
-      public_key = ::File.join(dir, 'k.key')
-      ::File.write(public_key, PublishFakes::PUBLIC_ARMOR)
-      user = ::File.join(dir, 'u.yml')
-      ::File.write(user, "signing:\n  public_key_file: #{public_key}\n")
-      run_gpg('info', config_path: user)
-    end
+  it 'shows info for the configured key' do
+    run_gpg('info')
 
     assert_includes out.string, "type:        private\n"
     assert_includes out.string, "fingerprint: #{PublishFakes::FINGERPRINT}\n"
-    assert_match(/public key: .* matches$/, out.string)
   end
 
   it 'converts between armor and base64 from a file or stdin' do
@@ -60,15 +53,10 @@ describe ::PackmanNova::Cli::Gpg do
     assert_raises(::PackmanNova::GpgError) { run_gpg('convert', '-', from: 'armor', input: ::StringIO.new(encoded)) }
   end
 
-  it 'exports the public key to signing.public_key_file' do
-    with_tmpdir do |dir|
-      public_key = ::File.join(dir, 'keys', 'packman-nova.key')
-      user = ::File.join(dir, 'u.yml')
-      ::File.write(user, "signing:\n  public_key_file: #{public_key}\n")
-      run_gpg('export-public', config_path: user)
+  it 'prints the public key derived from the private key' do
+    run_gpg('export-public')
 
-      assert_equal PublishFakes::PUBLIC_ARMOR, ::File.read(public_key)
-    end
+    assert_equal PublishFakes::PUBLIC_ARMOR, out.string
     refute_includes log.string, encoded
   end
 

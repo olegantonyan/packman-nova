@@ -11,7 +11,6 @@ describe 'packman-nova smoke' do
   let(:root) { ::Dir.mktmpdir('packman-nova-smoke-', ::ENV.fetch('PACKMAN_NOVA_SMOKE_ROOT', ::Dir.tmpdir)) }
   let(:workdir) { ::File.join(root, 'workdir') }
   let(:config_file) { ::File.join(root, 'packman-nova.yml') }
-  let(:public_key) { ::File.join(root, 'packman-nova.key') }
   let(:repo) { ::File.join(workdir, 'repo') }
   let(:essentials) { ::File.join(repo, 'opensuse_tumbleweed', 'essentials') }
   let(:env) { { 'PACKMAN_NOVA_WORKDIR' => workdir, 'PACKMAN_NOVA_PUBLIC_URL' => nil, 'PACKMAN_NOVA_REPO_PATH' => nil, 'GPG_PRIVATE_KEY_BASE64' => private_key } }
@@ -38,9 +37,10 @@ describe 'packman-nova smoke' do
   end
 
   def throwaway_key
-    ::File.write(config_file, "signing:\n  public_key_file: #{public_key}\n")
+    ::File.write(config_file, "signing:\n  require_signature: true\n")
     @private_key = cli!('--no-log-file', 'gpg', 'generate', '--name', 'packman-nova smoke', '--email', 'smoke@example.org').lines.first.strip
-    cli!('--no-log-file', 'gpg', 'export-public')
+
+    assert_includes cli!('--no-log-file', 'gpg', 'export-public'), '-----BEGIN PGP PUBLIC KEY BLOCK-----'
   end
 
   def in_builder(script)

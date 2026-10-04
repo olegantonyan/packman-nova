@@ -7,12 +7,8 @@ describe ::PackmanNova::Publish do
   let(:tmp) { ::Dir.mktmpdir('packman-nova-publish-') }
   let(:workdir) { ::File.join(tmp, 'work') }
   let(:repo) { ::File.join(tmp, 'repo') }
-  let(:public_key) { ::File.join(tmp, 'packman-nova.key') }
   let(:config) do
-    user = ::File.join(tmp, 'user.yml')
-    ::File.write(user, "signing:\n  public_key_file: #{public_key}\n")
     load_config(
-      path: user,
       env: {
         'PACKMAN_NOVA_WORKDIR' => workdir, 'PACKMAN_NOVA_REPO_PATH' => repo, 'PACKMAN_NOVA_PUBLIC_URL' => nil,
         'GPG_PRIVATE_KEY_BASE64' => ::PackmanNova::Gpg.to_base64(PublishFakes::PRIVATE_ARMOR)
@@ -31,7 +27,6 @@ describe ::PackmanNova::Publish do
   after { ::FileUtils.rm_rf(tmp) }
 
   before do
-    ::File.write(public_key, PublishFakes::PUBLIC_ARMOR)
     PublishFakes.results(results, 'fdk-aac' => fdk, 'ffmpeg-8' => ffmpeg)
     write_record(PublishFakes.record('fdk-aac' => ['succeeded', fdk], 'ffmpeg-8' => ['succeeded', ffmpeg]))
   end
@@ -40,9 +35,9 @@ describe ::PackmanNova::Publish do
     ::PackmanNova::Utils::JsonFile.write(::File.join(workdir, 'state', 'last-build.json'), record)
   end
 
-  def publisher(**options)
+  def publisher(**)
     logger = ::PackmanNova::Logging::Logger.new(outputs: [log])
-    ::PackmanNova::Publish.new(config: config, logger: logger, out: out, toolbox: toolbox, gpg: PublishFakes::Gpg.new, manifests: manifests, **options)
+    ::PackmanNova::Publish.new(config: config, logger: logger, out: out, toolbox: toolbox, gpg: PublishFakes::Gpg.new, manifests: manifests, **)
   end
 
   def state
@@ -126,13 +121,6 @@ describe ::PackmanNova::Publish do
 
     assert_equal 4, diff.to_resign.size
     assert(state['files'].values.all? { |entry| entry['key_id'] == PublishFakes::KEY_ID })
-  end
-
-  it 'refuses a public key that does not match the private key' do
-    ::File.write(public_key, PublishFakes::OTHER_PUBLIC_ARMOR)
-
-    error = assert_raises(::PackmanNova::PublishError) { publisher.call }
-    assert_includes error.message, 'does not match'
   end
 
   it 'refuses to publish without a build record' do

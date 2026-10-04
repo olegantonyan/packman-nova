@@ -95,8 +95,6 @@ module PackmanNova
         else
           report_private_key(encoded)
         end
-        public_key = config.resolve(config.signing.public_key_file)
-        report(::File.file?(public_key) ? :ok : :warn, 'public key', ::File.file?(public_key) ? relative(public_key) : "#{relative(public_key)} missing")
       end
 
       def report_private_key(encoded)

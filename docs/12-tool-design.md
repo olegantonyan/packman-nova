@@ -22,7 +22,7 @@ Ruby CLI that materializes package sources, runs `pbuild` inside a rootless podm
 ## 1. Architecture
 
 ```
-git: packages/<pkg>/{package.yml, spec, patches, _service, changes}   prjconf/   container/   keys/packman-nova.key
+git: packages/<pkg>/{package.yml, spec, patches, _service, changes}   prjconf/   container/
         | sync  (api.opensuse.org public, upstream URLs, PMBS, mirror src, sha-addressed cache)
 workdir/project/<pkg>/...  + _config + _configs/tumbleweed.conf        state/sync.json
         | build  (podman --privileged  packman-nova-builder  pbuild ... /project)   state/run-counter.json, state/builds/<run>.json
@@ -65,7 +65,6 @@ lib/packman_nova/site/{generator,model}.rb
 lib/packman_nova/site/templates/{index.html.liquid,packman-nova.repo.liquid,style.css}
 config/packman-nova.yml                      committed defaults with ${VAR}
 .env.example
-keys/packman-nova.key                        public key (committed once generated)
 packages/<pkg>/package.yml (+ vendored files; tarballs ignored by .gitignore)
 packages/ffmpeg-mini/, packages/packman-nova-keyring/     authored by us
 prjconf/{factory-base.conf,packman-nova-macros.conf}
@@ -77,7 +76,7 @@ docs/12-tool.md                              CLI reference, workdir layout, stat
 tools/                                       legacy scripts from milestones 1-3
 ```
 
-Gemspec runtime deps: `dotenv`, `liquid ~> 5`, `aws-sdk-s3 ~> 1`, `rexml`, `base64`, `logger`; `required_ruby_version >= 3.2`. Gemfile: `gemspec` + minitest, minitest-fail-fast, rake, rubocop, rubocop-minitest, rubocop-rake, pry. Rakefile tasks: `test` (excludes test/integration), `integration_test`, `rubocop`, default `test rubocop`. `.rubocop.yml` copied from agent-ruby with `TargetRubyVersion: 3.2`, `Exclude: exe/packman-nova, vendor/**/*`.
+Gemspec runtime deps: `dotenv`, `liquid ~> 5`, `aws-sdk-s3 ~> 1`, `rexml`, `base64`, `logger`; `required_ruby_version >= 4.0`. Gemfile: `gemspec` + minitest, minitest-fail-fast, rake, rubocop, rubocop-minitest, rubocop-rake, pry. Rakefile tasks: `test` (excludes test/integration), `integration_test`, `rubocop`, default `test rubocop`. `.rubocop.yml` copied from agent-ruby with `TargetRubyVersion: 4.0`, `Exclude: exe/packman-nova, vendor/**/*`.
 
 ## 3. Workdir layout (`/run/media/oleg/c3996ce0-a379-4403-9d64-7d4c0536463f/dev/packman-nova`)
 
@@ -151,7 +150,6 @@ pbuild:
   extra_args: []
 signing:
   gpg_private_key_base64: ${GPG_PRIVATE_KEY_BASE64}
-  public_key_file: keys/packman-nova.key
   require_signature: true
 repository:
   slug: packman-nova-essentials
@@ -211,8 +209,8 @@ sources:                             # files not in git; everything else in the 
       - mirror-src:gstreamer-plugins-bad-codecs    # extract from newest src.rpm on the mirror list
     sha256: <hex>
     size: 8347976
-  - file: packman-nova.key            # local source: copy from the project tree
-    path: keys/packman-nova.key
+  - file: packman-nova.key            # derived from GPG_PRIVATE_KEY_BASE64 at sync time
+    generated: public-key
 ```
 
 Rules: `urls` tried in order; `sha256` mandatory unless `sync --update-checksums` runs (fills sha256/size from the first successful download and rewrites the yml; the only command writing git-tracked files). Validation: exactly one `<name>.spec` (or `spec:` override), `enabled: false` packages are removed from the project dir. `::PackmanNova::Manifest::Loader.new(packages_dir:)` returns `Manifest` objects with API: `name`, `kind`, `enabled?`, `obs_link?`, `native?`, `origin` (project, package, pin), `link_rules` (delete list), `sources` (file, urls, sha256, size, path), `spec_name`, `dir`, `tags`, `tier`.
@@ -234,7 +232,7 @@ Rules: `urls` tried in order; `sha256` mandatory unless `sync --update-checksums
 | libfprint-tod-broadcom, libfprint-tod-goodix | native | `_service:download_url:*.orig.tar.gz` from dell.archive.canonical.com | tag `proprietary` |
 | chromium-plugin-widevinecdm | native | Google blob URL from spec | 117 MB; tag `proprietary` |
 | ffmpeg-mini | native, authored | PMBS spec plus `ffmpeg-9-mini-devel/libs` subpackages | `Version: %suse_version` |
-| packman-nova-keyring | native, authored | `packman-nova.repo` + `keys/packman-nova.key` via `path:` source | installs key and `/etc/zypp/repos.d/packman-nova.repo`; `%post` runs `rpmkeys --import` |
+| packman-nova-keyring | native, authored | `packman-nova.repo` + public key via `generated: public-key` source | installs key and `/etc/zypp/repos.d/packman-nova.repo`; `%post` runs `rpmkeys --import` |
 
 Excluded (no manifest): flash-player, lightspark, gpg-offline, ffmpeg-3, preinstallimage-base, psi+-iconsets, A_tw-cmake, python-Cython, python-docutils, rpmkey-packman.
 
@@ -244,13 +242,13 @@ Global: `-c/--config FILE`, `-w/--workdir DIR`, `--offline`, `-v/--verbose`, `-q
 
 | command | options | behaviour / exit code |
 |---|---|---|
-| `check` | | doctor: config validity, runtime detected, image present, workdir writable and free space (warn < 30 GB), gpg key decodes and matches `keys/packman-nova.key`, manifests valid, network reachability (skipped with `--offline`). 0/1 |
+| `check` | | doctor: config validity, runtime detected, image present, workdir writable and free space (warn < 30 GB), gpg key decodes, manifests valid, network reachability (skipped with `--offline`). 0/1 |
 | `sync` | `--check`, `--package NAME` (repeatable), `--update-checksums`, `--no-prjconf` | materializes the project dir; `--check` only reports drift (Factory srcmd5, TW snapshot, prjconf md5) and exits 2 when anything changed, 0 when nothing, 1 on error |
 | `build` | `--package NAME`... (pbuild `--rebuild-pkg`), `--rebuild` (all), `--single NAME`, `--buildjobs N`, `--jobs N`, `--no-checks`, `--debuginfo`, `--no-repo-refresh`, `--release STR`, `--no-sync`, `--dry-run` | runs `sync` first unless `--no-sync`; bumps run counter; runs pbuild; parses results; writes `state/builds/<run>.json`. Exit 0 if no package failed/unresolvable/broken, else 1 |
 | `publish` | `--provider localfs|s3`, `--unsigned`, `--dry-run`, `--no-site`, `--arch A` | section 8; `--dry-run` prints add/remove/sign lists |
 | `status` | `--json`, `--live` (runs `pbuild --result-code all --terse` in the container) | table: package, kind, srcmd5 (short), last code, release, rpm count, built_at, published release |
 | `site` | `--output DIR` | regenerates `index.html`, `.repo`, `packages.json` from repo `state.json` |
-| `gpg generate --name N --email E [--format base64|armor]` / `gpg info` / `gpg convert --from --to` / `gpg export-public` | | omnipackage-rs semantics; `export-public` writes `keys/packman-nova.key` from `GPG_PRIVATE_KEY_BASE64` |
+| `gpg generate --name N --email E [--format base64|armor]` / `gpg info` / `gpg convert --from --to` / `gpg export-public` | | omnipackage-rs semantics; `export-public` prints the public key derived from `GPG_PRIVATE_KEY_BASE64` |
 | `image build [--no-cache] [--tag T]`, `image info` | | builds container/Containerfile, records `state/image.json` |
 | `clean --build-root | --results | --cache | --all [--yes]` | | build-root via `podman unshare rm -rf` (or a throwaway container) |
 | `state push` / `state pull` | (s3 only, later) | tar.zst of `_build.tumbleweed.<arch>/` incl. `.pbuild/_base` plus `state/` to `<path_in_bucket>/_state/` |
@@ -327,7 +325,7 @@ autorefresh=1
 ```
 
 Algorithm (rpm/gpg/createrepo steps run inside the builder container with the repo dir mounted rw and a 0700 `tmp/gpg-<rand>/` mounted ro containing `key.priv`, deleted in `ensure`):
-1. Lock. Decode `GPG_PRIVATE_KEY_BASE64`, `gpg --show-keys --with-colons` for key id + fingerprint, assert it matches `keys/packman-nova.key` (unless `--unsigned`, refused when `require_signature` and provider is s3).
+1. Lock. Decode `GPG_PRIVATE_KEY_BASE64`, `gpg --show-keys --with-colons` for key id + fingerprint, derive the public key with `gpg --export --armor` (unless `--unsigned`, refused when `require_signature` and provider is s3).
 2. Working copy: localfs -> the repo dir itself; s3 -> `repo-mirror/` reconciled with `provider.list`.
 3. Desired set (`Repo::Diff`): for every package with code `succeeded` in `last-build.json`: binary rpms (minus debuginfo unless enabled) to `<arch>/`, `*.src.rpm` to `src/`. For every enabled package not succeeded: retain the files listed under that package in the current `state.json` (`Repo::Retention`). Disabled packages: nothing retained.
 4. Diff by filename + sha256: `to_add`, `to_replace`, `to_remove`.
@@ -352,7 +350,7 @@ Algorithm (rpm/gpg/createrepo steps run inside the builder container with the re
 
 ## 10. GPG (`::PackmanNova::Gpg`)
 
-Every call in a fresh `Dir.mktmpdir` (0700) with `GNUPGHOME` set. Commands as in omnipackage-rs `gpg.rs`: batch file (`Key-Type: RSA`, `Key-Length: 4096`, `Expire-Date: 0`, `%no-protection`), `--export --armor`, `--export-secret-keys --armor`, `--show-keys --with-fingerprint --with-colons` (parse `fpr:`/`pub:`), `--import` + sign test. `generate` prints the one-line base64 private key; `export-public` writes `keys/packman-nova.key`. Run on host if `gpg` exists, else in the container.
+Every call in a fresh `Dir.mktmpdir` (0700) with `GNUPGHOME` set. Commands as in omnipackage-rs `gpg.rs`: batch file (`Key-Type: RSA`, `Key-Length: 4096`, `Expire-Date: 0`, `%no-protection`), `--export --armor`, `--export-secret-keys --armor`, `--show-keys --with-fingerprint --with-colons` (parse `fpr:`/`pub:`), `--import` + sign test. `generate` prints the one-line base64 private key; `export-public` prints the derived public key; no key file is kept in git. Run on host if `gpg` exists, else in the container.
 
 ## 11. Logging, subprocesses, errors
 
@@ -392,7 +390,7 @@ Interfaces frozen by WP0: `Config` attribute names (4.1), `Workdir` path methods
 7. Name clashes with Factory (`libfdk-aac2`, `libheif*`, `ffmpeg-N-*`): build side solved by local-first; runtime side by release `1699.N.nova.1` > Factory's plus vendor stickiness after `--allow-vendor-change`; `ffmpeg-mini` stub `Version: 1699` beats `8.x`.
 8. rpmlint/post-build checks on by default (parity with PMBS); `pbuild.checks: false` disables.
 9. Failed rebuilds wipe old rpms: publish retains via `state.json`.
-10. GitHub Actions: rootless podman `--privileged` works on ubuntu-24.04; 14 GB runner disk forces `buildjobs: 1`; state must include `.pbuild/_base` (`state push/pull` to R2 `_state/`); run counter recovers from published `state.json`; concurrency group without cancel.
+10. GitHub Actions: rootless podman `--privileged` expected to work on ubuntu-26.04 (unverified); 14 GB runner disk forces `buildjobs: 1`; state must include `.pbuild/_base` (`state push/pull` to R2 `_state/`); run counter recovers from published `state.json`; concurrency group without cancel.
 11. PMBS shutdown: tarballs from upstream URLs first, PMBS second, mirror src.rpm third; after first publish our own `src/` dir joins `mirror_src_urls`.
 12. Legal: proprietary blobs tagged; `enabled` per package.
 13. Upstream change detection has no webhooks (OBS/src.opensuse.org Gitea webhooks need repo admin); cron `sync --check` (exit 2 triggers a build); per-package Atom feeds optional.

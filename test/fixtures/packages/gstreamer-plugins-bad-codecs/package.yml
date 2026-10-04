@@ -12,5 +12,7 @@ sources:
       - mirror-src:gstreamer-plugins-bad-codecs
     sha256: 9C4A5B0E7A1F3C2D4B6E8F0A1C3E5B7D9F1A3C5E7B9D1F3A5C7E9B1D3F5A7C9E
     size: 8347976
+  - file: README.SUSE
+    path: docs/README.SUSE
   - file: packman-nova.key
-    path: keys/packman-nova.key
+    generated: public-key

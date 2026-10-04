@@ -13,7 +13,7 @@ bundle exec rake                                   # unit tests + rubocop
 PACKMAN_NOVA_INTEGRATION=1 PACKMAN_NOVA_SMOKE_ROOT=/big/disk bundle exec rake integration_test
 ```
 
-Host needs ruby >= 3.2, bundler, podman (docker untested), tar, zstd. Every rpm/gpg/createrepo/pbuild step runs inside the builder image; `gpg` runs on the host when present.
+Host needs ruby >= 4.0 (`.ruby-version` pins 4.0.7), bundler, podman (docker untested), tar, zstd. Every rpm/gpg/createrepo/pbuild step runs inside the builder image; `gpg` runs on the host when present.
 
 ## CLI
 
@@ -32,16 +32,16 @@ Errors print `Class: message` (backtrace with `-v`) and exit 1; Ctrl-C exits 130
 
 | command | options | behaviour, exit code |
 |---|---|---|
-| `check` | | doctor: config, workdir writable, free disk (warn < 30 GB), runtime, image present and built from the current Containerfile, manifests valid, gpg key decodes and matches `keys/packman-nova.key`, network (OBS API, TW snapshot URL; PMBS warn only; skipped with `--offline`). 0 ok / 1 any fail |
+| `check` | | doctor: config, workdir writable, free disk (warn < 30 GB), runtime, image present and built from the current Containerfile, manifests valid, gpg key decodes, network (OBS API, TW snapshot URL; PMBS warn only; skipped with `--offline`). 0 ok / 1 any fail |
 | `sync` | `--check`, `--package NAME` (repeatable), `--update-checksums`, `--[no-]prjconf` | materializes `project/`. `--check` writes nothing but caches and reports drift. 1 if any package failed, else 2 for `--check` with drift, else 0 |
 | `build` | `--package NAME`... (pbuild `--rebuild-pkg`), `--rebuild` (all), `--single NAME`, `--[no-]sync`, `--dry-run`, `--release STR`, `--buildjobs N`, `--jobs N`, `--[no-]checks`, `--debuginfo`, `--[no-]repo-refresh` | sync (unless `--no-sync`), allocate run and release, run pbuild, write the build record. 0 if no package is failed/unresolvable/broken, else 1; `BuildError` if pbuild itself exits non-zero without a failed package. `--dry-run` prints the podman command |
 | `publish` | `--provider localfs\|s3`, `--unsigned`, `--dry-run`, `--[no-]site`, `--arch A` | sign new rpms, createrepo, sign repomd, write state/site, provider sync. `--dry-run` prints add/replace/remove/re-sign lists. `--unsigned` refused for s3 while `signing.require_signature` |
 | `status` | `--json`, `--live` | per package: kind, srcmd5, last code, release, rpm count, built_at, published release. `--live` asks pbuild in the container |
 | `site` | `--output DIR` | re-renders `index.html` and `packages.json` from the repo `state.json` |
 | `gpg generate` | `--name N` (default `project_name`), `--email E`, `--format base64\|armor` | prints a new RSA 4096 private key (one base64 line) on stdout, instructions on the log |
-| `gpg info [FILE\|-]` | | key id, fingerprint, uids of FILE or the configured key; says whether `keys/packman-nova.key` matches |
+| `gpg info [FILE\|-]` | | key id, fingerprint, uids of FILE or the configured key |
 | `gpg convert [FILE\|-]` | `--from`, `--to base64\|armor` | |
-| `gpg export-public` | | writes `signing.public_key_file` from `GPG_PRIVATE_KEY_BASE64` |
+| `gpg export-public` | | prints the public key derived from `GPG_PRIVATE_KEY_BASE64` |
 | `image build` / `image info` | `--[no-]cache`, `--tag T` | builds `container/Containerfile`, records `state/image.json` |
 | `clean` | `--build-root`, `--results`, `--cache`, `--all`, `--yes` | build-root through the container runtime (subuid-owned files), results = `project/_build.*` (incl. `.pbuild/_base`), cache = `cache/` |
 | `state push` / `state pull` | `--allow-missing` (pull) | s3 only: `tar --zstd` of `project/_build.<reponame>.<arch>/` and `state/` to `<path_in_bucket>/_state/state.tar.zst`; `--allow-missing` makes a first pull on an empty bucket a warning |
@@ -49,7 +49,7 @@ Errors print `Class: message` (backtrace with `-v`) and exit 1; Ctrl-C exits 130
 
 ## Configuration
 
-Defaults: `config/packman-nova.yml`. Layers, later wins: defaults, user file, non-empty `PACKMAN_NOVA_{WORKDIR,CONTAINER_RUNTIME,PUBLIC_URL,REPO_PATH}`, CLI flags. `${VAR}` expands from the process env, then `./.env` (process env wins); unset variables become `""`. Unknown keys and wrong types raise `ConfigError` naming the dotted key. Relative paths (`prjconf/`, `keys/`, `container/`) resolve against the repository root.
+Defaults: `config/packman-nova.yml`. Layers, later wins: defaults, user file, non-empty `PACKMAN_NOVA_{WORKDIR,CONTAINER_RUNTIME,PUBLIC_URL,REPO_PATH}`, CLI flags. `${VAR}` expands from the process env, then `./.env` (process env wins); unset variables become `""`. Unknown keys and wrong types raise `ConfigError` naming the dotted key. Relative paths (`prjconf/`, `container/`) resolve against the repository root.
 
 | key | default | notes |
 |---|---|---|
@@ -62,7 +62,7 @@ Defaults: `config/packman-nova.yml`. Layers, later wins: defaults, user file, no
 | `sources.http.{timeout_sec,retries}` | `600`, `5` | |
 | `container.{runtime,image,containerfile,privileged,extra_args}` | `auto`, `localhost/packman-nova-builder:latest`, `container/Containerfile`, `true`, `[]` | |
 | `pbuild.{reponame,buildjobs,jobs,checks,debuginfo,baselibs,repo_refresh,timeout_sec,extra_args}` | `tumbleweed`, `2`, `8`, `true`, `false`, `false`, `true`, `43200`, `[]` | `timeout_sec` bounds the whole pbuild run |
-| `signing.{gpg_private_key_base64,public_key_file,require_signature}` | `${GPG_PRIVATE_KEY_BASE64}`, `keys/packman-nova.key`, `true` | |
+| `signing.{gpg_private_key_base64,require_signature}` | `${GPG_PRIVATE_KEY_BASE64}`, `true` | the public key is always derived from the private one |
 | `repository.{slug,path,public_url,publish_srpms,publish_debuginfo,provider}` | `packman-nova-essentials`, `opensuse_tumbleweed/essentials`, `${PACKMAN_NOVA_PUBLIC_URL}`, `true`, `false`, `localfs` | `slug` = zypper repo alias; empty `public_url` = `file://<localfs root>` |
 | `repository.localfs.path` | `${PACKMAN_NOVA_REPO_PATH}` | empty = `<workdir>/repo` |
 | `repository.s3.{bucket,path_in_bucket,endpoint,access_key_id,secret_access_key,region,force_path_style,cloudflare_zone_id,cloudflare_api_token}` | `CLOUDFLARE_*` env, `""`, `auto`, `true` | |
@@ -100,7 +100,7 @@ State schemas: `PackmanNova::State::Schemas::{SYNC_STATE,BUILD_RECORD,REPO_STATE
 
 **sync** (`Sync#call`). Prjconf: fetch Factory `_config` unless offline/`--no-prjconf`, write `_configs/tumbleweed.conf` and `_config`; a changed `_config` md5 sets `rebuild_all_required`, which stays set until a build with `--rebuild` succeeds. Snapshot id from `media.1/media`. Per enabled manifest:
 - obs-link: `GET <obs_api>/source/<project>/<package>?expand=1[&rev=pin]`; unchanged when srcmd5, file list and every on-disk md5 equal `sync.json`. Otherwise files not in `link.delete` are fetched with `?rev=<srcmd5>` into `cache/blobs/md5/`, assembled in `project/.<pkg>.tmp/` and renamed into place.
-- native: every file in `packages/<pkg>/` except `package.yml` plus each `sources[]` entry. URLs are tried in order: `https://...`; `pmbs:<pkg>[/<file>]` (PMBS listing, fetched with `?rev=<srcmd5>`); `mirror-src:<srpm name>` (newest src.rpm on the mirror index, member extracted in the builder container); `path:` copies a repo file (the keyring's key). sha256 must match.
+- native: every file in `packages/<pkg>/` except `package.yml` plus each `sources[]` entry. URLs are tried in order: `https://...`; `pmbs:<pkg>[/<file>]` (PMBS listing, fetched with `?rev=<srcmd5>`); `mirror-src:<srpm name>` (newest src.rpm on the mirror index, member extracted in the builder container); `path:` copies a repo file; `generated: public-key` writes the public key derived from `GPG_PRIVATE_KEY_BASE64`. sha256 must match.
 - A failing package keeps its previous `sync.json` entry and project dir; the others continue. Full runs prune project dirs without an enabled manifest.
 
 Source endpoints verified 2026-09-29: OBS serves link packages' files with `?rev=<expanded srcmd5>`; PMBS returns 404 for service products (`_service:obs_scm:*`) with `?expand=1` but serves every file with `?rev=`; `+` in PMBS names works raw, `:` must stay raw; the mirror index picks the newest src.rpm by rpmvercmp on version then release. Offline sync uses cached OBS listings, blobs, the existing prjconf copy (else `base_fallback`) and the recorded snapshot. `openSUSE:Factory/fdk-aac` does not exist; Factory scmsync packages (ffmpeg-4/7/8/9) carry `_scmsync.obsinfo` and `build.specials.obscpio`, which pbuild ignores.
@@ -118,9 +118,10 @@ Source endpoints verified 2026-09-29: OBS serves link packages' files with `?rev
 
 ## Signing key
 
-- Generate: `packman-nova gpg generate --name packman-nova --email <e>` prints one base64 line; put it into `.env` as `GPG_PRIVATE_KEY_BASE64=` without echoing it (`umask 077; k=$(packman-nova -q --no-log-file gpg generate ... | head -1)`), then `gpg export-public` writes `keys/packman-nova.key` (commit it), `gpg info` confirms the match. `packages/packman-nova-keyring` ships that key.
+- Generate: `packman-nova gpg generate --name packman-nova --email <e>` prints one base64 line; put it into `.env` as `GPG_PRIVATE_KEY_BASE64=` without echoing it (`umask 077; k=$(packman-nova -q --no-log-file gpg generate ... | head -1)`).
+- The public key is never stored in git. Publish derives it for `repomd.xml.key` and `/packman-nova.key`; sync derives it into `cache/public-key.asc` for `packages/packman-nova-keyring` (source `generated: public-key`), so syncing the keyring needs the private key. `gpg export-public` prints it.
 - Current key (2026-09-29): RSA 4096, id `C2F2B2F52552208F`, fingerprint `41F4 A349 AA69 0BAA 70B1 FCC5 C2F2 B2F5 2552 208F`, uid `packman-nova <oleg@aytm.com>`, no expiry. The private key exists only in `.env` (gitignored, 0600); back that file up offline (password manager or encrypted storage) and store the same line as the CI secret.
-- Rotate: generate a new key, replace `.env` and the CI secret, `gpg export-public`, bump the keyring package (`Version`, changes), `build --package packman-nova-keyring`, `publish`. Publish sees the new key id in `state.json` and re-signs every published rpm; users must import the new key (`zypper ref` asks, the keyring update imports it).
+- Rotate: generate a new key, replace `.env` and the CI secret, bump the keyring package (`Version`, changes), `sync`, `build --package packman-nova-keyring`, `publish`. Publish sees the new key id in `state.json` and re-signs every published rpm; users must import the new key (`zypper ref` asks, the keyring update imports it).
 
 ## Troubleshooting
 
@@ -137,8 +138,8 @@ Source endpoints verified 2026-09-29: OBS serves link packages' files with `?rev
 
 ## GitHub Actions
 
-- `.github/workflows/ci.yml`: on push and pull request, Ruby 3.4, `bundle exec rake`.
-- `.github/workflows/build-publish.yml`, "build-publish (draft, disabled)": `workflow_dispatch` only; the 6-hourly cron is commented out, and the job runs only when the repository variable `PACKMAN_NOVA_BUILD_ENABLED` is `true`. Steps on ubuntu-24.04: install podman and zstd, free disk, write `.env` from secret `PACKMAN_NOVA_DOTENV` (the full `.env`: `GPG_PRIVATE_KEY_BASE64`, `PACKMAN_NOVA_PUBLIC_URL`, `CLOUDFLARE_R2_*`, `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_API_TOKEN`), write `packman-nova.yml` with `buildjobs: 1, jobs: 4` (14 GB runner disk), `image build`, `check`, `state pull --allow-missing`, `run --provider s3`, `state push` (also after a failed run), upload `logs/`. Concurrency group `packman-nova-tumbleweed-x86_64` without cancel; timeout 350 min.
+- `.github/workflows/ci.yml`: on push and pull request, Ruby from `.ruby-version`, `bundle exec rake`.
+- `.github/workflows/build-publish.yml`, "build-publish (draft, disabled)": `workflow_dispatch` only; the 6-hourly cron is commented out, and the job runs only when the repository variable `PACKMAN_NOVA_BUILD_ENABLED` is `true`. Steps on ubuntu-26.04: install podman and zstd, free disk, write `.env` from secret `PACKMAN_NOVA_DOTENV` (the full `.env`: `GPG_PRIVATE_KEY_BASE64`, `PACKMAN_NOVA_PUBLIC_URL`, `CLOUDFLARE_R2_*`, `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_API_TOKEN`), write `packman-nova.yml` with `buildjobs: 1, jobs: 4` (14 GB runner disk), `image build`, `check`, `state pull --allow-missing`, `run --provider s3`, `state push` (also after a failed run), upload `logs/`. Concurrency group `packman-nova-tumbleweed-x86_64` without cancel; timeout 350 min.
 - Before enabling: create the R2 bucket and custom domain, set the secret and variable, seed `_state/` with `state push` from a local full build (a cold full build does not fit 350 min on a 4-core runner), verify `state pull` + `run` on a dispatch.
 
 ## Code map

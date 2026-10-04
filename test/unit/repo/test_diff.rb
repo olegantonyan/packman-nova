@@ -13,8 +13,8 @@ describe ::PackmanNova::Repo::Diff do
 
   after { ::FileUtils.rm_rf(tmp) }
 
-  def diff(record, state: ::PackmanNova::Repo::State.empty, **options)
-    ::PackmanNova::Repo::Diff.new(build_record: record, results_dir: results_dir, state: state, enabled: enabled, arch: 'x86_64', repo_dir: repo_dir, **options).call
+  def diff(record, state: ::PackmanNova::Repo::State.empty, **)
+    ::PackmanNova::Repo::Diff.new(build_record: record, results_dir: results_dir, state: state, enabled: enabled, arch: 'x86_64', repo_dir: repo_dir, **).call
   end
 
   def publish(result, key_id: nil)

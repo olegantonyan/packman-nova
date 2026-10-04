@@ -38,9 +38,9 @@ module TestHelpers
     ::PackmanNova::Logging::Logger.new(outputs: [::StringIO.new], level: ::Logger::DEBUG)
   end
 
-  def load_config(env: {}, cwd: nil, **options)
+  def load_config(env: {}, cwd: nil, **)
     with_env(env) do
-      cwd ? ::PackmanNova::Config.load(cwd: cwd, **options) : with_tmpdir { |dir| ::PackmanNova::Config.load(cwd: dir, **options) }
+      cwd ? ::PackmanNova::Config.load(cwd: cwd, **) : with_tmpdir { |dir| ::PackmanNova::Config.load(cwd: dir, **) }
     end
   end
 end

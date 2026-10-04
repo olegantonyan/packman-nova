@@ -5,7 +5,6 @@ require 'fileutils'
 module PublishFakes
   PRIVATE_ARMOR = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n\nZmFrZSBwcml2YXRl\n-----END PGP PRIVATE KEY BLOCK-----\n"
   PUBLIC_ARMOR = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nZmFrZSBwdWJsaWM=\n-----END PGP PUBLIC KEY BLOCK-----\n"
-  OTHER_PUBLIC_ARMOR = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nb3RoZXI=\n-----END PGP PUBLIC KEY BLOCK-----\n"
   KEY_ID = '31D7469FD4F5F9EF'
   FINGERPRINT = "0EECDB2A7E2B144481F18002#{KEY_ID}".freeze
 
@@ -78,10 +77,13 @@ module PublishFakes
   end
 
   class Gpg
+    def public_key_from_private(_armor)
+      PUBLIC_ARMOR
+    end
+
     def info(armor)
       text = ::PackmanNova::Gpg.to_armor(armor)
-      fingerprint = text == OTHER_PUBLIC_ARMOR ? 'F' * 40 : FINGERPRINT
-      ::PackmanNova::Gpg::Info.new(key_id: fingerprint[-16..], fingerprint: fingerprint, uids: ['Test <test@example.invalid>'], secret: text.include?('PRIVATE'))
+      ::PackmanNova::Gpg::Info.new(key_id: KEY_ID, fingerprint: FINGERPRINT, uids: ['Test <test@example.invalid>'], secret: text.include?('PRIVATE'))
     end
   end
 

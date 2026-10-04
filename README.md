@@ -59,7 +59,7 @@ sudo zypper ar -f file://<workdir>/repo/opensuse_tumbleweed/essentials/packman-n
 - `packages/<name>/package.yml` + vendored spec, patches, changes. 40 packages, 38 enabled. Tarballs are not in git; `sync` downloads them.
 - `prjconf/` `factory-base.conf` (Factory `_config` fallback) + `packman-nova-macros.conf` (becomes the project `_config`).
 - `container/Containerfile` builder image: Tumbleweed + obs-build (pbuild), rpm-build, createrepo_c, gpg2; patches obs-build's `/dev/fd` handling.
-- `keys/packman-nova.key` public signing key.
+- No public key in git: it is derived from `GPG_PRIVATE_KEY_BASE64` (`packman-nova gpg export-public` prints it).
 - `test/unit/**` unit tests (`bundle exec rake`), `test/integration/test_smoke.rb` end-to-end fdk-aac run.
 - `.github/workflows/` `ci.yml` (tests) and `build-publish.yml` (draft, disabled).
 - `out/`, `.cache/` results of the milestone 1-3 scripts (not for git).

@@ -67,7 +67,7 @@ module PackmanNova
         [
           "generated RSA 4096 key #{key.key_id} (#{key.fingerprint}) for #{key_name} <#{key_email}>",
           'keep this private key secret: put the line above into .env as GPG_PRIVATE_KEY_BASE64=<line> (or a CI secret)',
-          "then run 'packman-nova gpg export-public' to write #{config.signing.public_key_file}"
+          'the public key is derived from it; print it with packman-nova gpg export-public'
         ]
       end
 
@@ -76,7 +76,6 @@ module PackmanNova
         [
           ['type:', info.secret? ? 'private' : 'public'], ['key id:', info.key_id], ['fingerprint:', info.fingerprint], *info.uids.map { |uid| ['uid:', uid] }
         ].each { |label, value| out.puts("#{label.ljust(12)} #{value}") }
-        report_public_key_match(info)
       end
 
       def run_convert
@@ -89,11 +88,7 @@ module PackmanNova
       end
 
       def run_export_public
-        public_armor = gpg.public_key_from_private(configured_private_key)
-        path = config.resolve(config.signing.public_key_file)
-        ::PackmanNova::Utils::Path.atomic_write(path, public_armor)
-        info = gpg.info(public_armor)
-        logger.info("wrote public key #{info.key_id} (#{info.fingerprint}) to #{path}")
+        out.print(gpg.public_key_from_private(configured_private_key))
       end
 
       def key_input
@@ -109,14 +104,6 @@ module PackmanNova
         raise ::PackmanNova::GpgError, 'signing.gpg_private_key_base64 (GPG_PRIVATE_KEY_BASE64) is empty' if encoded.empty?
 
         encoded
-      end
-
-      def report_public_key_match(info)
-        path = config.resolve(config.signing.public_key_file)
-        return out.puts("#{'public key:'.ljust(12)} #{path} missing") unless ::File.file?(path)
-
-        matches = gpg.info(::File.read(path)).same_key?(info)
-        out.puts("#{'public key:'.ljust(12)} #{path} #{matches ? 'matches' : 'does NOT match'}")
       end
 
       def gpg

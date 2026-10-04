@@ -5,7 +5,7 @@ module PackmanNova
     class SourceParser
       include ::PackmanNova::Manifest::Fields
 
-      KEYS = %i[file urls sha256 size path].freeze
+      KEYS = %i[file urls sha256 size path generated].freeze
 
       def initialize(label:, require_checksums:)
         @label = label
@@ -17,10 +17,11 @@ module PackmanNova
         reject_unknown(entry, KEYS, field)
         urls = parse_urls(entry, field)
         path = string(entry, :path, "#{field}.path")
-        fail!(field, 'needs exactly one of urls or path') unless urls.empty? ^ path.nil?
+        generated = parse_generated(entry, field)
+        fail!(field, 'needs exactly one of urls, path or generated') unless [!urls.empty?, path, generated].one?
 
         ::PackmanNova::Manifest::Source.new(
-          file: parse_file(entry, field), urls: urls, path: path, sha256: parse_sha256(entry, field, urls), size: parse_size(entry, field)
+          file: parse_file(entry, field), urls: urls, path: path, generated: generated, sha256: parse_sha256(entry, field, urls), size: parse_size(entry, field)
         )
       end
 
@@ -42,6 +43,14 @@ module PackmanNova
 
           fail!("#{field}.urls", "unsupported url #{url.inspect} (use http(s)://, pmbs:<package>[/<file>] or mirror-src:<package>)")
         end
+      end
+
+      def parse_generated(entry, field)
+        generated = string(entry, :generated, "#{field}.generated")
+        allowed = ::PackmanNova::Manifest::Source::GENERATED
+        fail!("#{field}.generated", "must be one of #{allowed.join(', ')}, got #{generated.inspect}") if generated && !allowed.include?(generated)
+
+        generated
       end
 
       def parse_sha256(entry, field, urls)

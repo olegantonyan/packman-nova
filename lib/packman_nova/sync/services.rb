@@ -4,16 +4,16 @@ module PackmanNova
   class Sync
     class Services
       class << self
-        def from_config(config:, logger:, workdir:, downloader: nil, extractor: nil)
+        def from_config(config:, logger:, workdir:, downloader: nil, extractor: nil, gpg: nil)
           downloader ||= ::PackmanNova::Sources::Downloader.from_config(config: config, logger: logger)
           extractor ||= ::PackmanNova::Sources::SrpmExtractor.new(config: config, logger: logger, workdir: workdir)
-          new(config: config, logger: logger, workdir: workdir, downloader: downloader, extractor: extractor)
+          new(config: config, logger: logger, workdir: workdir, downloader: downloader, extractor: extractor, gpg: gpg)
         end
       end
 
-      attr_reader :downloader, :cache, :obs, :pmbs, :mirror, :fetcher
+      attr_reader :downloader, :cache, :obs, :pmbs, :mirror, :fetcher, :public_key
 
-      def initialize(config:, logger:, workdir:, downloader:, extractor:)
+      def initialize(config:, logger:, workdir:, downloader:, extractor:, gpg: nil)
         sources = config.sources
         @downloader = downloader
         @cache = ::PackmanNova::Sources::DownloadCache.new(workdir: workdir)
@@ -23,6 +23,7 @@ module PackmanNova
           urls: sources.mirror_src_urls, downloader: downloader, workdir: workdir, extractor: extractor, logger: logger
         )
         @fetcher = ::PackmanNova::Sync::SourceFetcher.new(cache: cache, downloader: downloader, pmbs: pmbs, mirror: mirror, logger: logger)
+        @public_key = ::PackmanNova::Sync::PublicKey.new(config: config, logger: logger, workdir: workdir, gpg: gpg)
       end
     end
   end
