@@ -120,7 +120,7 @@ Source endpoints verified 2026-09-29: OBS serves link packages' files with `?rev
 
 - Generate: `packman-nova gpg generate --name packman-nova --email <e>` prints one base64 line; put it into `.env` as `GPG_PRIVATE_KEY_BASE64=` without echoing it (`umask 077; k=$(packman-nova -q --no-log-file gpg generate ... | head -1)`).
 - The public key is never stored in git. Publish derives it for `repomd.xml.key` and `/packman-nova.key`; sync derives it into `cache/public-key.asc` for `packages/packman-nova-keyring` (source `generated: public-key`), so syncing the keyring needs the private key. `gpg export-public` prints it.
-- Current key (2026-09-29): RSA 4096, id `C2F2B2F52552208F`, fingerprint `41F4 A349 AA69 0BAA 70B1 FCC5 C2F2 B2F5 2552 208F`, uid `packman-nova <oleg@aytm.com>`, no expiry. The private key exists only in `.env` (gitignored, 0600); back that file up offline (password manager or encrypted storage) and store the same line as the CI secret.
+- Current key (2026-09-29, uid changed 2026-10-04): RSA 4096, id `C2F2B2F52552208F`, fingerprint `41F4 A349 AA69 0BAA 70B1 FCC5 C2F2 B2F5 2552 208F`, uid `packman-nova <oleg.b.antonyan@gmail.com>`, no expiry. The private key exists only in `.env` (gitignored, 0600); back that file up offline (password manager or encrypted storage) and store the same line as the CI secret.
 - Rotate: generate a new key, replace `.env` and the CI secret, bump the keyring package (`Version`, changes), `sync`, `build --package packman-nova-keyring`, `publish`. Publish sees the new key id in `state.json` and re-signs every published rpm; users must import the new key (`zypper ref` asks, the keyring update imports it).
 
 ## Troubleshooting

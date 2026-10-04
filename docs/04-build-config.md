@@ -70,5 +70,6 @@ The `%define` block affects OBS dependency expansion; the `Macros:` block is wri
 
 ## Things that will bite
 - Some Packman specs use `%packman_bs` or `BUILD_ORIG_ADDON`; grep the snapshot before dropping a macro.
+- packman-nova adds `Prefer: libopenaptx-devel` (not in PMBS): since 2026-10-02 Tumbleweed ships `libfreeaptx-devel`, which also provides `pkgconfig(libfreeaptx)`, so pipewire-aptx was unresolvable. Packman's rpm links `libopenaptx.so.0`.
 - `Prefer:` lines resolve "have choice" errors; outside OBS the equivalent is pinning exact package names in the build root or using `zypper --solver` options in the build container.
 - Factory's ffmpeg-8 `_multibuild` has a `mini` flavor; Packman deletes it via `_link`. Build only the main flavor.
