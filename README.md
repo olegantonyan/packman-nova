@@ -12,6 +12,33 @@ sudo zypper --gpg-auto-import-keys ref
 sudo zypper dup --from packman-nova-essentials --allow-vendor-change
 ```
 
+## How it works
+
+A GitHub Actions job (`.github/workflows/build-publish.yml`) runs every night at 01:17 UTC and normally needs no
+attention:
+
+1. **Restore.** `state pull` downloads yesterday's pbuild results and `state/` from the R2 bucket, so pbuild knows
+   what is already built.
+2. **Sync.** For every enabled `packages/<name>/package.yml`: `obs-link` packages take Factory's current sources
+   from the OBS API; `native` packages use the spec in this repo plus tarballs from upstream (fallback: our source
+   archive in the bucket). Checksums are verified. The current Factory prjconf and Tumbleweed snapshot id are recorded too.
+3. **Build.** pbuild runs in the builder container and rebuilds only packages whose sources or build dependencies
+   changed. An i586 pass then makes the `-32bit` packages. Release `1699.<run>.nova.1` is higher than Factory's,
+   so our packages win on users' systems.
+4. **Publish.** New rpms are signed, repodata is regenerated and signed, changed files are uploaded to R2, stale
+   ones deleted, the Cloudflare cache purged, and the site at packman.omnipackage.org updated. New source tarballs
+   are archived under `_sources/`, so a later build doesn't need Packman or a vanished upstream.
+5. **Save.** `state push` uploads the updated pbuild state for the next night.
+
+If nothing changed upstream, the night builds and publishes nothing. Users get updates with
+`zypper ref && zypper dup`.
+
+When a package fails, the job goes red. The log shows the pbuild result and the last 100 lines of that package's
+build log. The previously published rpms of that package stay in the repo.
+
+To change a package, edit `packages/<name>/` and push to `master`. CI runs the tests, and the next nightly run (or a
+manual dispatch) builds and publishes it.
+
 ## Build and publish
 
 ```
