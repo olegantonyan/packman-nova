@@ -71,5 +71,6 @@ The `%define` block affects OBS dependency expansion; the `Macros:` block is wri
 ## Things that will bite
 - Some Packman specs use `%packman_bs` or `BUILD_ORIG_ADDON`; grep the snapshot before dropping a macro.
 - packman-nova adds `Prefer: libopenaptx-devel` (not in PMBS): since 2026-10-02 Tumbleweed ships `libfreeaptx-devel`, which also provides `pkgconfig(libfreeaptx)`, so pipewire-aptx was unresolvable. Packman's rpm links `libopenaptx.so.0`.
+- -32bit: `%ifarch i586` block in `prjconf/packman-nova-macros.conf`. `BuildFlags: onlybuild:` limits the i586 pass to the 21 packages with a `baselibs.conf` (Packman's `-32bit` set minus ffmpeg-3) plus the ffmpeg-mini solver stub; add a package there when it gains one. `VMinstall: !kernel-obs-build` because OBS exports that package to i586 from x86_64 and the i586 port lacks it; chroot builds do not need it.
 - `Prefer:` lines resolve "have choice" errors; outside OBS the equivalent is pinning exact package names in the build root or using `zypper --solver` options in the build container.
 - Factory's ffmpeg-8 `_multibuild` has a `mini` flavor; Packman deletes it via `_link`. Build only the main flavor.

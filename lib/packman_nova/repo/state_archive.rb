@@ -57,7 +57,7 @@ module PackmanNova
       end
 
       def results_dirs
-        config.distro.arches.map { |arch| workdir.results_dir(reponame: config.pbuild.reponame, arch: arch) }
+        [*config.distro.arches, config.distro.baselibs.arch].reject(&:empty?).uniq.map { |arch| workdir.results_dir(reponame: config.pbuild.reponame, arch: arch) }
       end
 
       def with_archive

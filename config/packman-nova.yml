@@ -8,6 +8,10 @@ distro:
   repos:
     - https://download.opensuse.org/tumbleweed/repo/oss/
   snapshot_url: https://download.opensuse.org/tumbleweed/repo/oss/media.1/media
+  baselibs:
+    arch: i586
+    repos:
+      - https://download.opensuse.org/ports/i586/tumbleweed/repo/oss/
 release:
   template: "%{suse_version}.%{run}.nova.1"
 prjconf:
@@ -29,7 +33,6 @@ pbuild:
   jobs: 8
   checks: true
   debuginfo: false
-  baselibs: false
   repo_refresh: true
   timeout_sec: 43200
   extra_args: []

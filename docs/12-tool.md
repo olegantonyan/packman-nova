@@ -34,7 +34,7 @@ Errors print `Class: message` (backtrace with `-v`) and exit 1; Ctrl-C exits 130
 |---|---|---|
 | `check` | | doctor: config, workdir writable, free disk (warn < 30 GB), runtime, image present and built from the current Containerfile, manifests valid, gpg key decodes, network (OBS API, TW snapshot URL; skipped with `--offline`). 0 ok / 1 any fail |
 | `sync` | `--check`, `--package NAME` (repeatable), `--update-checksums`, `--[no-]prjconf` | materializes `project/`. `--check` writes nothing but caches and reports drift. 1 if any package failed, else 2 for `--check` with drift, else 0 |
-| `build` | `--package NAME`... (pbuild `--rebuild-pkg`), `--rebuild` (all), `--single NAME`, `--[no-]sync`, `--dry-run`, `--release STR`, `--buildjobs N`, `--jobs N`, `--[no-]checks`, `--debuginfo`, `--[no-]repo-refresh` | sync (unless `--no-sync`), allocate run and release, run pbuild, write the build record. 0 if no package is failed/unresolvable/broken, else 1; `BuildError` if pbuild itself exits non-zero without a failed package. `--dry-run` prints the podman command |
+| `build` | `--package NAME`... (pbuild `--rebuild-pkg`), `--rebuild` (all), `--single NAME`, `--[no-]sync`, `--dry-run`, `--release STR`, `--buildjobs N`, `--jobs N`, `--[no-]checks`, `--debuginfo`, `--[no-]repo-refresh` | sync (unless `--no-sync`), allocate run and release, run pbuild for x86_64, then the i586 baselibs pass, write the build record. 0 if no package is failed/unresolvable/broken, else 1; `BuildError` if pbuild itself exits non-zero without a failed package. `--dry-run` prints the podman command |
 | `publish` | `--provider localfs\|s3`, `--unsigned`, `--dry-run`, `--[no-]site`, `--arch A` | sign new rpms, createrepo, sign repomd, write state/site, provider sync. `--dry-run` prints add/replace/remove/re-sign lists. `--unsigned` refused for s3 while `signing.require_signature` |
 | `status` | `--json`, `--live` | per package: kind, srcmd5, last code, release, rpm count, built_at, published release. `--live` asks pbuild in the container |
 | `site` | `--output DIR` | re-renders `index.html` and `packages.json` from the repo `state.json` |
@@ -44,7 +44,7 @@ Errors print `Class: message` (backtrace with `-v`) and exit 1; Ctrl-C exits 130
 | `gpg export-public` | | prints the public key derived from `GPG_PRIVATE_KEY_BASE64` |
 | `image build` / `image info` | `--[no-]cache`, `--tag T` | builds `container/Containerfile`, records `state/image.json` |
 | `clean` | `--build-root`, `--results`, `--cache`, `--all`, `--yes` | build-root through the container runtime (subuid-owned files), results = `project/_build.*` (incl. `.pbuild/_base`), cache = `cache/` |
-| `state push` / `state pull` | `--allow-missing` (pull) | s3 only: `tar --zstd` of `project/_build.<reponame>.<arch>/` and `state/` to `<path_in_bucket>/_state/state.tar.zst`; `--allow-missing` makes a first pull on an empty bucket a warning |
+| `state push` / `state pull` | `--allow-missing` (pull) | s3 only: `tar --zstd` of `project/_build.<reponame>.<arch>/` (x86_64 and i586) and `state/` to `<path_in_bucket>/_state/state.tar.zst`; `--allow-missing` makes a first pull on an empty bucket a warning |
 | `run` | `--[no-]publish`, `--[no-]fail-on-failed-packages` (default yes), `--provider P` | sync, `build --no-sync`, publish. Exit 2 if publish failed; else 1 if any package failed to sync or build (unless `--no-fail-on-failed-packages`), even though publish succeeded; else 0. Ends with `run summary: ...` |
 
 ## Configuration
@@ -56,12 +56,13 @@ Defaults: `config/packman-nova.yml`. Layers, later wins: defaults, user file, no
 | `workdir` | `${PACKMAN_NOVA_WORKDIR}` | required |
 | `project_name`, `vendor` | `packman-nova` | |
 | `distro.{id,suse_version,arches,repos,snapshot_url}` | `opensuse_tumbleweed`, `1699`, `[x86_64]`, TW oss, TW `media.1/media` | first arch is built |
+| `distro.baselibs.{arch,repos}` | `i586`, TW i586 port oss | second pbuild pass with `--baselibs`; `arch: ""` disables it |
 | `release.template` | `%{suse_version}.%{run}.nova.1` | |
 | `prjconf.{base_url,base_fallback,local}` | Factory `_config`, `prjconf/factory-base.conf`, `prjconf/packman-nova-macros.conf` | |
 | `sources.obs_api` | OBS public API | |
 | `sources.http.{timeout_sec,retries}` | `600`, `5` | |
 | `container.{runtime,image,containerfile,privileged,extra_args}` | `auto`, `localhost/packman-nova-builder:latest`, `container/Containerfile`, `true`, `[]` | |
-| `pbuild.{reponame,buildjobs,jobs,checks,debuginfo,baselibs,repo_refresh,timeout_sec,extra_args}` | `tumbleweed`, `2`, `8`, `true`, `false`, `false`, `true`, `43200`, `[]` | `timeout_sec` bounds the whole pbuild run |
+| `pbuild.{reponame,buildjobs,jobs,checks,debuginfo,repo_refresh,timeout_sec,extra_args}` | `tumbleweed`, `2`, `8`, `true`, `false`, `true`, `43200`, `[]` | `timeout_sec` bounds each pbuild pass |
 | `signing.{gpg_private_key_base64,require_signature}` | `${GPG_PRIVATE_KEY_BASE64}`, `true` | the public key is always derived from the private one |
 | `repository.{slug,path,public_url,publish_srpms,publish_debuginfo,provider}` | `packman-nova-essentials`, `opensuse_tumbleweed/essentials`, `${PACKMAN_NOVA_PUBLIC_URL}`, `true`, `false`, `localfs` | `slug` = zypper repo alias; empty `public_url` = `file://<localfs root>` |
 | `repository.localfs.path` | `${PACKMAN_NOVA_REPO_PATH}` | empty = `<workdir>/repo` |
@@ -80,6 +81,7 @@ project/                           pbuild project dir
   <pkg>/                           materialized sources (hardlinks into cache/)
   _build.tumbleweed.x86_64/<pkg>/  *.rpm, _log, _meta, _meta.success|_meta.fail, _reason
   _build.tumbleweed.x86_64/.pbuild/_base/   downloaded TW rpms + hdrmd5s; keep it, or every run rebuilds all
+  _build.tumbleweed.i586/<pkg>/    baselibs pass: i586 rpms (not published) + *-32bit*.x86_64.rpm
 build-root/<n>/                    one build root per builder, subuid-owned
 cache/blobs/{sha256,md5}/<hex>     content-addressed sources; cache/obs/, cache/prjconf/
 state/sync.json                    per package kind, origin, srcmd5, files; TW snapshot, prjconf md5s, rebuild_all_required
@@ -106,6 +108,8 @@ State schemas: `PackmanNova::State::Schemas::{SYNC_STATE,BUILD_RECORD,REPO_STATE
 Source endpoints verified 2026-09-29: OBS serves link packages' files with `?rev=<expanded srcmd5>`. Offline sync uses cached OBS listings, blobs, the existing prjconf copy (else `base_fallback`) and the recorded snapshot. `openSUSE:Factory/fdk-aac` does not exist; Factory scmsync packages (ffmpeg-4/7/8/9) carry `_scmsync.obsinfo` and `build.specials.obscpio`, which pbuild ignores.
 
 **build** (`Build#call`). Sync, then lock. Run number = max(`run-counter.json`, repo `state.json` run, max run in result rpm names) + 1, persisted before pbuild starts; release from `release.template`. A run that builds nothing gives its number back. pbuild itself decides what to build: a package is rebuilt when its `_meta` (source md5 + hdrmd5 of every build dependency) changes, so a new Factory srcmd5 or a changed dependency rebuilds exactly the affected tree. Failed packages are retried only when their meta changes or with `--package`/`--rebuild`. Implicit `--rebuild all` when `rebuild_all_required` and no explicit selection. Afterwards results are collected with `pbuild --result-code all` (with details) and cross-checked with the files in `_build.*/<pkg>/`.
+
+**-32bit** (as Packman). A second pass `pbuild --arch i586 --baselibs` against the TW i586 port, same release, builds only the `onlybuild` list in `prjconf/packman-nova-macros.conf` (the packages with a `baselibs.conf`). mkbaselibs turns their i586 libraries into `*-32bit*.x86_64.rpm`; the build record keeps them under `packages.<name>.baselibs` and publish puts them into `x86_64/`. i586 rpms are not published. A package whose i586 build fails counts as failed, so its previously published files are kept.
 
 **publish** (`Publish#call`). Lock, decode and match the key. Desired set = binary rpms of `succeeded` packages in `last-build.json` (debuginfo only with `publish_debuginfo`, src.rpms with `publish_srpms`) + for enabled packages that did not succeed, their files from the current `state.json` (retention). Diff by file name and unsigned `source_sha256`: add, replace, remove, re-sign (key changed). Only changed files are staged, signed (`rpm --addsign`, verified with `rpm -Kv`) and moved; createrepo_c and repomd signing run only when an arch dir changed or its metadata/signature is missing. `state.json` is rewritten only when its content changes, so a repeated publish is a no-op. s3: upload changed objects (rpms, repodata, then `repomd.xml*`, then `.repo`/state/site), delete stale managed keys last, purge Cloudflare, then upload every cached source file of the enabled native packages that `_sources/sha256/` lacks (the source archive: no Packman dependency once seeded; never deleted by publish).
 

@@ -134,3 +134,9 @@ Verified:
 - The first run (run 1) was stopped after that failure; run 2 used `--rebuild` so all packages share one release.
 - First-run intermediate results show `unresolvable: nothing provides ...` for packages whose providers are not built yet; pbuild re-evaluates after each build and ends clean.
 - Nothing needed `link.delete` for `_scmsync.obsinfo` / `build.specials.obscpio`, and no spec or manifest changes were needed.
+
+## 2026-10-05: -32bit baselibs pass
+
+- Run 5 (`1699.5.nova.1`), full rebuild: x86_64 39/39 in 64 min, then `pbuild --arch i586 --baselibs` against `ports/i586/tumbleweed/repo/oss/`: 22 succeeded, 17 excluded by `onlybuild`, 53 min.
+- First attempt failed with `vminstalls: nothing provides kernel-obs-build` (OBS exports it to i586 from x86_64); fixed with `VMinstall: !kernel-obs-build` under `%ifarch i586`.
+- The 57 `*-32bit` names equal Packman's x86_64 `-32bit` set (`reference/repo-metadata/Essentials.primary.xml.gz`) minus the 9 from ffmpeg-3. `publish --dry-run` adds all 57 to `x86_64/`; i586 rpms and `-32bit-debuginfo` are not published.

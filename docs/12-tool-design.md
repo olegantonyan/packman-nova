@@ -142,7 +142,6 @@ pbuild:
   jobs: 8
   checks: true
   debuginfo: false
-  baselibs: false
   repo_refresh: true
   extra_args: []
 signing:

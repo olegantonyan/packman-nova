@@ -24,7 +24,7 @@ module PackmanNova
 
       def to_s
         rows = record.fetch('packages', {}).map do |key, entry|
-          [key, entry['code'], entry.fetch('rpms', []).size, self.class.duration(entry['duration_sec']), reason(entry)]
+          [key, entry['code'], entry.fetch('rpms', []).size + entry.dig('baselibs', 'rpms').to_a.size, self.class.duration(entry['duration_sec']), reason(entry)]
         end
         "#{::PackmanNova::Pbuild::Table.new(headers: HEADERS, rows: rows)}#{footer}\n"
       end

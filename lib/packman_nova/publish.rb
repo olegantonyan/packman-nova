@@ -72,7 +72,7 @@ module PackmanNova
       layout = prepare_layout(provider, dry_run)
       last_build = ::PackmanNova::Repo::LastBuild.load(workdir)
       state = ::PackmanNova::Repo::State.load(layout.state_file)
-      arch = last_build.arch(arch, default: default_arch)
+      arch = last_build.arch(arch, default: config.distro.arches.first)
       diff = diff_for(last_build.record, state, layout, arch: arch, key: key, check_files: !(dry_run && provider.remote?))
       report(diff, last_build, key, dry_run: dry_run)
       dry_run ? diff : commit(provider, diff, layout, state: state, last_build: last_build, arch: arch, key: key, site: site)
@@ -91,15 +91,15 @@ module PackmanNova
       provider.prepare!(layout: ::PackmanNova::Repo::Layout.from_config(config, root: provider.root), dry_run: dry_run)
     end
 
-    def default_arch
-      config.distro.arches.first
-    end
-
     def diff_for(record, state, layout, arch:, key:, check_files:)
       ::PackmanNova::Repo::Diff.new(
-        build_record: record, results_dir: workdir.results_dir(reponame: config.pbuild.reponame, arch: arch), state: state,
+        build_record: record, results_dir: results_dir(arch), baselibs_dir: results_dir(config.distro.baselibs.arch), state: state,
         enabled: enabled_names, arch: arch, repo_dir: layout.repo_dir, key_id: key&.key_id, check_files: check_files, **repository_flags
       ).call
+    end
+
+    def results_dir(arch)
+      workdir.results_dir(reponame: config.pbuild.reponame, arch: arch) unless arch.empty?
     end
 
     def enabled_names

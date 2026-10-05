@@ -47,7 +47,11 @@ module PackmanNova
               'srpm' => 'String, src.rpm or nosrc.rpm file name, null if none',
               'duration_sec' => 'Integer, from _log mtime vs start, null if unknown',
               'reason' => 'String, from _reason explain',
-              'log' => 'String, path of _log relative to the workdir'
+              'log' => 'String, path of _log relative to the workdir',
+              'baselibs' => {
+                'arch' => 'String, e.g. "i586"', 'code' => 'String, pbuild result code of the baselibs pass',
+                'rpms' => 'Array of String, -32bit rpm file names exported into the main arch', 'details' => 'String'
+              }
             }
           }
         }

@@ -9,8 +9,10 @@ module PackmanNova
         @workdir = workdir
       end
 
-      def compose(results:, codes:, details: {}, **fields)
-        packages = (results.keys | codes.keys).sort.to_h { |key| [key, package_entry(key, results[key], codes[key]).merge('details' => details[key])] }
+      def compose(results:, codes:, details: {}, baselibs: {}, **fields)
+        packages = (results.keys | codes.keys).sort.to_h do |key|
+          [key, with_baselibs(package_entry(key, results[key], codes[key]).merge('details' => details[key]), baselibs[key])]
+        end
         { 'schema' => ::PackmanNova::State::Schemas::VERSION, **stringify(fields), 'codes' => tally(packages), 'packages' => packages }
       end
 
@@ -42,6 +44,19 @@ module PackmanNova
           'rpms' => result.binary_rpms, 'debuginfo_rpms' => result.debuginfo_rpms, 'srpm' => result.srpm,
           'log' => result.log && relative(result.log), 'built_at' => result.built_at&.utc&.iso8601, 'duration_sec' => result.duration_sec
         }
+      end
+
+      def with_baselibs(entry, baselibs)
+        return entry unless baselibs
+
+        merged = entry.merge('baselibs' => baselibs)
+        return merged unless failure?(baselibs['code']) && !failure?(entry['code'])
+
+        merged.merge('code' => baselibs['code'], 'details' => "#{baselibs['arch']}: #{baselibs['details'] || baselibs['code']}")
+      end
+
+      def failure?(code)
+        ::PackmanNova::Pbuild::ResultParser::FAILURE_CODES.include?(code)
       end
 
       def empty_entry(key, code)

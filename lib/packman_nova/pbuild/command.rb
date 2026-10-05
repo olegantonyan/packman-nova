@@ -25,6 +25,10 @@ module PackmanNova
         settings.fetch(:rebuild)
       end
 
+      def baselibs?
+        settings.fetch(:baselibs)
+      end
+
       def argv
         [
           EXECUTABLE, *target_args, '--root', ::PackmanNova::Pbuild::ProjectDir::BUILD_ROOT_CONTAINER_PATH,

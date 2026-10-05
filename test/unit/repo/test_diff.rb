@@ -143,6 +143,19 @@ describe ::PackmanNova::Repo::Diff do
     assert_raises(::PackmanNova::PublishError) { diff(clash) }
   end
 
+  it 'publishes -32bit rpms of the baselibs pass into the main arch' do
+    baselibs_dir = ::File.join(tmp, 'baselibs')
+    rpms = ['libfdk-aac2-32bit-2.0.3-1.x86_64.rpm', 'libfdk-aac2-32bit-debuginfo-2.0.3-1.x86_64.rpm']
+    PublishFakes.results(baselibs_dir, 'fdk-aac' => rpms)
+    record = PublishFakes.record('fdk-aac' => ['succeeded', fdk])
+    record['packages']['fdk-aac']['baselibs'] = { 'arch' => 'i586', 'code' => 'succeeded', 'rpms' => rpms }
+    result = diff(record, baselibs_dir: baselibs_dir)
+
+    assert_equal %w[src/fdk-aac-2.0.3-1.src.rpm x86_64/libfdk-aac2-2.0.3-1.x86_64.rpm x86_64/libfdk-aac2-32bit-2.0.3-1.x86_64.rpm], result.to_add
+    assert_equal ::File.join(baselibs_dir, 'fdk-aac', 'libfdk-aac2-32bit-2.0.3-1.x86_64.rpm'), result.desired.fetch('x86_64/libfdk-aac2-32bit-2.0.3-1.x86_64.rpm').source
+    assert_raises(::PackmanNova::PublishError) { diff(record) }
+  end
+
   it 'leaves files of other arches alone' do
     PublishFakes.results(results_dir, 'fdk-aac' => ['libfdk-aac2-2.0.3-1.i586.rpm'])
     record = PublishFakes.record('fdk-aac' => ['succeeded', [*fdk, 'libfdk-aac2-2.0.3-1.i586.rpm']])

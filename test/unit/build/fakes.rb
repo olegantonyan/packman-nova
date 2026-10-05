@@ -32,9 +32,10 @@ module BuildFakes
 
     def capture(argv, **)
       captured << argv
-      raise ::PackmanNova::SubprocessError.new(cli: argv, status: nil) if @result_text.nil?
+      text = @result_text.respond_to?(:call) ? @result_text.call(argv) : @result_text
+      raise ::PackmanNova::SubprocessError.new(cli: argv, status: nil) if text.nil?
 
-      @result_text
+      text
     end
   end
 

@@ -23,10 +23,11 @@ describe ::PackmanNova::Repo::StateArchive do
       base = ::File.join(dir, 'project', '_build.tumbleweed.x86_64', '.pbuild', '_base', 'repo1')
       ::FileUtils.mkdir_p(base)
       ::File.write(::File.join(base, 'a.rpm'), 'cached')
+      ::FileUtils.mkdir_p(::File.join(dir, 'project', '_build.tumbleweed.i586'))
       ::FileUtils.mkdir_p(::File.join(dir, 'state'))
       ::File.write(::File.join(dir, 'state', 'last-build.json'), '{}')
 
-      assert_equal ['project/_build.tumbleweed.x86_64', 'state'], archive(dir).push
+      assert_equal ['project/_build.tumbleweed.x86_64', 'project/_build.tumbleweed.i586', 'state'], archive(dir).push
       assert_equal 'application/zstd', store.fetch('_state/state.tar.zst').last
 
       ::FileUtils.rm_rf(::File.join(dir, 'project'))

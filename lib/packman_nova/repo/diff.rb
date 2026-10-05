@@ -17,9 +17,11 @@ module PackmanNova
         end
       end
 
-      def initialize(build_record:, results_dir:, state:, enabled:, arch:, repo_dir:, publish_srpms: true, publish_debuginfo: false, key_id: nil, check_files: true)
+      def initialize(build_record:, results_dir:, state:, enabled:, arch:, repo_dir:, baselibs_dir: nil, publish_srpms: true, publish_debuginfo: false, key_id: nil,
+                     check_files: true)
         @outputs = ::PackmanNova::Repo::BuildOutputs.new(
-          build_record: build_record, results_dir: results_dir, enabled: enabled, arch: arch, publish_srpms: publish_srpms, publish_debuginfo: publish_debuginfo
+          build_record: build_record, results_dir: results_dir, baselibs_dir: baselibs_dir, enabled: enabled, arch: arch,
+          publish_srpms: publish_srpms, publish_debuginfo: publish_debuginfo
         )
         @retention = ::PackmanNova::Repo::Retention.new(state: state, build_record: build_record, enabled: enabled)
         @state = state

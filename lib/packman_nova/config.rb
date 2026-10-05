@@ -12,7 +12,10 @@ module PackmanNova
       offline: BOOLEAN,
       project_name: ::String,
       vendor: ::String,
-      distro: { id: ::String, suse_version: ::Integer, arches: STRINGS, repos: STRINGS, snapshot_url: ::String },
+      distro: {
+        id: ::String, suse_version: ::Integer, arches: STRINGS, repos: STRINGS, snapshot_url: ::String,
+        baselibs: { arch: ::String, repos: STRINGS }
+      },
       release: { template: ::String },
       prjconf: { base_url: ::String, base_fallback: ::String, local: ::String },
       sources: {
@@ -22,7 +25,7 @@ module PackmanNova
       container: { runtime: ::String, image: ::String, containerfile: ::String, privileged: BOOLEAN, extra_args: STRINGS },
       pbuild: {
         reponame: ::String, buildjobs: ::Integer, jobs: ::Integer, checks: BOOLEAN, debuginfo: BOOLEAN,
-        baselibs: BOOLEAN, repo_refresh: BOOLEAN, timeout_sec: ::Integer, extra_args: STRINGS
+        repo_refresh: BOOLEAN, timeout_sec: ::Integer, extra_args: STRINGS
       },
       signing: { gpg_private_key_base64: ::String, require_signature: BOOLEAN },
       repository: {

@@ -21,17 +21,25 @@ describe ::PackmanNova::Build do
     packages.each { |name| ::FileUtils.mkdir_p(::File.join(project, name)) }
   end
 
-  def write_result(name, release:, success: true)
-    dir = ::File.join(results, name)
+  def write_result(name, release:, success: true, dir: ::File.join(results, name), rpms: nil)
     ::FileUtils.mkdir_p(dir)
     ::File.write(::File.join(dir, '_meta'), "srcmd5  #{name}\n")
     ::FileUtils.cp(::File.join(dir, '_meta'), ::File.join(dir, success ? '_meta.success' : '_meta.fail'))
     ::File.write(::File.join(dir, '_log'), 'log')
     return unless success
 
-    %W[lib#{name}2-1.0-#{release}.x86_64.rpm #{name}-1.0-#{release}.src.rpm lib#{name}2-debuginfo-1.0-#{release}.x86_64.rpm].each do |file|
+    (rpms || %W[lib#{name}2-1.0-#{release}.x86_64.rpm #{name}-1.0-#{release}.src.rpm lib#{name}2-debuginfo-1.0-#{release}.x86_64.rpm]).each do |file|
       ::File.write(::File.join(dir, file), '')
     end
+  end
+
+  def write_baselibs(name, release:, success: true)
+    rpms = %W[lib#{name}2-1.0-#{release}.i586.rpm lib#{name}2-32bit-1.0-#{release}.x86_64.rpm #{name}-1.0-#{release}.src.rpm]
+    write_result(name, release: release, success: success, dir: ::File.join(project, '_build.tumbleweed.i586', name), rpms: rpms)
+  end
+
+  def arch_of(argv)
+    argv[argv.index('--arch') + 1]
   end
 
   def subprocess(status: 0, result_text: "succeeded: 1\n    fdk-aac\n", &)
@@ -87,6 +95,62 @@ describe ::PackmanNova::Build do
     assert_equal 1, state('run-counter.json')['run']
     assert_equal ['fdk-aac'], record['built']
     assert_match(/^fdk-aac +succeeded +1/, out.string)
+  end
+
+  it 'runs an i586 baselibs pass and records its -32bit rpms' do
+    materialize('fdk-aac')
+    fake = subprocess do |argv|
+      argv.include?('--baselibs') ? write_baselibs('fdk-aac', release: '1699.1.nova.1') : write_result('fdk-aac', release: '1699.1.nova.1')
+    end
+
+    assert_equal 0, build(fake).call(sync: false)
+
+    main, baselibs = fake.executed.map { |argv| argv[argv.index('pbuild')..] }
+
+    assert_equal %w[x86_64 i586], [arch_of(main), arch_of(baselibs)]
+    assert_includes baselibs.each_cons(2).to_a, ['--repo', 'https://download.opensuse.org/ports/i586/tumbleweed/repo/oss/']
+    refute_includes baselibs.each_cons(2).to_a, ['--repo', 'https://download.opensuse.org/tumbleweed/repo/oss/']
+    assert_includes baselibs, '--baselibs'
+    refute_includes main, '--baselibs'
+    assert_equal(%w[x86_64 i586], fake.captured.map { |argv| arch_of(argv) })
+    record = state('last-build.json')
+    expected = { 'arch' => 'i586', 'code' => 'succeeded', 'rpms' => ['libfdk-aac2-32bit-1.0-1699.1.nova.1.x86_64.rpm'], 'details' => nil }
+
+    assert_equal expected, record.dig('packages', 'fdk-aac', 'baselibs')
+    assert_equal 'x86_64', record['arch']
+    assert_match(/^fdk-aac +succeeded +2/, out.string)
+  end
+
+  it 'fails a package whose baselibs build failed and skips excluded ones' do
+    materialize('fdk-aac', 'vlc')
+    codes = ->(argv) { arch_of(argv) == 'i586' ? "failed: 1\n    fdk-aac\nexcluded: 1\n    vlc\n" : "succeeded: 2\n    fdk-aac\n    vlc\n" }
+    fake = subprocess(status: 1, result_text: codes) do |argv|
+      next write_baselibs('fdk-aac', release: '1699.1.nova.1', success: false) if argv.include?('--baselibs')
+
+      write_result('fdk-aac', release: '1699.1.nova.1')
+      write_result('vlc', release: '1699.1.nova.1')
+    end
+
+    assert_equal 1, build(fake).call(sync: false)
+
+    record = state('last-build.json')
+
+    assert_equal ['failed', 'i586: failed'], record.dig('packages', 'fdk-aac').values_at('code', 'details')
+    assert_equal({ 'failed' => 1, 'succeeded' => 1 }, record['codes'])
+    refute record.dig('packages', 'vlc').key?('baselibs')
+  end
+
+  describe 'without baselibs' do
+    let(:config) { load_config(env: { 'PACKMAN_NOVA_WORKDIR' => root, 'PACKMAN_NOVA_REPO_PATH' => nil }, overrides: { distro: { baselibs: { arch: '' } } }) }
+
+    it 'runs a single pbuild pass' do
+      materialize('fdk-aac')
+      fake = subprocess { write_result('fdk-aac', release: '1699.1.nova.1') }
+
+      assert_equal 0, build(fake).call(sync: false)
+      assert_equal 1, fake.executed.size
+      refute state('last-build.json').dig('packages', 'fdk-aac').key?('baselibs')
+    end
   end
 
   it 'returns 1 when a package failed' do
@@ -201,7 +265,10 @@ describe ::PackmanNova::Build do
 
     assert_empty fake.executed
     assert_empty sync_calls
-    assert_match(%r{pbuild --dist /project/_configs/tumbleweed.conf .* --jobs 3 --release 1699.1.nova.1 --no-checks --no-repo-refresh /project$}, out.string)
+    first, second = out.string.lines
+
+    assert_match(%r{pbuild --dist /project/_configs/tumbleweed.conf .* --arch x86_64 .* --jobs 3 --release 1699.1.nova.1 --no-checks --no-repo-refresh /project$}, first)
+    assert_match(/--arch i586 .* --release 1699.1.nova.1 --no-checks --baselibs --no-repo-refresh /, second)
     refute_path_exists ::File.join(root, 'state', 'run-counter.json')
   end
 end

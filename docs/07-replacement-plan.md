@@ -4,7 +4,7 @@
 Tumbleweed `Essentials` equivalent: same packages, same sources, same macro set, our infra, our key. Later: Leap 16.x, Slowroll, selected Multimedia apps.
 
 ## Decisions already taken
-- Target arches: x86_64 and aarch64. Drop i586 and armv7hl unless demand appears. (GitHub has native arm64 runners; armv7 would need QEMU.)
+- Target arches: x86_64 and aarch64. Drop i586 and armv7hl unless demand appears. (GitHub has native arm64 runners; armv7 would need QEMU.) x86_64 ships Packman's `-32bit` packages, built by an i586 baselibs pass (2026-10-05, `docs/12-tool.md`).
 - New signing key and our own `rpmkey-<name>` package. Never reuse Packman's key or vendor string.
 - Do not depend on PMBS staying up: vendor the expanded sources of every native package into this repo; keep linked packages as provenance records (Factory package + srcmd5) and re-fetch from api.opensuse.org.
 - Drop dead weight from day one: flash-player, lightspark, gpg-offline, ffmpeg-3, preinstallimage-base, psi+-iconsets. Review: chromium-plugin-widevinecdm, A_tw-cmake, A_tw-SVT-AV1, python-Cython/docutils helpers.

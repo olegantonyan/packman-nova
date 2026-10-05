@@ -13,9 +13,10 @@ module PackmanNova
 
       attr_reader :ignored
 
-      def initialize(build_record:, results_dir:, enabled:, arch:, publish_srpms: true, publish_debuginfo: false)
+      def initialize(build_record:, results_dir:, enabled:, arch:, baselibs_dir: nil, publish_srpms: true, publish_debuginfo: false)
         @build_packages = build_record.fetch('packages', {})
         @results_dir = results_dir
+        @baselibs_dir = baselibs_dir
         @enabled = enabled
         @arch = arch
         @publish_srpms = publish_srpms
@@ -41,7 +42,7 @@ module PackmanNova
 
       private
 
-      attr_reader :build_packages, :results_dir, :enabled, :arch, :publish_srpms, :publish_debuginfo
+      attr_reader :build_packages, :results_dir, :baselibs_dir, :enabled, :arch, :publish_srpms, :publish_debuginfo
 
       def succeeded_names
         names = build_packages.select { |_name, entry| entry['code'] == SUCCEEDED }.keys.sort
@@ -61,14 +62,18 @@ module PackmanNova
       def outputs(name)
         entry = build_packages.fetch(name)
         files = [*entry['rpms'], *(publish_debuginfo ? entry['debuginfo_rpms'] : []), entry['srpm']].compact.uniq
-        files.map { |file| resolve(name, file) }
+        files.map { |file| resolve(name, file, results_dir) } + baselibs_outputs(name, entry)
       end
 
-      def resolve(name, file)
+      def baselibs_outputs(name, entry)
+        entry.dig('baselibs', 'rpms').to_a.map { |file| resolve(name, file, baselibs_dir) }
+      end
+
+      def resolve(name, file, dir)
         return file if file.start_with?('/') && ::File.file?(file)
 
-        candidates = [::File.join(results_dir, name, file), ::File.join(results_dir, file)]
-        candidates.find { |path| ::File.file?(path) } || raise(::PackmanNova::PublishError, "#{name}: build output #{file} not found under #{results_dir}")
+        candidates = dir ? [::File.join(dir, name, file), ::File.join(dir, file)] : []
+        candidates.find { |path| ::File.file?(path) } || raise(::PackmanNova::PublishError, "#{name}: build output #{file} not found under #{dir.inspect}")
       end
 
       def target(basename)

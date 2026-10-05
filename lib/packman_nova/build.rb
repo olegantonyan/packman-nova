@@ -14,6 +14,8 @@ require 'packman_nova/pbuild/reason'
 require 'packman_nova/pbuild/job_history'
 require 'packman_nova/pbuild/package_result'
 require 'packman_nova/pbuild/results'
+require 'packman_nova/pbuild/baselibs'
+require 'packman_nova/pbuild/record_writer'
 require 'packman_nova/pbuild/executor'
 require 'packman_nova/pbuild/run_floor'
 require 'packman_nova/pbuild/run_allocator'
@@ -65,8 +67,8 @@ module PackmanNova
     end
 
     def print_dry_run(selection, tuning, release)
-      command = pbuild_command(selection, tuning, release || allocator.peek)
-      out.puts(::Shellwords.join(executor.command(command.argv)))
+      release ||= allocator.peek
+      commands(selection, tuning, release).each { |command| out.puts(::Shellwords.join(executor.command(command.argv))) }
       0
     end
 
@@ -74,60 +76,50 @@ module PackmanNova
       project_dir.validate!([*selection[:rebuild_packages], *selection[:single]])
       image_id = environment.image.ensure!
       run, release = allocator.allocate(release)
-      command = pbuild_command(selection, tuning, release)
       started_at = clock.call
-      status = run_pbuild(command, run)
-      report(write_record(command, status, run: run, release: release, image_id: image_id, started_at: started_at), status, command)
+      passes = run_passes(commands(selection, tuning, release), run)
+      report(record_writer.call(*passes, run: run, release: release, image_id: image_id, started_at: started_at), passes)
     end
 
-    def run_pbuild(command, run)
-      logger.info("run #{run}, release #{command.release}#{', rebuilding everything' if command.rebuild?}")
+    def commands(selection, tuning, release)
+      main = pbuild_command(selection, tuning, release)
+      environment.baselibs? ? [main, pbuild_command(selection, tuning, release, baselibs: true)] : [main]
+    end
+
+    def run_passes(commands, run)
+      logger.info("run #{run}, release #{commands.first.release}#{', rebuilding everything' if commands.first.rebuild?}")
       project_dir.prepare!
-      executor.run(command.argv, timeout_sec: config.pbuild.timeout_sec)
+      commands.map { |command| run_pass(command) }
     end
 
-    def report(record, status, command)
-      out.print(::PackmanNova::Pbuild::Summary.new(record: record).to_s)
-      failed = ::PackmanNova::Pbuild::Summary.failed_packages(record)
-      return 1 unless failed.empty?
-      raise ::PackmanNova::BuildError.new("pbuild exited with #{status.exitstatus.inspect}", failed_packages: []) unless status.success?
+    def run_pass(command)
+      logger.info("pbuild --arch #{command.arch}#{' --baselibs' if command.baselibs?}")
+      ::PackmanNova::Pbuild::RecordWriter::Pass.new(command: command, status: executor.run(command.argv, timeout_sec: config.pbuild.timeout_sec))
+    end
 
-      sync_state.clear_rebuild_all! if command.rebuild?
+    def report(record, passes)
+      out.print(::PackmanNova::Pbuild::Summary.new(record: record).to_s)
+      return 1 unless ::PackmanNova::Pbuild::Summary.failed_packages(record).empty?
+
+      check_exits!(passes)
+      sync_state.clear_rebuild_all! if passes.first.command.rebuild?
       0
     end
 
-    def write_record(command, status, **fields)
-      results = ::PackmanNova::Pbuild::Results.scan(project_dir.results_dir)
-      built = built_keys(results, **fields)
-      parser = collect_codes(command)
-      record = build_record.compose(results: results, codes: parser.codes, details: parser.details, **fields, **record_fields(command, status), built: built)
-      logger.info("build record #{build_record.write(record)}")
-      record
+    def check_exits!(passes)
+      failed = passes.reject { |pass| pass.status.success? }
+      return if failed.empty?
+
+      raise ::PackmanNova::BuildError.new(failed.map { |pass| "pbuild --arch #{pass.command.arch} exited with #{pass.status.exitstatus.inspect}" }.join('; '), failed_packages: [])
     end
 
-    def built_keys(results, run:, started_at:, **)
-      built = results.select { |_key, result| result.built_since?(started_at) }.keys
-      logger.info("nothing was built, run #{run} stays free") if built.empty? && allocator.give_back!
-      built
+    def record_writer
+      ::PackmanNova::Pbuild::RecordWriter.new(environment: environment, build_record: build_record, allocator: allocator, logger: logger, clock: clock)
     end
 
-    def record_fields(command, status)
-      {
-        finished_at: clock.call, arch: project_dir.arch, tumbleweed_snapshot: sync_state.tumbleweed_snapshot,
-        pbuild_argv: command.argv, pbuild_exit: status.exitstatus
-      }
-    end
-
-    def collect_codes(command)
-      ::PackmanNova::Pbuild::ResultParser.parse(executor.capture(command.result_argv(details: true)))
-    rescue ::PackmanNova::SubprocessError => e
-      logger.warn("pbuild result query failed, using result files only: #{e.message.lines.first&.strip}")
-      ::PackmanNova::Pbuild::ResultParser.parse('')
-    end
-
-    def pbuild_command(selection, tuning, release)
+    def pbuild_command(selection, tuning, release, baselibs: false)
       implicit = selection[:rebuild_packages].empty? && selection[:single].nil? && sync_state.rebuild_all_required?
-      environment.command(release: release, **tuning, **selection, rebuild: selection[:rebuild] || implicit)
+      environment.command(release: release, baselibs: baselibs, **tuning, **selection, rebuild: selection[:rebuild] || implicit)
     end
   end
 end

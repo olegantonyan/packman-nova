@@ -42,16 +42,24 @@ module PackmanNova
         @project_dir ||= ::PackmanNova::Pbuild::ProjectDir.new(workdir: workdir, reponame: config.pbuild.reponame, arch: config.distro.arches.first)
       end
 
+      def baselibs?
+        !config.distro.baselibs.arch.empty?
+      end
+
+      def baselibs_results_dir
+        workdir.results_dir(reponame: config.pbuild.reponame, arch: config.distro.baselibs.arch)
+      end
+
       def executor(image: self.image.tag)
         ::PackmanNova::Pbuild::Executor.new(config: config, runner: runner, project_dir: project_dir, image: image)
       end
 
-      def command(release:, **)
+      def command(release:, baselibs: false, **)
         settings = config.pbuild
         ::PackmanNova::Pbuild::Command.new(
-          reponame: settings.reponame, arch: project_dir.arch, repos: config.distro.repos, release: release, buildjobs: settings.buildjobs,
-          jobs: settings.jobs, checks: settings.checks?, debuginfo: settings.debuginfo?, baselibs: settings.baselibs?,
-          repo_refresh: settings.repo_refresh?, extra_args: settings.extra_args, **
+          reponame: settings.reponame, **target(baselibs), release: release, buildjobs: settings.buildjobs, jobs: settings.jobs,
+          checks: settings.checks?, debuginfo: settings.debuginfo?, baselibs: baselibs, repo_refresh: settings.repo_refresh?,
+          extra_args: settings.extra_args, **
         )
       end
 
@@ -66,6 +74,13 @@ module PackmanNova
       def repo_root
         path = config.repository.localfs.path
         path.empty? ? workdir.repo_dir : ::File.expand_path(path)
+      end
+
+      private
+
+      def target(baselibs)
+        source = baselibs ? config.distro.baselibs : config.distro
+        { arch: baselibs ? source.arch : project_dir.arch, repos: source.repos }
       end
     end
   end
