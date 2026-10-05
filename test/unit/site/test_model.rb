@@ -31,7 +31,7 @@ describe ::PackmanNova::Site::Model do
 
   it 'builds the install commands' do
     assert_equal([
-                   'sudo zypper ar -f https://packman.example.org/opensuse_tumbleweed/essentials/packman-nova.repo',
+                   'sudo zypper ar -f -p 80 https://packman.example.org/opensuse_tumbleweed/essentials/packman-nova.repo',
                    'sudo zypper --gpg-auto-import-keys ref',
                    'sudo zypper dup --from packman-nova-essentials --allow-vendor-change'
                  ], model.commands.map { |command| command.fetch('text') })
@@ -54,9 +54,12 @@ describe ::PackmanNova::Site::Model do
     assert_equal(%w[ffmpeg-8 libx264:x264 vlc], model.packages.map { |row| row.fetch('name') })
   end
 
-  it 'links obs-link origins to build.opensuse.org' do
+  it 'links obs-link origins to build.opensuse.org and native ones to their published src.rpm' do
     assert_equal 'https://build.opensuse.org/package/show/openSUSE:Factory/ffmpeg-8', rows.fetch('ffmpeg-8').fetch('origin_url')
-    assert_nil rows.fetch('libx264:x264').fetch('origin_url')
+    native = rows.fetch('libx264:x264')
+
+    assert_equal 'src.rpm', native.fetch('origin_label')
+    assert_equal 'https://packman.example.org/opensuse_tumbleweed/essentials/src/libx264-0.165.3222-1699.7.nova.1.src.rpm', native.fetch('origin_url')
   end
 
   it 'describes a succeeded package' do
@@ -100,7 +103,7 @@ describe ::PackmanNova::Site::Model do
     assert_equal %w[baseurls commands description generated_at generated_at_iso key key_url packages public_url release repo_file_url repo_url run slug source_url
                     title totals tumbleweed_snapshot], model.to_h.keys.sort
     assert_equal '2026-09-29 08:15 UTC', model.to_h.fetch('generated_at')
-    assert_nil model.to_h.fetch('source_url')
+    assert_equal 'https://github.com/olegantonyan/packman-nova', model.to_h.fetch('source_url')
   end
 
   it 'takes the source URL from site.source_url' do

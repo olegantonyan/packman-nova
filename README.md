@@ -7,7 +7,7 @@ Published at https://packman.omnipackage.org.
 ## Install
 
 ```
-sudo zypper ar -f https://packman.omnipackage.org/opensuse_tumbleweed/essentials/packman-nova.repo
+sudo zypper ar -f -p 80 https://packman.omnipackage.org/opensuse_tumbleweed/essentials/packman-nova.repo
 sudo zypper --gpg-auto-import-keys ref
 sudo zypper dup --from packman-nova-essentials --allow-vendor-change
 ```

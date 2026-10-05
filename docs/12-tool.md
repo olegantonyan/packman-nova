@@ -67,7 +67,7 @@ Defaults: `config/packman-nova.yml`. Layers, later wins: defaults, user file, no
 | `repository.{slug,path,public_url,publish_srpms,publish_debuginfo,provider}` | `packman-nova-essentials`, `opensuse_tumbleweed/essentials`, `${PACKMAN_NOVA_PUBLIC_URL}`, `true`, `false`, `localfs` | `slug` = zypper repo alias; empty `public_url` = `file://<localfs root>` |
 | `repository.localfs.path` | `${PACKMAN_NOVA_REPO_PATH}` | empty = `<workdir>/repo` |
 | `repository.s3.{bucket,path_in_bucket,endpoint,access_key_id,secret_access_key,region,force_path_style,cloudflare_zone_id,cloudflare_api_token}` | `CLOUDFLARE_*` env, `""`, `auto`, `true` | |
-| `site.{title,description,source_url}` | see file; `source_url` `""` | `source_url` adds a footer link |
+| `site.{title,description,source_url}` | see file; `source_url` GitHub repo | `source_url` adds a nav and footer link; `""` hides them |
 
 Secrets masked as `***` in logs: `signing.gpg_private_key_base64`, `repository.s3.secret_access_key`, `repository.s3.cloudflare_api_token`.
 

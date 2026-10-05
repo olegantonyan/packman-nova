@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Oct  5 17:00:00 UTC 2026 - oleg.b.antonyan@gmail.com
+
+- Update to 1.0.1: repo file sets priority=80
+
+-------------------------------------------------------------------
 Tue Sep 29 09:00:00 UTC 2026 - oleg@aytm.com
 
 - Initial package 1.0.0: packman-nova signing key and zypper repo file

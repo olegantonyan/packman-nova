@@ -60,5 +60,5 @@ repository:
     cloudflare_api_token: ${CLOUDFLARE_API_TOKEN}
 site:
   title: packman-nova Essentials for openSUSE Tumbleweed
-  description: Independent rebuild of the Packman Essentials repository from public sources.
-  source_url: ""
+  description: Packman Essentials, rebuilt from public sources.
+  source_url: https://github.com/olegantonyan/packman-nova

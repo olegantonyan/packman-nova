@@ -11,7 +11,7 @@ describe ::PackmanNova::Site::Generator do
   let(:html) { generator.render_index }
 
   it 'renders the install commands' do
-    assert_includes html, 'sudo zypper ar -f https://packman.example.org/opensuse_tumbleweed/essentials/packman-nova.repo'
+    assert_includes html, 'sudo zypper ar -f -p 80 https://packman.example.org/opensuse_tumbleweed/essentials/packman-nova.repo'
     assert_includes html, 'sudo zypper --gpg-auto-import-keys ref'
     assert_includes html, 'sudo zypper dup --from packman-nova-essentials --allow-vendor-change'
   end
@@ -22,6 +22,8 @@ describe ::PackmanNova::Site::Generator do
     assert_includes html, 'https://packman.example.org/packman-nova.key'
     assert_includes html, '20260927'
     assert_includes html, '<title>packman-nova Essentials for openSUSE Tumbleweed</title>'
+    assert_includes html, '<a href="https://github.com/olegantonyan/packman-nova">GitHub</a>'
+    assert_includes html, 'Inspired by <a href="https://omnipackage.org">omnipackage.org</a>.'
   end
 
   it 'renders every package with its version' do
@@ -46,7 +48,7 @@ describe ::PackmanNova::Site::Generator do
   it 'renders without a key' do
     html = ::PackmanNova::Site::Generator.new(config: site_config, state: state.except('key'), logger: null_logger).render_index
 
-    assert_includes html, 'No signing key is recorded'
+    assert_includes html, 'No signing key recorded'
   end
 
   it 'writes index.html and packages.json' do

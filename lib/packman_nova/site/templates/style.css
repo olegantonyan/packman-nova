@@ -150,9 +150,27 @@ td time, td[data-label="Version"] code { white-space: nowrap; }
 .status-ok { background: var(--ok-bg); color: var(--ok-text); }
 .status-fail { background: var(--fail-bg); color: var(--fail-text); }
 .status-other { background: var(--other-bg); color: var(--other-text); }
-details summary { cursor: pointer; }
-details ul { margin: .4rem 0 0; padding-left: 1.1rem; }
-details li { overflow-wrap: anywhere; }
+.files-toggle {
+  font: inherit;
+  font-size: .85rem;
+  color: var(--link);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: .1rem .5rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.files-toggle::before { content: "\25B8  "; }
+.files-toggle[aria-expanded="true"]::before { content: "\25BE  "; }
+tbody tr.expanded > td { background: var(--code-inline-bg); border-bottom-color: transparent; }
+tbody tr.files-row > td { background: var(--code-inline-bg); box-shadow: inset 3px 0 0 var(--link); padding: .4rem 1rem .8rem; }
+tbody tr.files-row[hidden] { display: none; }
+ul.files { list-style: none; margin: 0; padding: 0; }
+ul.files li { display: flex; justify-content: space-between; gap: 1rem; padding: .2rem 0; border-bottom: 1px dashed var(--border); }
+ul.files li:last-child { border-bottom: 0; }
+ul.files a { overflow-wrap: anywhere; font-family: ui-monospace, "Fira Code", monospace; font-size: .85rem; }
+ul.files .muted { white-space: nowrap; }
 .muted { color: var(--muted); }
 
 footer { margin-top: 2rem; color: var(--muted); font-size: .85rem; }
@@ -172,4 +190,6 @@ footer a { color: inherit; }
   td { border: 0; padding: .2rem 0; display: grid; grid-template-columns: 6.5rem 1fr; gap: .5rem; }
   td > * { min-width: 0; }
   td::before { content: attr(data-label); color: var(--muted); font-size: .8rem; }
+  tbody tr.files-row > td { display: block; padding: .5rem .75rem; }
+  tbody tr.files-row > td::before { content: none; }
 }

@@ -1,5 +1,5 @@
 Name:           packman-nova-keyring
-Version:        1.0.0
+Version:        1.0.1
 Release:        0
 Summary:        Repository configuration and signing key for packman-nova
 License:        MIT

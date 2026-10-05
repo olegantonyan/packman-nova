@@ -43,9 +43,9 @@ module PackmanNova
 
       def commands
         [
-          command('add', 'Add the repository', "sudo zypper ar -f #{repo_file_url}"),
-          command('refresh', 'Refresh metadata and import the signing key', 'sudo zypper --gpg-auto-import-keys ref'),
-          command('switch', 'Switch installed packages to this repository', "sudo zypper dup --from #{slug} --allow-vendor-change")
+          command('add', 'Add the repo', "sudo zypper ar -f -p #{::PackmanNova::Repo::RepoFile::PRIORITY} #{repo_file_url}"),
+          command('refresh', 'Import the key', 'sudo zypper --gpg-auto-import-keys ref'),
+          command('switch', 'Switch packages', "sudo zypper dup --from #{slug} --allow-vendor-change")
         ]
       end
 

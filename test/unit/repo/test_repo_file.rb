@@ -16,6 +16,7 @@ describe ::PackmanNova::Repo::RepoFile do
       gpgkey=https://packman.omnipackage.org/packman-nova.key
       enabled=1
       autorefresh=1
+      priority=80
     REPO
   end
 

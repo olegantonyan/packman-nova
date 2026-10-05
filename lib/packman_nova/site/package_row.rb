@@ -25,7 +25,7 @@ module PackmanNova
       attr_reader :name, :entry, :files, :repo_url
 
       def identity
-        { 'name' => name, 'anchor' => ::PackmanNova::Site::Format.anchor(name), 'evr' => evr, 'origin_url' => origin_url }
+        { 'name' => name, 'anchor' => ::PackmanNova::Site::Format.anchor(name), 'evr' => evr, 'origin_label' => entry['origin'] || 'src.rpm', 'origin_url' => origin_url }
       end
 
       def build
@@ -46,10 +46,10 @@ module PackmanNova
       end
 
       def origin_url
-        project, package = entry['origin'].to_s.split('/', 2)
-        return nil unless entry['kind'] == 'obs-link' && package && !package.empty?
+        return file_rows.find { |row| row['path'].start_with?(SOURCE_PREFIX) }&.fetch('url') unless entry['kind'] == 'obs-link'
 
-        format(OBS_PACKAGE_URL, project: project, package: package)
+        project, package = entry['origin'].to_s.split('/', 2)
+        format(OBS_PACKAGE_URL, project: project, package: package) if package && !package.empty?
       end
 
       def file_rows

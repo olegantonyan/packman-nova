@@ -6,3 +6,4 @@ gpgcheck=1
 gpgkey=https://packman.omnipackage.org/packman-nova.key
 enabled=1
 autorefresh=1
+priority=80

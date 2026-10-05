@@ -13,9 +13,9 @@
 <div class="container">
 <header>
   <h1>{{ title | escape }}</h1>
-  <p>An independent rebuild of the Packman Essentials package set for openSUSE Tumbleweed from public sources: openSUSE Factory spec files plus Packman's project configuration. Packages are built on GitHub Actions in containers. Not affiliated with Packman or openSUSE.</p>
-  <p>Packman <a href="https://lists.links2linux.de/pipermail/packman/2026-August/018314.html">announced</a> that it shuts down on 2026-12-31 unless someone takes it over. This repository keeps the same packages available after that date.</p>
-  <nav><a href="#install">Install</a><a href="#signing-key">Signing key</a><a href="#repository">Repository</a><a href="#packages">Packages</a></nav>
+  <p>Packman Essentials, rebuilt from public sources. Not affiliated with Packman or openSUSE.</p>
+  <p>Packman <a href="https://lists.links2linux.de/pipermail/packman/2026-August/018314.html">shuts down</a> on 2026-12-31. This repo keeps the packages going.</p>
+  <nav><a href="#install">Install</a><a href="#signing-key">Key</a><a href="#repository">Repo</a><a href="#packages">Packages</a>{% if source_url %}<a href="{{ source_url | escape }}">GitHub</a>{% endif %}</nav>
 </header>
 
 <main>
@@ -32,36 +32,35 @@
     </li>
 {%- endfor %}
   </ol>
-  <p class="note"><code>--allow-vendor-change</code> replaces installed packages from other vendors (openSUSE, Packman) with the builds from this repository. The <code>packman-nova-keyring</code> package in this repository installs the signing key and the repo file.</p>
+  <p class="note">Step 3 replaces openSUSE and Packman builds with these.</p>
 </section>
 
 <section id="signing-key">
-  <h2>Signing key</h2>
+  <h2>Key</h2>
 {%- if key %}
   <dl class="facts">
     <dt>Key ID</dt><dd><code>{{ key.id | escape }}</code></dd>
     <dt>Fingerprint</dt><dd><code>{{ key.fingerprint | escape }}</code></dd>
-    <dt>Public key</dt><dd><a href="{{ key_url | escape }}">{{ key_url | escape }}</a></dd>
+    <dt>File</dt><dd><a href="{{ key_url | escape }}">{{ key_url | escape }}</a></dd>
   </dl>
 {%- else %}
-  <p>No signing key is recorded for this repository.</p>
-  <p class="note">Public key location: <a href="{{ key_url | escape }}">{{ key_url | escape }}</a></p>
+  <p>No signing key recorded. <a href="{{ key_url | escape }}">{{ key_url | escape }}</a></p>
 {%- endif %}
 </section>
 
 <section id="repository">
-  <h2>Repository</h2>
+  <h2>Repo</h2>
   <dl class="facts">
     <dt>Repo file</dt><dd><a href="{{ repo_file_url | escape }}">{{ repo_file_url | escape }}</a></dd>
 {%- for baseurl in baseurls %}
-    <dt>Base URL ({{ baseurl.arch | escape }})</dt><dd><code>{{ baseurl.url | escape }}</code></dd>
+    <dt>{{ baseurl.arch | escape }}</dt><dd><code>{{ baseurl.url | escape }}</code></dd>
 {%- endfor %}
-    <dt>Tumbleweed snapshot</dt><dd>{% if tumbleweed_snapshot %}{{ tumbleweed_snapshot | escape }}{% else %}unknown{% endif %}</dd>
-    <dt>Last update</dt><dd>{% if generated_at %}<time datetime="{{ generated_at_iso | escape }}">{{ generated_at | escape }}</time>{% else %}unknown{% endif %}</dd>
-    <dt>Build run</dt><dd>{{ run | escape }}{% if release %} (release <code>{{ release | escape }}</code>){% endif %}</dd>
-    <dt>Packages</dt><dd>{{ totals.packages }} source packages: {{ totals.succeeded }} built in their last run, {{ totals.not_succeeded }} not</dd>
-    <dt>Files</dt><dd>{{ totals.binary_rpms }} binary rpms, {{ totals.source_rpms }} source rpms, {{ totals.size }}</dd>
-    <dt>Machine-readable</dt><dd><a href="packages.json">packages.json</a></dd>
+    <dt>Tumbleweed</dt><dd>{% if tumbleweed_snapshot %}{{ tumbleweed_snapshot | escape }}{% else %}unknown{% endif %}</dd>
+    <dt>Updated</dt><dd>{% if generated_at %}<time datetime="{{ generated_at_iso | escape }}">{{ generated_at | escape }}</time>{% else %}unknown{% endif %}</dd>
+    <dt>Run</dt><dd>{{ run | escape }}{% if release %} <code>{{ release | escape }}</code>{% endif %}</dd>
+    <dt>Packages</dt><dd>{{ totals.succeeded }} of {{ totals.packages }} built</dd>
+    <dt>Files</dt><dd>{{ totals.binary_rpms }} rpms, {{ totals.source_rpms }} src, {{ totals.size }}</dd>
+    <dt>JSON</dt><dd><a href="packages.json">packages.json</a></dd>
   </dl>
 </section>
 
@@ -76,11 +75,16 @@
       <tr id="{{ package.anchor }}">
         <td data-label="Package"><a class="name" href="#{{ package.anchor }}">{{ package.name | escape }}</a></td>
         <td data-label="Version">{% if package.evr %}<code>{{ package.evr | escape }}</code>{% else %}<span class="muted">unknown</span>{% endif %}</td>
-        <td data-label="Origin"><div>{% if package.origin_url %}<a href="{{ package.origin_url | escape }}">{{ package.origin | escape }}</a>{% elsif package.origin %}{{ package.origin | escape }}{% else %}own sources{% endif %}<span class="kind">{{ package.kind | escape }}</span></div></td>
+        <td data-label="Origin"><div>{% if package.origin_url %}<a href="{{ package.origin_url | escape }}">{{ package.origin_label | escape }}</a>{% else %}{{ package.origin_label | escape }}{% endif %}<span class="kind">{{ package.kind | escape }}</span></div></td>
         <td data-label="Status"><div><span class="status status-{{ package.status_class }}">{{ package.status | escape }}</span>{% if package.last_run %} <span class="muted">run {{ package.last_run | escape }}</span>{% endif %}{% if package.reason %}<span class="reason">{{ package.reason | escape }}</span>{% endif %}</div></td>
         <td data-label="Built">{% if package.built_at %}<time datetime="{{ package.built_at_iso | escape }}">{{ package.built_at | escape }}</time>{% else %}<span class="muted">never</span>{% endif %}</td>
-        <td data-label="Files"><div>{% if package.files.size > 0 %}<details><summary>{{ package.files.size }} rpms</summary><ul>{% for file in package.files %}<li><a href="{{ file.url | escape }}">{{ file.name | escape }}</a> <span class="muted">{{ file.size }}</span></li>{% endfor %}</ul></details>{% else %}<span class="muted">none published</span>{% endif %}{% if package.retained %}<span class="reason">kept from the last successful build</span>{% endif %}</div></td>
+        <td data-label="Files"><div>{% if package.files.size > 0 %}<button type="button" class="files-toggle" aria-expanded="false" aria-controls="files-{{ package.anchor }}" hidden>{{ package.files.size }} rpms</button>{% else %}<span class="muted">none</span>{% endif %}{% if package.retained %}<span class="reason">from last good build</span>{% endif %}</div></td>
       </tr>
+{%- if package.files.size > 0 %}
+      <tr class="files-row" id="files-{{ package.anchor }}">
+        <td colspan="6"><ul class="files">{% for file in package.files %}<li><a href="{{ file.url | escape }}">{{ file.name | escape }}</a><span class="muted">{{ file.size }}</span></li>{% endfor %}</ul></td>
+      </tr>
+{%- endif %}
 {%- endfor %}
     </tbody>
   </table>
@@ -88,14 +92,26 @@
 </main>
 
 <footer>
-  <p>Some codecs in this repository may be covered by patents in some jurisdictions; you are responsible for complying with the laws that apply to you.</p>
+  <p>Some codecs may be patented where you live. Check your local laws.</p>
 {%- if source_url %}
   <p>Source: <a href="{{ source_url | escape }}">{{ source_url | escape }}</a></p>
 {%- endif %}
-  <p>Generated {% if generated_at %}{{ generated_at | escape }}{% else %}at an unknown time{% endif %} from build run {{ run | escape }}.</p>
+  <p>Inspired by <a href="https://omnipackage.org">omnipackage.org</a>.</p>
+  <p>Run {{ run | escape }}{% if generated_at %}, {{ generated_at | escape }}{% endif %}.</p>
 </footer>
 </div>
 <script>
+document.querySelectorAll('.files-toggle').forEach(function (button) {
+  var row = document.getElementById(button.getAttribute('aria-controls'));
+  row.hidden = true;
+  button.hidden = false;
+  button.addEventListener('click', function () {
+    var open = button.getAttribute('aria-expanded') !== 'true';
+    button.setAttribute('aria-expanded', String(open));
+    row.hidden = !open;
+    button.closest('tr').classList.toggle('expanded', open);
+  });
+});
 if (navigator.clipboard) {
   document.querySelectorAll('.copy-btn').forEach(function (button) {
     button.hidden = false;

@@ -4,6 +4,7 @@ module PackmanNova
   module Repo
     class RepoFile
       DISTRO_NAMES = { 'opensuse_tumbleweed' => 'openSUSE Tumbleweed' }.freeze
+      PRIORITY = 80
 
       class << self
         def base_url(config:, root:)
@@ -28,6 +29,7 @@ module PackmanNova
           gpgkey=#{base_url}/#{::PackmanNova::Repo::Layout::PUBLIC_KEY_FILE}
           enabled=1
           autorefresh=1
+          priority=#{PRIORITY}
         REPO
       end
 
