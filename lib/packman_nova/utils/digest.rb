@@ -15,10 +15,6 @@ module PackmanNova
         ::Digest::MD5.file(path).hexdigest
       end
 
-      def sha256_string(string)
-        ::Digest::SHA256.hexdigest(string)
-      end
-
       def md5_string(string)
         ::Digest::MD5.hexdigest(string)
       end

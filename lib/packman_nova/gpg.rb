@@ -5,18 +5,15 @@ require 'base64'
 module PackmanNova
   class Gpg
     ARMOR_PREFIX = '-----BEGIN PGP '
-    FORMATS = %w[base64 armor].freeze
     KEY_FILE = 'key.asc'
     BATCH_FILE = 'genkey.batch'
-    DATA_FILE = 'data.txt'
-    SIGNATURE_FILE = 'data.txt.asc'
 
     class << self
-      def build(config:, logger:, subprocess: ::PackmanNova::Utils::Subprocess.new(logger: logger))
-        return new(executor: ::PackmanNova::Gpg::HostExecutor.new(subprocess: subprocess)) if ::PackmanNova::Gpg::HostExecutor.available?(subprocess)
+      def build(config:, logger:, subprocess: ::PackmanNova::Utils::Subprocess.new(logger:))
+        return new(executor: ::PackmanNova::Gpg::HostExecutor.new(subprocess:)) if ::PackmanNova::Gpg::HostExecutor.available?(subprocess)
 
         logger.debug('gpg not found on the host, running it in the builder container')
-        new(executor: ::PackmanNova::Gpg::ContainerExecutor.build(config: config, logger: logger, subprocess: subprocess))
+        new(executor: ::PackmanNova::Gpg::ContainerExecutor.build(config:, logger:, subprocess:))
       end
 
       def to_base64(text)
@@ -36,11 +33,7 @@ module PackmanNova
       end
 
       def convert(text, to:)
-        case to
-        when 'armor' then to_armor(text)
-        when 'base64' then to_base64(text)
-        else raise ::ArgumentError, "unknown key format #{to.inspect}, expected one of #{FORMATS.join(', ')}"
-        end
+        to == 'armor' ? to_armor(text) : to_base64(text)
       end
     end
 
@@ -75,17 +68,6 @@ module PackmanNova
         raise ::PackmanNova::GpgError, 'no key found to export' if public_armor.strip.empty?
 
         public_armor
-      end
-    end
-
-    def sign_test(armor_or_base64)
-      within_home do |home|
-        import(home, armor_or_base64)
-        data = home.write(DATA_FILE, 'packman-nova signing test')
-        signature = home.path(SIGNATURE_FILE)
-        home.gpg('--batch', '--yes', '--armor', '--detach-sign', '--output', signature, data)
-        home.gpg('--batch', '--verify', signature, data)
-        true
       end
     end
 

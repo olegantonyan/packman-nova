@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-require_relative '../publish/fakes'
+require 'support/publish_fakes'
 
 describe ::PackmanNova::Repo::StateBuilder do
   let(:tmp) { ::Dir.mktmpdir('packman-nova-state-') }
@@ -20,7 +20,7 @@ describe ::PackmanNova::Repo::StateBuilder do
 
   def diff(desired, stage:, succeeded:, retained: [])
     ::PackmanNova::Repo::Diff::Result.new(
-      desired: desired, to_add: stage, to_replace: [], to_remove: [], to_resign: [], retained_packages: retained, succeeded_packages: succeeded, ignored: []
+      desired:, to_add: stage, to_replace: [], to_remove: [], to_resign: [], retained_packages: retained, succeeded_packages: succeeded, ignored: []
     )
   end
 
@@ -34,8 +34,8 @@ describe ::PackmanNova::Repo::StateBuilder do
     record = PublishFakes.record({ 'libx264:x264' => ['succeeded', []], 'vlc' => ['unresolvable', []] }, 5)
     state = ::PackmanNova::Repo::StateBuilder.new(
       previous: ::PackmanNova::Repo::State.empty, build_record: record, diff: diff(desired, stage: desired.keys, succeeded: ['libx264:x264']),
-      layout: layout, manifests: manifests, sync_state: { 'packages' => { 'libx264' => { 'srcmd5' => 'abc' } } },
-      versions: { 'libx264:x264' => info }, key: PublishFakes.key, now: now
+      layout:, manifests:, sync_packages: { 'libx264' => { 'srcmd5' => 'abc' } },
+      versions: { 'libx264:x264' => info }, key: PublishFakes.key, now:
     ).call
 
     assert_equal [5, '1699.5.nova.1', '2026-09-29T12:00:00Z'], [state.run, state.release, state.to_h['generated_at']]
@@ -62,8 +62,8 @@ describe ::PackmanNova::Repo::StateBuilder do
     )
     desired = { 'x86_64/libavcodec62-8-1.x86_64.rpm' => entry.new(relative: 'x86_64/libavcodec62-8-1.x86_64.rpm', package: 'ffmpeg-8', source: nil, source_sha256: 'y') }
     state = ::PackmanNova::Repo::StateBuilder.new(
-      previous: previous, build_record: PublishFakes.record({ 'ffmpeg-8' => ['failed', []] }, 3), diff: diff(desired, stage: [], succeeded: [], retained: ['ffmpeg-8']),
-      layout: layout, manifests: manifests, now: now
+      previous:, build_record: PublishFakes.record({ 'ffmpeg-8' => ['failed', []] }, 3), diff: diff(desired, stage: [], succeeded: [], retained: ['ffmpeg-8']),
+      layout:, manifests:, now:
     ).call
     package = state.packages.fetch('ffmpeg-8')
 

@@ -9,9 +9,9 @@ describe ::PackmanNova::Sources::ObsClient do
   let(:xml) { ::File.read(fixture_path('sync', 'obs_directory.xml')) }
 
   def client(offline: false, api: server.url('/public'))
-    http = ::PackmanNova::Utils::Http.new(logger: null_logger, timeout_sec: 5, retries: 0, offline: offline)
-    downloader = ::PackmanNova::Sources::Downloader.new(http: http, logger: null_logger, offline: offline)
-    ::PackmanNova::Sources::ObsClient.new(api: api, downloader: downloader, workdir: workdir)
+    http = ::PackmanNova::Utils::Http.new(logger: null_logger, timeout_sec: 5, retries: 0, offline:)
+    downloader = ::PackmanNova::Sources::Downloader.new(http:, logger: null_logger)
+    ::PackmanNova::Sources::ObsClient.new(api:, downloader:, workdir:)
   end
 
   after do
@@ -41,6 +41,23 @@ describe ::PackmanNova::Sources::ObsClient do
     assert ::File.file?(::File.join(workdir.obs_cache_dir(project: 'openSUSE:Factory', package: 'demo'), "#{listing.srcmd5}.xml"))
   end
 
+  it 'parses entries sorted by name with md5 and size' do
+    server.on('/public/source/openSUSE:Factory/demo?expand=1', body: xml)
+    listing = client.directory(project: 'openSUSE:Factory', package: 'demo')
+    entry = listing.entry('demo-1.0.tar.gz')
+
+    assert_equal %w[_multibuild demo-1.0.tar.gz demo.changes demo.spec], listing.entries.map(&:name)
+    assert_equal ['034956cbb1e3629e7cade3d311ffd06a', 5_004_148], [entry.md5, entry.size]
+    assert_nil listing.entry('nope')
+  end
+
+  it 'raises SyncError with the OBS status summary' do
+    server.on('/public/source/openSUSE:Factory/nope?expand=1', body: ::File.read(fixture_path('sync', 'obs_not_found.xml')))
+    error = assert_raises(::PackmanNova::SyncError) { client.directory(project: 'openSUSE:Factory', package: 'nope') }
+
+    assert_equal 'openSUSE:Factory/nope: Package not found: openSUSE:Factory/nope', error.message
+  end
+
   it 'serves the newest cached listing when offline' do
     server.on('/public/source/openSUSE:Factory/demo?expand=1', body: xml)
     client.directory(project: 'openSUSE:Factory', package: 'demo')
@@ -59,11 +76,5 @@ describe ::PackmanNova::Sources::ObsClient do
 
   it 'raises SyncError when offline without a cached listing' do
     assert_raises(::PackmanNova::SyncError) { client(offline: true).directory(project: 'openSUSE:Factory', package: 'nope') }
-  end
-
-  it 'fetches a project prjconf' do
-    server.on('/public/source/openSUSE:Factory/_config', body: "Macros:\n")
-
-    assert_equal "Macros:\n", client.prjconf(project: 'openSUSE:Factory')
   end
 end

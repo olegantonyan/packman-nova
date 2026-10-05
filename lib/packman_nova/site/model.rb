@@ -6,16 +6,9 @@ module PackmanNova
       KEY_FILE_NAME = ::PackmanNova::Repo::Layout::PUBLIC_KEY_FILE
       REPO_FILE_NAME = ::PackmanNova::Repo::Layout::REPO_FILE
       SOURCE_DIR = 'src'
-      SUCCEEDED = ::PackmanNova::Site::PackageRow::SUCCEEDED
+      SUCCEEDED = ::PackmanNova::Pbuild::ResultParser::SUCCEEDED
       GITHUB_REPO = %r{\Ahttps://github\.com/([^/]+/[^/]+?)/?\z}
       WORKFLOW_FILE = 'build-publish.yml'
-
-      class << self
-        def localfs_root(config)
-          path = config.repository.localfs.path
-          path.empty? ? config.workdir.repo_dir : ::File.expand_path(path)
-        end
-      end
 
       def initialize(config:, state:)
         @config = config
@@ -23,12 +16,11 @@ module PackmanNova
       end
 
       def public_url
-        url = config.repository.public_url.strip.sub(%r{/+\z}, '')
-        url.empty? ? "file://#{self.class.localfs_root(config)}" : url
+        layout.public_url(config.repository.public_url)
       end
 
       def repo_url
-        "#{public_url}/#{config.repository.path.delete_prefix('/').delete_suffix('/')}"
+        "#{public_url}/#{layout.path}"
       end
 
       def repo_file_url
@@ -65,7 +57,7 @@ module PackmanNova
 
       def packages
         @packages ||= state.fetch('packages', {}).sort_by { |name, _entry| name }.map do |name, entry|
-          ::PackmanNova::Site::PackageRow.new(name: name, entry: entry, files: files, repo_url: repo_url).to_h
+          ::PackmanNova::Site::PackageRow.new(name:, entry:, files:, repo_url:).to_h
         end
       end
 
@@ -94,6 +86,10 @@ module PackmanNova
 
       attr_reader :config, :state
 
+      def layout
+        @layout ||= ::PackmanNova::Repo::Layout.from_config(config, root: ::PackmanNova::Repo::Layout.localfs_root(config))
+      end
+
       def files
         state.fetch('files', {})
       end
@@ -117,10 +113,13 @@ module PackmanNova
 
       def summary
         {
-          'title' => config.site.title, 'description' => config.site.description,
-          'tumbleweed_snapshot' => state['tumbleweed_snapshot'], 'run' => state['run'], 'release' => state['release'],
-          'generated_at' => ::PackmanNova::Site::Format.time(state['generated_at']), 'generated_at_iso' => state['generated_at']
+          'title' => config.site.title, 'description' => config.site.description, 'distro_name' => config.distro.name,
+          'distro_snapshot' => state['distro_snapshot'], 'run' => state['run'], 'release' => state['release'], **generated
         }
+      end
+
+      def generated
+        { 'generated_at' => ::PackmanNova::Site::Format.time(state['generated_at']), 'generated_at_iso' => state['generated_at'] }
       end
     end
   end

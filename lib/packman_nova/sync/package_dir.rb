@@ -39,10 +39,6 @@ module PackmanNova
         ::FileUtils.rm_rf(path)
       end
 
-      def exist?
-        ::File.directory?(path)
-      end
-
       private
 
       def tmp_path

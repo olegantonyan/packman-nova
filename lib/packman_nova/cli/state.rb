@@ -19,10 +19,9 @@ module PackmanNova
         end
       end
 
-      def initialize(provider: nil, subprocess: nil, **)
+      def initialize(bucket: nil, **)
         super(**)
-        @provider = provider
-        @subprocess = subprocess
+        @bucket = bucket
       end
 
       def call
@@ -36,19 +35,19 @@ module PackmanNova
       private
 
       def archive
-        ::PackmanNova::Repo::StateArchive.new(config: config, workdir: workdir, provider: provider, subprocess: subprocess, logger: logger)
+        ::PackmanNova::Repo::StateArchive.new(config:, workdir:, bucket:, subprocess:, logger:)
       end
 
       def workdir
         @workdir ||= config.workdir
       end
 
-      def provider
-        @provider ||= ::PackmanNova::Repo::Providers::S3.build(config: config, logger: logger)
+      def bucket
+        @bucket ||= ::PackmanNova::Repo::Providers::S3.build(config:, logger:).bucket
       end
 
       def subprocess
-        @subprocess ||= ::PackmanNova::Utils::Subprocess.new(logger: logger)
+        @subprocess ||= ::PackmanNova::Utils::Subprocess.new(logger:)
       end
     end
   end

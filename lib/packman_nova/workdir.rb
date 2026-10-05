@@ -11,21 +11,23 @@ module PackmanNova
 
     attr_reader :root
 
+    class << self
+      def dist_config(reponame) = ::File.join('_configs', "#{reponame}.conf")
+    end
+
     def initialize(root:)
       @root = root.to_s.freeze
       freeze
     end
 
     def project_dir = join('project')
-    def configs_dir = ::File.join(project_dir, '_configs')
+    def dist_config_file(reponame) = ::File.join(project_dir, self.class.dist_config(reponame))
     def config_file = ::File.join(project_dir, '_config')
     def package_dir(name) = ::File.join(project_dir, name)
     def results_dir(reponame:, arch:) = ::File.join(project_dir, "_build.#{reponame}.#{arch}")
-    def pbuild_state_dir = ::File.join(project_dir, '.pbuild')
     def build_root = join('build-root')
     def cache_dir = join('cache')
     def obs_cache_dir(project:, package:) = ::File.join(cache_dir, 'obs', project, package)
-    def prjconf_cache_dir = ::File.join(cache_dir, 'prjconf')
     def public_key_file = ::File.join(cache_dir, 'public-key.asc')
     def state_dir = join('state')
     def state_file(name) = ::File.join(state_dir, name)
@@ -52,19 +54,15 @@ module PackmanNova
       ::FileUtils.mkdir_p(tmp_dir)
       path = ::Dir.mktmpdir(prefix, tmp_dir)
       ::File.chmod(0o700, path)
-      return path unless block_given?
-
-      begin
-        yield path
-      ensure
-        ::FileUtils.rm_rf(path)
-      end
+      yield path
+    ensure
+      ::FileUtils.rm_rf(path) if path
     end
 
-    def with_lock(blocking: false)
+    def with_lock
       ::FileUtils.mkdir_p(root)
       ::File.open(lock_file, ::File::RDWR | ::File::CREAT, 0o644) do |file|
-        acquire_lock(file, blocking)
+        acquire_lock(file)
         yield
       ensure
         file.flock(::File::LOCK_UN)
@@ -74,6 +72,12 @@ module PackmanNova
     def prepare!
       TOP_LEVEL_DIRS.each { |dir| ::FileUtils.mkdir_p(join(dir)) }
       self
+    end
+
+    def package_names
+      return [] unless ::File.directory?(project_dir)
+
+      ::Dir.children(project_dir).reject { |name| name.start_with?('.', '_') }.select { |name| ::File.directory?(package_dir(name)) }.sort
     end
 
     def exist?
@@ -99,9 +103,8 @@ module PackmanNova
       ::File.join(root, name)
     end
 
-    def acquire_lock(file, blocking)
-      mode = blocking ? ::File::LOCK_EX : ::File::LOCK_EX | ::File::LOCK_NB
-      raise ::PackmanNova::LockError, "another packman-nova process holds #{lock_file}" unless file.flock(mode)
+    def acquire_lock(file)
+      raise ::PackmanNova::LockError, "another packman-nova process holds #{lock_file}" unless file.flock(::File::LOCK_EX | ::File::LOCK_NB)
 
       file.truncate(0)
       file.write("#{::Process.pid}\n")

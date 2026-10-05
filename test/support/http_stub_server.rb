@@ -19,7 +19,7 @@ class HttpStubServer
   end
 
   def on(path, status: 200, headers: {}, body: '')
-    routes[path] << Response.new(status: status, headers: headers, body: body)
+    routes[path] << Response.new(status:, headers:, body:)
     self
   end
 

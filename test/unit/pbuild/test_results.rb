@@ -17,7 +17,6 @@ describe ::PackmanNova::Pbuild::Results do
     assert_equal %w[fdk-aac-devel-2.0.3-1699.2.nova.1.x86_64.rpm libfdk-aac2-2.0.3-1699.2.nova.1.x86_64.rpm], fdk.binary_rpms
     assert_equal %w[fdk-aac-debugsource-2.0.3-1699.2.nova.1.x86_64.rpm libfdk-aac2-debuginfo-2.0.3-1699.2.nova.1.x86_64.rpm], fdk.debuginfo_rpms
     assert_equal 'fdk-aac-2.0.3-1699.2.nova.1.src.rpm', fdk.srpm
-    assert_empty fdk.noarch_rpms
     assert_equal ::File.join(dir, 'fdk-aac', '_log'), fdk.log
     assert_equal 'forced rebuild', fdk.reason
   end
@@ -56,11 +55,51 @@ describe ::PackmanNova::Pbuild::Results do
     assert_empty ::PackmanNova::Pbuild::Results.scan(fixture_path('pbuild', 'missing'))
   end
 
-  it 'classifies noarch rpms' do
+  it 'classifies nosrc rpms' do
     result = ::PackmanNova::Pbuild::PackageResult.new(key: 'k', dir: '/d', rpm_files: %w[k-doc-1-1699.1.nova.1.noarch.rpm k-1-1699.1.nova.1.nosrc.rpm], status: nil)
 
-    assert_equal ['k-doc-1-1699.1.nova.1.noarch.rpm'], result.noarch_rpms
+    assert_equal ['k-doc-1-1699.1.nova.1.noarch.rpm'], result.binary_rpms
     assert_equal 'k-1-1699.1.nova.1.nosrc.rpm', result.srpm
     assert_nil result.flavor
+  end
+
+  describe 'with written _reason and _jobhistory files' do
+    def scan_with(reason: nil, history: nil)
+      with_tmpdir do |root|
+        ::FileUtils.mkdir_p(::File.join(root, 'fdk-aac'))
+        ::File.write(::File.join(root, 'fdk-aac', '_meta'), 'm')
+        ::File.write(::File.join(root, 'fdk-aac', '_reason'), reason) if reason
+        ::File.write(::File.join(root, '_jobhistory'), history) if history
+        ::PackmanNova::Pbuild::Results.scan(root).fetch('fdk-aac')
+      end
+    end
+
+    it 'reads the reason with old source md5 or package changes' do
+      assert_equal 'new build', scan_with(reason: "<reason>\n  <explain>new build</explain>\n</reason>\n").reason
+      assert_equal 'source change: old source 01234567',
+                   scan_with(reason: '<reason><explain>source change</explain><oldsource>0123456789abcdef0123456789abcdef</oldsource></reason>').reason
+      changes = '<packagechange change="md5sum" key="libx264-devel"/><packagechange change="added" key="nasm"/>'
+
+      assert_equal 'meta change: libx264-devel (md5sum), nasm (added)', scan_with(reason: "<reason><explain>meta change</explain>#{changes}</reason>").reason
+    end
+
+    it 'takes timing from the last job per package' do
+      history = <<~XML
+        <jobhistlist>
+          <jobhist package="fdk-aac" starttime="110" endtime="150" code="failed"/>
+          <jobhist package="fdk-aac" starttime="210" endtime="290" code="succeeded"/>
+        </jobhistlist>
+      XML
+      result = scan_with(history:)
+
+      assert_equal [::Time.at(290).utc, 80], [result.built_at, result.duration_sec]
+    end
+
+    it 'ignores broken files' do
+      result = scan_with(reason: '<reason><explain>', history: '<jobhistlist><jobhist')
+
+      assert_nil result.reason
+      assert_nil result.duration_sec
+    end
   end
 end

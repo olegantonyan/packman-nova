@@ -10,14 +10,14 @@ module PackmanNova
       end
 
       def peek
-        release_for(run_counter.peek(floor: floor))
+        release_for(run_counter.peek(floor:))
       end
 
       def allocate(release = nil)
         return [explicit_run(release), release] if release
 
         @snapshot = run_counter.snapshot
-        run = run_counter.next!(floor: floor) { |next_run| release_for(next_run) }
+        run = run_counter.next!(floor:) { |next_run| release_for(next_run) }
         [run, release_for(run)]
       end
 
@@ -29,13 +29,11 @@ module PackmanNova
       end
 
       def floor
-        ::PackmanNova::Pbuild::RunFloor.new(
-          repo_state_files: environment.repo_state_files, results_dir: environment.project_dir.results_dir, template: config.release.template
-        ).call
+        [published_run, built_run].max
       end
 
       def release_for(run)
-        ::PackmanNova::Release.new(template: config.release.template, suse_version: config.distro.suse_version, run: run).to_s
+        ::PackmanNova::Release.new(template: config.release.template, suse_version: config.distro.suse_version, run:).to_s
       end
 
       private
@@ -46,8 +44,27 @@ module PackmanNova
         ::PackmanNova::Release.parse_run(release, template: config.release.template) || ::PackmanNova::Release.parse_run(release) || run_counter.current
       end
 
+      def published_run
+        environment.repo_state_files.map { |path| run_in(path) }.max || 0
+      end
+
+      def built_run
+        results_dir = environment.project_dir.results_dir
+        return 0 unless ::File.directory?(results_dir)
+
+        ::Dir.glob('*/*.rpm', base: results_dir).filter_map { |path| ::PackmanNova::Release.parse_run(::File.basename(path), template: config.release.template) }.max || 0
+      end
+
+      def run_in(path)
+        data = ::PackmanNova::Utils::JsonFile.read(path, default: {})
+        run = data.is_a?(::Hash) ? data['run'] : nil
+        run.is_a?(::Integer) ? run : 0
+      rescue ::PackmanNova::Error
+        0
+      end
+
       def run_counter
-        @run_counter ||= ::PackmanNova::State::RunCounter.new(workdir: environment.workdir, clock: clock)
+        @run_counter ||= ::PackmanNova::State::RunCounter.new(workdir: environment.workdir, clock:)
       end
     end
   end

@@ -69,7 +69,7 @@ module PackmanNova
       end
 
       def plain_file(name, path)
-        ::PackmanNova::Sync::ExpectedFile.new(name: name, source: path, md5: ::PackmanNova::Utils::Digest.md5_file(path))
+        ::PackmanNova::Sync::ExpectedFile.new(name:, source: path, md5: ::PackmanNova::Utils::Digest.md5_file(path))
       end
 
       def change_detail(previous, files)
@@ -101,7 +101,7 @@ module PackmanNova
         record = {
           'kind' => manifest.kind, 'origin' => nil, 'srcmd5' => srcmd5(files), 'files' => files, 'synced_at' => ::Time.now.utc.iso8601
         }
-        ::PackmanNova::Sync::Outcome.new(name: manifest.name, status: :changed, record: record, detail: detail, checksums: checksums)
+        ::PackmanNova::Sync::Outcome.new(name: manifest.name, status: :changed, record:, detail:, checksums:)
       end
 
       def srcmd5(files)

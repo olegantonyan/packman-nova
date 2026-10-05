@@ -15,7 +15,7 @@ describe ::PackmanNova::Repo::StateArchive do
 
   def archive(dir, subprocess: ::PackmanNova::Utils::Subprocess.new(logger: null_logger))
     config = load_config(env: { 'PACKMAN_NOVA_WORKDIR' => dir })
-    ::PackmanNova::Repo::StateArchive.new(config: config, workdir: config.workdir, provider: provider, subprocess: subprocess, logger: null_logger)
+    ::PackmanNova::Repo::StateArchive.new(config:, workdir: config.workdir, bucket: provider, subprocess:, logger: null_logger)
   end
 
   it 'archives the results dir with the pbuild cache and state, then restores them' do
@@ -49,7 +49,7 @@ describe ::PackmanNova::Repo::StateArchive do
         ::File.write(argv[3], 'archive') if argv[2] == '-cf'
         ::Data.define(:ok) { def success? = ok }.new(ok: true)
       end
-      archive(dir, subprocess: subprocess).push
+      archive(dir, subprocess:).push
 
       assert_equal ['tar', '--zstd', '-cf'], argvs.first.first(3)
       assert_equal ['-C', dir, 'state'], argvs.first.last(3)

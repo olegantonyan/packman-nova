@@ -29,7 +29,7 @@ module PackmanNova
       private
 
       def environment
-        @environment ||= ::PackmanNova::Pbuild::Environment.new(config: config, logger: logger)
+        @environment ||= ::PackmanNova::Pbuild::Environment.new(config:, logger:)
       end
 
       def last_build
@@ -49,7 +49,7 @@ module PackmanNova
       end
 
       def query_live_codes
-        text = environment.executor.capture(environment.command(release: last_build.fetch('release', '')).result_argv(details: true))
+        text = environment.executor.capture(environment.command(release: last_build.fetch('release', '')).result_argv)
         ::PackmanNova::Pbuild::ResultParser.parse(text).codes
       end
 
@@ -58,7 +58,7 @@ module PackmanNova
       end
 
       def row(name)
-        base = name.split(':', 2).first
+        base = ::PackmanNova::Manifest.base_name(name)
         { 'package' => name, **sync_columns(base), **build_columns(name), 'published' => published.dig(base, 'release') }
       end
 

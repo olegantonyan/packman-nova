@@ -11,8 +11,8 @@ module PackmanNova
         raise ::PackmanNova::Error, 'use only one of --package, --rebuild and --single' if [rebuild_packages.any?, rebuild, !single.nil?].count(true) > 1
 
         @settings = {
-          reponame: reponame, arch: arch, repos: repos, buildjobs: buildjobs, jobs: jobs, release: release, checks: checks, debuginfo: debuginfo,
-          baselibs: baselibs, repo_refresh: repo_refresh, rebuild_packages: rebuild_packages, rebuild: rebuild, single: single, extra_args: extra_args
+          reponame:, arch:, repos:, buildjobs:, jobs:, release:, checks:, debuginfo:,
+          baselibs:, repo_refresh:, rebuild_packages:, rebuild:, single:, extra_args:
         }.freeze
         freeze
       end
@@ -36,12 +36,8 @@ module PackmanNova
         ]
       end
 
-      def result_argv(details: false)
-        [EXECUTABLE, '--reponame', reponame, '--arch', arch, '--result-code', 'all', *(details ? [] : ['--terse']), PROJECT]
-      end
-
-      def repoquery_argv(name)
-        [EXECUTABLE, *target_args, '--no-repo-refresh', '--repoquery', name, PROJECT]
+      def result_argv
+        [EXECUTABLE, '--reponame', reponame, '--arch', arch, '--result-code', 'all', PROJECT]
       end
 
       private
@@ -50,7 +46,7 @@ module PackmanNova
 
       def target_args
         [
-          '--dist', ::File.join(PROJECT, ::PackmanNova::Pbuild::ProjectDir::DIST_CONFIG), '--reponame', reponame, '--arch', arch,
+          '--dist', ::File.join(PROJECT, ::PackmanNova::Workdir.dist_config(reponame)), '--reponame', reponame, '--arch', arch,
           *repos.flat_map { |repo| ['--repo', repo] }
         ]
       end

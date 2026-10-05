@@ -9,4 +9,4 @@ sources:
       - https://github.com/mstorsjo/fdk-aac/archive/v2.0.3.tar.gz
     sha256: e25671cd96b10bad896aa42ab91a695a9e573395262baed4e4a2ff178d6a3a78
     size: 2518649
-notes: "Factory also ships libfdk-aac2; local-first precedence makes ours win in build roots (docs/11 open question)."
+notes: "Factory also ships libfdk-aac2; local-first precedence makes ours win in build roots."

@@ -2,7 +2,6 @@
 
 module PackmanNova
   class Release
-    DEFAULT_TEMPLATE = '%{suse_version}.%{run}.nova.1'
     RUN_PATTERN = /(?:\A|-)\d+\.(\d+)\.nova\.\d+(?=\.|\z)/
 
     class << self
@@ -33,7 +32,7 @@ module PackmanNova
     end
 
     def to_s
-      format(template, suse_version: suse_version, run: run)
+      format(template, suse_version:, run:)
     rescue ::KeyError, ::ArgumentError => e
       raise ::PackmanNova::ConfigError, "release.template #{template.inspect}: #{e.message}"
     end

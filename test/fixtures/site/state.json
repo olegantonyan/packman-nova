@@ -3,7 +3,7 @@
   "generated_at": "2026-09-29T08:15:42Z",
   "run": 7,
   "release": "1699.7.nova.1",
-  "tumbleweed_snapshot": "20260927",
+  "distro_snapshot": "20260927",
   "key": {
     "id": "C6D7E8F93F1C2A9B",
     "fingerprint": "0A1B2C3D4E5F60718293A4B5C6D7E8F93F1C2A9B"

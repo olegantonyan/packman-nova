@@ -42,7 +42,7 @@ module PackmanNova
       end
 
       def track(label, previous:, current:)
-        changes << Change.new(label: label, previous: previous, current: current) unless current.nil?
+        changes << Change.new(label:, previous:, current:) unless current.nil?
       end
 
       def changed
@@ -59,6 +59,12 @@ module PackmanNova
 
       def failed?
         !failed.empty?
+      end
+
+      def log(logger)
+        lines.each { |line| logger.info(line) }
+        logger.warn("sync failed for #{failed.keys.join(', ')}; building their previous sources") if failed?
+        self
       end
 
       def lines

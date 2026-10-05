@@ -3,7 +3,7 @@
 module PackmanNova
   class Cli
     class Build < ::PackmanNova::Cli::Command
-      BUILD_OPTIONS = %i[packages rebuild single buildjobs jobs checks debuginfo release sync dry_run].freeze
+      BUILD_OPTIONS = %i[packages rebuild single buildjobs jobs checks debuginfo repo_refresh release sync dry_run].freeze
 
       class << self
         def summary
@@ -34,9 +34,7 @@ module PackmanNova
       end
 
       def call
-        arguments = options.slice(*BUILD_OPTIONS)
-        arguments[:no_repo_refresh] = !options[:repo_refresh] if options.key?(:repo_refresh)
-        ::PackmanNova::Build.new(config: config, logger: logger, out: out).call(**arguments)
+        ::PackmanNova::Build.new(config:, logger:, out:).call(**options.slice(*BUILD_OPTIONS))
       end
     end
   end

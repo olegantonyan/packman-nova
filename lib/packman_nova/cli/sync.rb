@@ -12,7 +12,7 @@ module PackmanNova
           parser.on('--check', 'only report drift; exit 2 when anything changed') { options[:check] = true }
           parser.on('--package NAME', 'limit to this package (repeatable)') { |name| (options[:packages] ||= []) << name }
           parser.on('--update-checksums', 'fill sha256/size in package.yml from the first download') { options[:update_checksums] = true }
-          parser.on('--[no-]prjconf', 'refresh the Factory prjconf (default: yes)') { |value| options[:prjconf] = value }
+          parser.on('--[no-]prjconf', 'refresh the base prjconf (default: yes)') { |value| options[:prjconf] = value }
         end
       end
 
@@ -34,7 +34,7 @@ module PackmanNova
       end
 
       def sync
-        ::PackmanNova::Sync.new(config: config, logger: logger)
+        ::PackmanNova::Sync.new(config:, logger:)
       end
 
       def print_report(report)

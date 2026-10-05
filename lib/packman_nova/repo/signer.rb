@@ -38,7 +38,7 @@ module PackmanNova
       def call(dir:, files:, key_dir:, key_id:)
         return [] if files.empty?
 
-        lines = toolbox.run(SCRIPT, mounts: self.class.mounts(dir: dir, key_dir: key_dir), args: files, env: { 'KEY_ID' => key_id, 'GPG_TTY' => '/dev/null' })
+        lines = toolbox.run(SCRIPT, mounts: self.class.mounts(dir:, key_dir:), args: files, env: { 'KEY_ID' => key_id, 'GPG_TTY' => '/dev/null' })
         verify!(lines, files, key_id)
         files
       end

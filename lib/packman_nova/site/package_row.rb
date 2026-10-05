@@ -5,7 +5,7 @@ module PackmanNova
     class PackageRow
       OBS_PACKAGE_URL = 'https://build.opensuse.org/package/show/%<project>s/%<package>s'
       ENTRY_KEYS = %w[kind origin srcmd5 version release last_run reason].freeze
-      SUCCEEDED = 'succeeded'
+      SUCCEEDED = ::PackmanNova::Pbuild::ResultParser::SUCCEEDED
       STATUS_CLASSES = { SUCCEEDED => 'ok', 'failed' => 'fail', 'unresolvable' => 'fail', 'broken' => 'fail' }.freeze
       SOURCE_PREFIX = 'src/'
 
@@ -49,7 +49,7 @@ module PackmanNova
         return file_rows.find { |row| row['path'].start_with?(SOURCE_PREFIX) }&.fetch('url') unless entry['kind'] == 'obs-link'
 
         project, package = entry['origin'].to_s.split('/', 2)
-        format(OBS_PACKAGE_URL, project: project, package: package) if package && !package.empty?
+        format(OBS_PACKAGE_URL, project:, package:) if package && !package.empty?
       end
 
       def file_rows

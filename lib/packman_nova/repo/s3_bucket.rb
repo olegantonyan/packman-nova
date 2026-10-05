@@ -6,6 +6,12 @@ module PackmanNova
   module Repo
     class S3Bucket
       DELETE_BATCH = 1000
+      TEXT = 'text/plain; charset=utf-8'
+      CONTENT_TYPES = {
+        '.rpm' => 'application/x-rpm', '.xml' => 'application/xml', '.gz' => 'application/gzip', '.zst' => 'application/zstd',
+        '.xz' => 'application/x-xz', '.bz2' => 'application/x-bzip2', '.sqlite' => 'application/vnd.sqlite3',
+        '.asc' => TEXT, '.key' => TEXT, '.repo' => TEXT, '.json' => 'application/json', '.html' => 'text/html; charset=utf-8'
+      }.freeze
 
       attr_reader :name, :prefix
 
@@ -31,8 +37,8 @@ module PackmanNova
         ::FileUtils.rm_f(part) if part
       end
 
-      def upload(path, key, content_type: ::PackmanNova::Repo::UploadOrder.content_type(key))
-        ::File.open(path, 'rb') { |io| client.put_object(bucket: name, key: full_key(key), body: io, content_type: content_type) }
+      def upload(path, key, content_type: CONTENT_TYPES.fetch(::File.extname(key), 'application/octet-stream'))
+        ::File.open(path, 'rb') { |io| client.put_object(bucket: name, key: full_key(key), body: io, content_type:) }
         key
       end
 

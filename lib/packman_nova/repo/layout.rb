@@ -14,7 +14,12 @@ module PackmanNova
 
       class << self
         def from_config(config, root:)
-          new(root: root, path: config.repository.path)
+          new(root:, path: config.repository.path)
+        end
+
+        def localfs_root(config)
+          path = config.repository.localfs.path.strip
+          path.empty? ? config.workdir.repo_dir : ::File.expand_path(path)
         end
       end
 
@@ -27,22 +32,17 @@ module PackmanNova
       end
 
       def repo_dir = ::File.join(root, path)
-      def arch_dir(arch) = ::File.join(repo_dir, arch)
       def src_dir = ::File.join(repo_dir, SRC)
       def state_file = ::File.join(repo_dir, STATE_FILE)
       def repo_file = ::File.join(repo_dir, REPO_FILE)
-      def index_file = ::File.join(root, INDEX_FILE)
-      def packages_file = ::File.join(root, PACKAGES_FILE)
       def public_key_file = ::File.join(root, PUBLIC_KEY_FILE)
       def file(relative) = ::File.join(repo_dir, relative)
       def repodata_dir(subdir) = ::File.join(repo_dir, subdir, REPODATA)
       def repomd(subdir) = ::File.join(repodata_dir(subdir), 'repomd.xml')
 
-      def key(path)
-        expanded = ::File.expand_path(path)
-        raise ::ArgumentError, "#{path} is outside #{root}" unless expanded.start_with?("#{root}/")
-
-        expanded.delete_prefix("#{root}/")
+      def public_url(configured)
+        url = configured.strip.sub(%r{/+\z}, '')
+        url.empty? ? "file://#{root}" : url
       end
 
       def managed?(key)

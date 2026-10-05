@@ -58,7 +58,7 @@ module PackmanNova
         return {} if files.empty?
 
         mounts = [::PackmanNova::Container::Mount.new(source: dir, target: MOUNT, readonly: true)]
-        result = self.class.parse(toolbox.capture(SCRIPT, mounts: mounts, args: files, env: { 'QUERY_FORMAT' => FORMAT }))
+        result = self.class.parse(toolbox.capture(SCRIPT, mounts:, args: files, env: { 'QUERY_FORMAT' => FORMAT }))
         missing = files - result.keys
         raise ::PackmanNova::PublishError, "rpm query returned nothing for #{missing.join(', ')}" unless missing.empty?
 

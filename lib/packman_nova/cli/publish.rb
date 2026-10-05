@@ -30,7 +30,7 @@ module PackmanNova
       end
 
       def publisher
-        ::PackmanNova::Publish.new(config: config, logger: logger, out: out)
+        ::PackmanNova::Publish.new(config:, logger:, out:)
       end
 
       def summary_line(diff)

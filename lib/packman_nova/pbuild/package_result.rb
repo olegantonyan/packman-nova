@@ -5,7 +5,6 @@ module PackmanNova
     class PackageResult
       SOURCE_RPM = /\.(?:no)?src\.rpm\z/
       DEBUG_RPM = /-debug(?:info|source)-[^-]+-[^-]+\.rpm\z/
-      NOARCH_RPM = /\.noarch\.rpm\z/
 
       attr_reader :key, :name, :flavor, :dir, :rpm_files, :status, :reason, :log, :built_at, :duration_sec
 
@@ -32,10 +31,6 @@ module PackmanNova
 
       def debuginfo_rpms
         rpm_files.select { |file| DEBUG_RPM.match?(file) && !SOURCE_RPM.match?(file) }
-      end
-
-      def noarch_rpms
-        binary_rpms.grep(NOARCH_RPM)
       end
 
       def binary_rpms

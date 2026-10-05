@@ -1,19 +1,17 @@
 # frozen_string_literal: true
 
 require 'fileutils'
-require 'forwardable'
 require 'uri'
 
 module PackmanNova
   module Repo
     module Providers
       class S3 < ::PackmanNova::Repo::Providers::Base
-        extend ::Forwardable
-
         STATE_PREFIX = '_state/'
         REQUIRED_SETTINGS = %i[bucket endpoint access_key_id secret_access_key].freeze
-
-        def_delegators :bucket, :list, :download, :upload, :delete, :exist?, :full_key, :prefix
+        REPOMD_RANKS = { 'repomd.xml' => 2, 'repomd.xml.asc' => 3, 'repomd.xml.key' => 4 }.freeze
+        ROOT_RANKS = { 'index.html' => 8, 'packages.json' => 9, 'packman-nova.key' => 10 }.freeze
+        OTHER_RANK = 7
 
         class << self
           def client(settings)
@@ -28,7 +26,7 @@ module PackmanNova
           def build(config:, logger:, client: nil)
             settings = validate!(config.repository.s3)
             bucket = ::PackmanNova::Repo::S3Bucket.new(client: client || self.client(settings), name: settings.bucket, prefix: settings.path_in_bucket)
-            new(root: config.workdir.repo_mirror_dir, logger: logger, bucket: bucket, purger: purger(settings, logger), public_url: config.repository.public_url)
+            new(root: config.workdir.repo_mirror_dir, logger:, bucket:, purger: purger(settings, logger), public_url: config.repository.public_url)
           end
 
           def validate!(settings)
@@ -41,14 +39,14 @@ module PackmanNova
           def purger(settings, logger)
             return if settings.cloudflare_zone_id.empty? || settings.cloudflare_api_token.empty?
 
-            ::PackmanNova::Repo::CloudflarePurge.new(zone_id: settings.cloudflare_zone_id, api_token: settings.cloudflare_api_token, logger: logger)
+            ::PackmanNova::Repo::CloudflarePurge.new(zone_id: settings.cloudflare_zone_id, api_token: settings.cloudflare_api_token, logger:)
           end
         end
 
         attr_reader :bucket
 
         def initialize(root:, logger:, bucket:, purger: nil, public_url: '')
-          super(root: root, logger: logger)
+          super(root:, logger:)
           @bucket = bucket
           @purger = purger
           @public_url = public_url.to_s
@@ -67,8 +65,8 @@ module PackmanNova
         def sync!(layout:)
           uploads, deletions = sync_plan(layout)
           logger.info("s3: uploading #{uploads.size} object(s), deleting #{deletions.size} from #{bucket.url}")
-          uploads.each { |key| upload(local(key), key) }
-          delete(deletions)
+          uploads.each { |key| bucket.upload(local(key), key) }
+          bucket.delete(deletions)
           purge unless uploads.empty? && deletions.empty?
           layout
         end
@@ -84,14 +82,23 @@ module PackmanNova
         def sync_plan(layout)
           remote = managed_listing(layout)
           uploads = local_keys(layout).reject { |key| current?(key, remote[key]) }
-          [::PackmanNova::Repo::UploadOrder.sort(uploads), remote.keys.reject { |key| ::File.file?(local(key)) }.sort]
+          [uploads.sort_by { |key| [upload_rank(key), key] }, remote.keys.reject { |key| ::File.file?(local(key)) }.sort]
+        end
+
+        def upload_rank(key)
+          return 0 if key.end_with?('.rpm')
+          return REPOMD_RANKS.fetch(::File.basename(key), 1) if key.include?("/#{::PackmanNova::Repo::Layout::REPODATA}/")
+          return 5 if key.end_with?('.repo')
+          return 6 if ::File.basename(key) == ::PackmanNova::Repo::Layout::STATE_FILE
+
+          ROOT_RANKS.fetch(key, OTHER_RANK)
         end
 
         def mirror(layout)
           remote = managed_listing(layout)
           stale = remote.keys.reject { |key| current?(key, remote[key]) }
           logger.info("s3: mirroring #{stale.size} of #{remote.size} object(s) into #{root}")
-          stale.each { |key| download(key, local(key)) }
+          stale.each { |key| bucket.download(key, local(key)) }
           prune(layout, remote.keys)
         end
 
@@ -101,11 +108,11 @@ module PackmanNova
 
         def fetch_state(layout)
           key = layout.state_key
-          exist?(key) ? download(key, local(key)) : ::FileUtils.rm_f(local(key))
+          bucket.exist?(key) ? bucket.download(key, local(key)) : ::FileUtils.rm_f(local(key))
         end
 
         def managed_listing(layout)
-          ::PackmanNova::Repo::Layout::ROOT_FILES.reduce(list("#{layout.path}/")) { |acc, name| acc.merge(list(name).slice(name)) }
+          ::PackmanNova::Repo::Layout::ROOT_FILES.reduce(bucket.list("#{layout.path}/")) { |acc, name| acc.merge(bucket.list(name).slice(name)) }
         end
 
         def local_keys(layout)

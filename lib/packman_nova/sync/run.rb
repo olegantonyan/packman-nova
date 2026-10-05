@@ -6,6 +6,7 @@ module PackmanNova
   class Sync
     class Run
       PACKAGE_ERRORS = [::PackmanNova::Error, ::SystemCallError].freeze
+      SNAPSHOT_DATE = /\b(\d{8})\b/
 
       def initialize(config:, logger:, workdir:, services:, manifests:, options:)
         @config = config
@@ -30,9 +31,28 @@ module PackmanNova
       attr_reader :config, :logger, :workdir, :services, :manifests, :options, :report
 
       def finish(previous, prjconf, snapshot)
-        next_state = ::PackmanNova::Sync::NextState.new(previous: previous, report: report, enabled_names: enabled_names, filtered: !options[:packages].nil?)
-        report.rebuild_all_required = next_state.rebuild_all_required?(prjconf.local_md5)
-        [report, next_state.call(prjconf: prjconf, snapshot: snapshot)]
+        report.rebuild_all_required = rebuild_all_required?(previous, prjconf.local_md5)
+        next_state = {
+          'schema' => ::PackmanNova::State::Schemas::VERSION, 'synced_at' => ::Time.now.utc.iso8601,
+          'distro_snapshot' => snapshot, 'base_prjconf_md5' => prjconf.factory_md5, 'local_config_md5' => prjconf.local_md5,
+          'rebuild_all_required' => report.rebuild_all_required, 'packages' => next_packages(previous)
+        }
+        [report, next_state]
+      end
+
+      def rebuild_all_required?(previous, local_md5)
+        before = previous['local_config_md5']
+        (!before.nil? && before != local_md5) || previous.fetch('rebuild_all_required', false)
+      end
+
+      def next_packages(previous)
+        kept = previous.fetch('packages').except(*report.removed)
+        kept = kept.slice(*enabled_names) unless options[:packages]
+        kept.merge(outcome_records).sort.to_h
+      end
+
+      def outcome_records
+        report.outcomes.to_h { |outcome| [outcome.name, outcome.record] }
       end
 
       def check_only?
@@ -41,20 +61,29 @@ module PackmanNova
 
       def sync_prjconf(previous)
         result = prjconf.call(refresh: options.fetch(:prjconf), write: !check_only?)
-        report.track('Factory prjconf md5', previous: previous['factory_prjconf_md5'], current: result.factory_md5)
+        report.track('base prjconf md5', previous: previous['base_prjconf_md5'], current: result.factory_md5)
         report.track('local _config md5', previous: previous['local_config_md5'], current: result.local_md5)
         result
       end
 
       def prjconf
-        ::PackmanNova::Sync::Prjconf.new(config: config, workdir: workdir, downloader: services.downloader, logger: logger)
+        ::PackmanNova::Sync::Prjconf.new(config:, workdir:, downloader: services.downloader, logger:)
       end
 
       def sync_snapshot(previous)
-        snapshot = ::PackmanNova::Sync::Snapshot.new(url: config.distro.snapshot_url, downloader: services.downloader, logger: logger)
-        current = snapshot.call(previous: previous['tumbleweed_snapshot'])
-        report.track('Tumbleweed snapshot', previous: previous['tumbleweed_snapshot'], current: current)
+        current = fetch_snapshot || previous['distro_snapshot']
+        report.track('distro snapshot', previous: previous['distro_snapshot'], current:)
         current
+      end
+
+      def fetch_snapshot
+        return if services.downloader.offline?
+
+        body = services.downloader.get(config.distro.snapshot_url)
+        body[SNAPSHOT_DATE, 1] || body.lines.first&.strip
+      rescue ::PackmanNova::DownloadError => e
+        logger.warn("distro snapshot: #{e.message}")
+        nil
       end
 
       def sync_package(manifest, previous)
@@ -82,10 +111,10 @@ module PackmanNova
       end
 
       def materializer(manifest)
-        arguments = { manifest: manifest, services: services, workdir: workdir, logger: logger }
+        arguments = { manifest:, services:, workdir:, logger: }
         return ::PackmanNova::Sync::ObsLinkMaterializer.new(**arguments) if manifest.obs_link?
 
-        ::PackmanNova::Sync::NativeMaterializer.new(config: config, **arguments)
+        ::PackmanNova::Sync::NativeMaterializer.new(config:, **arguments)
       end
 
       def update_checksums(manifest, outcome)
@@ -97,15 +126,20 @@ module PackmanNova
 
       def log_outcome(outcome, seconds)
         suffix = outcome.changed? ? " (#{outcome.detail})" : ''
-        logger.info(format('%<name>s: %<status>s%<suffix>s in %<seconds>.1fs', name: outcome.name, status: outcome.status, suffix: suffix, seconds: seconds))
+        logger.info(format('%<name>s: %<status>s%<suffix>s in %<seconds>.1fs', name: outcome.name, status: outcome.status, suffix:, seconds:))
       end
 
       def prune
-        stale = ::PackmanNova::Sync::StaleDirs.new(project_dir: workdir.project_dir).call(keep: enabled_names, only: options[:packages])
-        stale.each do |name|
+        stale_dirs.each do |name|
           report.remove(name)
           remove_dir(name) unless check_only?
         end
+      end
+
+      def stale_dirs
+        candidates = workdir.package_names
+        candidates &= options[:packages] if options[:packages]
+        candidates - enabled_names
       end
 
       def remove_dir(name)

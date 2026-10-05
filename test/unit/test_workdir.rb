@@ -6,7 +6,7 @@ describe ::PackmanNova::Workdir do
   let(:workdir) { ::PackmanNova::Workdir.new(root: '/w') }
 
   it 'builds project paths' do
-    assert_equal '/w/project/_configs', workdir.configs_dir
+    assert_equal '/w/project/_configs/tumbleweed.conf', workdir.dist_config_file('tumbleweed')
     assert_equal '/w/project/_config', workdir.config_file
     assert_equal '/w/project/_build.tumbleweed.x86_64', workdir.results_dir(reponame: 'tumbleweed', arch: 'x86_64')
   end
@@ -42,18 +42,13 @@ describe ::PackmanNova::Workdir do
     end
   end
 
-  it 'creates private temporary directories under tmp/' do
+  it 'yields a private temporary directory under tmp/ and removes it afterwards' do
     with_tmpdir do |dir|
-      path = ::PackmanNova::Workdir.new(root: dir).mktmpdir('gpg-')
-
-      assert path.start_with?(::File.join(dir, 'tmp', 'gpg-'))
-      assert_equal 0o700, ::File.stat(path).mode & 0o777
-    end
-  end
-
-  it 'removes a block-scoped temporary directory afterwards' do
-    with_tmpdir do |dir|
-      path = ::PackmanNova::Workdir.new(root: dir).mktmpdir('stage-') { |tmp| tmp }
+      path = ::PackmanNova::Workdir.new(root: dir).mktmpdir('gpg-') do |tmp|
+        assert tmp.start_with?(::File.join(dir, 'tmp', 'gpg-'))
+        assert_equal 0o700, ::File.stat(tmp).mode & 0o777
+        tmp
+      end
 
       refute_path_exists path
     end

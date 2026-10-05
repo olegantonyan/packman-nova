@@ -24,7 +24,6 @@ describe ::PackmanNova::Gpg do
     it 'rejects input that is neither armor nor base64 of armor' do
       assert_raises(::PackmanNova::GpgError) { ::PackmanNova::Gpg.to_armor('not base64 !!') }
       assert_raises(::PackmanNova::GpgError) { ::PackmanNova::Gpg.to_armor(::Base64.strict_encode64('plain text')) }
-      assert_raises(::ArgumentError) { ::PackmanNova::Gpg.convert(armor, to: 'binary') }
     end
   end
 
@@ -36,7 +35,6 @@ describe ::PackmanNova::Gpg do
       assert_equal '0EECDB2A7E2B144481F1800231D7469FD4F5F9EF', info.fingerprint
       assert_equal ['packman-nova WP3 test <wp3test@example.invalid>', 'Second: uid <second@example.invalid>'], info.uids
       assert_predicate info, :secret?
-      assert_equal 'd4f5f9ef', info.short_id
     end
 
     it 'raises when no key is present' do
@@ -50,7 +48,6 @@ describe ::PackmanNova::Gpg do
 
       refute_includes key.inspect, 'SECRET'
       refute_includes key.to_s, 'SECRET'
-      assert_equal '23456789', key.short_id
     end
   end
 
@@ -71,7 +68,7 @@ describe ::PackmanNova::Gpg do
     available = ::PackmanNova::Gpg::HostExecutor.available?(subprocess)
     generated = nil
 
-    let(:gpg) { ::PackmanNova::Gpg.new(executor: ::PackmanNova::Gpg::HostExecutor.new(subprocess: subprocess)) }
+    let(:gpg) { ::PackmanNova::Gpg.new(executor: ::PackmanNova::Gpg::HostExecutor.new(subprocess:)) }
     let(:key) { generated ||= gpg.generate(name: 'packman-nova unit test', email: 'unit@example.invalid') }
 
     before { skip 'gpg is not installed' unless available }
@@ -91,14 +88,6 @@ describe ::PackmanNova::Gpg do
 
     it 'derives the public key from the private key' do
       assert_equal key.fingerprint, gpg.info(gpg.public_key_from_private(key.private_armor)).fingerprint
-    end
-
-    it 'signs and verifies with the private key' do
-      assert gpg.sign_test(key.private_base64)
-    end
-
-    it 'fails the sign test with a public key only' do
-      assert_raises(::PackmanNova::GpgError) { gpg.sign_test(key.public_armor) }
     end
 
     it 'rejects garbage keys' do

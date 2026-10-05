@@ -4,7 +4,7 @@ require 'test_helper'
 
 describe ::PackmanNova::Pbuild::ProjectDir do
   def project_dir(root)
-    ::PackmanNova::Pbuild::ProjectDir.new(workdir: ::PackmanNova::Workdir.new(root: root), reponame: 'tumbleweed', arch: 'x86_64')
+    ::PackmanNova::Pbuild::ProjectDir.new(workdir: ::PackmanNova::Workdir.new(root:), reponame: 'tumbleweed', arch: 'x86_64')
   end
 
   it 'knows host and container paths' do
@@ -12,7 +12,6 @@ describe ::PackmanNova::Pbuild::ProjectDir do
 
     assert_equal '/w/project', dir.host_path
     assert_equal '/w/project/_build.tumbleweed.x86_64', dir.results_dir
-    assert_equal '/project/_configs/tumbleweed.conf', dir.dist_container_path
     assert_equal [
       ['--mount', 'type=bind,source=/w/project,target=/project'], ['--mount', 'type=bind,source=/w/build-root,target=/build-root']
     ], dir.mounts.map(&:to_args)

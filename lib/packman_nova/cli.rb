@@ -5,7 +5,7 @@ require 'optparse'
 
 module PackmanNova
   class Cli
-    PROGRAM_NAME = ::PackmanNova::Cli::OptionParsers::PROGRAM_NAME
+    PROGRAM_NAME = 'packman-nova'
     INTERRUPTED_EXIT_CODE = 130
     COMMANDS = {
       'check' => ::PackmanNova::Cli::Check,
@@ -26,7 +26,6 @@ module PackmanNova
       @out = out
       @err = err
       @global = { log_file: true }
-      @parsers = ::PackmanNova::Cli::OptionParsers.new(global: global, commands: COMMANDS)
     end
 
     def call
@@ -37,18 +36,18 @@ module PackmanNova
       log_file&.close
     end
 
+    private
+
+    attr_reader :argv, :out, :err, :global, :logger, :log_file
+
     def verbose?
       global.fetch(:verbose, false)
     end
 
-    private
-
-    attr_reader :argv, :out, :err, :global, :parsers, :logger, :log_file
-
     def run
-      parsers.global_parser.order!(argv)
+      global_parser.order!(argv)
       return print_and_succeed(::PackmanNova::VERSION) if global[:version]
-      return print_and_succeed(parsers.global_parser) if global[:help]
+      return print_and_succeed(global_parser) if global[:help]
 
       dispatch(argv.shift)
     end
@@ -56,18 +55,66 @@ module PackmanNova
     def dispatch(name)
       command_class = COMMANDS.fetch(name) { raise ::OptionParser::InvalidArgument, name ? "unknown command '#{name}'" : 'no command given' }
       options = {}
-      parser = parsers.command_parser(name, command_class, options)
+      parser = command_parser(name, command_class, options)
       parser.parse!(argv)
       return print_and_succeed(parser) if options[:help]
 
       config, config_error = load_config(command_class)
       @logger = build_logger(name, command_class, config)
-      command_class.new(config: config, logger: logger, options: options, args: argv, out: out, config_error: config_error).call
+      command_class.new(config:, logger:, options:, args: argv, out:, config_error:).call
+    end
+
+    def global_parser
+      @global_parser ||= ::OptionParser.new do |parser|
+        parser.banner = "Usage: #{PROGRAM_NAME} [global options] <command> [command options]"
+        define_global_options(parser)
+        parser.on('--version', 'print the version') { global[:version] = true }
+        parser.on('-h', '--help', 'show this help') { global[:help] = true }
+        describe_commands(parser)
+      end
+    end
+
+    def command_parser(name, command_class, options)
+      ::OptionParser.new do |parser|
+        parser.banner = "Usage: #{PROGRAM_NAME} [global options] #{name} #{command_class.usage}"
+        parser.separator(command_class.summary)
+        parser.separator('')
+        command_class.options(parser, options)
+        parser.on('-h', '--help', 'show this help') { options[:help] = true }
+        parser.separator('')
+        parser.separator('Global options:')
+        define_global_options(parser)
+      end
+    end
+
+    def define_global_options(parser)
+      define_location_options(parser)
+      define_output_options(parser)
+    end
+
+    def define_location_options(parser)
+      parser.on('-c', '--config FILE', 'config file merged over the defaults (default: ./packman-nova.yml)') { |value| global[:config] = value }
+      parser.on('-w', '--workdir DIR', 'workdir (overrides PACKMAN_NOVA_WORKDIR)') { |value| global[:workdir] = value }
+      parser.on('--offline', 'no network, caches only') { global[:offline] = true }
+    end
+
+    def define_output_options(parser)
+      parser.on('-v', '--verbose', 'debug output and backtraces') { global[:verbose] = true }
+      parser.on('-q', '--quiet', 'warnings and errors only') { global[:quiet] = true }
+      parser.on('--[no-]log-file', 'write logs/<timestamp>-<command>.log in the workdir (default: yes)') { |value| global[:log_file] = value }
+    end
+
+    def describe_commands(parser)
+      parser.separator('')
+      parser.separator('Commands:')
+      COMMANDS.each { |name, klass| parser.separator(format('    %-8<name>s %<summary>s', name:, summary: klass.summary)) }
+      parser.separator('')
+      parser.separator("See '#{PROGRAM_NAME} <command> --help' for command options.")
     end
 
     def load_config(command_class)
       overrides = { workdir: global[:workdir] && ::File.expand_path(global[:workdir]), offline: global[:offline] }.compact
-      [::PackmanNova::Config.load(path: global[:config], overrides: overrides), nil]
+      [::PackmanNova::Config.load(path: global[:config], overrides:), nil]
     rescue ::PackmanNova::ConfigError => e
       raise unless command_class.tolerates_config_error?
 

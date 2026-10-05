@@ -6,21 +6,22 @@ describe ::PackmanNova::Container::Runtime do
   let(:config) { load_config(env: { 'PACKMAN_NOVA_CONTAINER_RUNTIME' => nil }) }
 
   it 'prefers the environment variable' do
-    runtime = ::PackmanNova::Container::Runtime.detect(config: config, env: { 'PACKMAN_NOVA_CONTAINER_RUNTIME' => 'docker' }, probe: ->(_) { flunk })
+    configured = load_config(env: { 'PACKMAN_NOVA_CONTAINER_RUNTIME' => 'docker' })
+    runtime = ::PackmanNova::Container::Runtime.detect(config: configured, probe: ->(_) { flunk })
 
-    assert_predicate runtime, :docker?
+    assert_equal 'docker', runtime.executable
   end
 
   it 'probes podman before docker when set to auto' do
     probed = []
-    runtime = ::PackmanNova::Container::Runtime.detect(config: config, env: {}, probe: ->(exe) { (probed << exe) && exe == 'docker' })
+    runtime = ::PackmanNova::Container::Runtime.detect(config:, probe: ->(exe) { (probed << exe) && exe == 'docker' })
 
     assert_equal 'docker', runtime.executable
     assert_equal %w[podman docker], probed
   end
 
   it 'raises ConfigError when nothing is installed' do
-    assert_raises(::PackmanNova::ConfigError) { ::PackmanNova::Container::Runtime.detect(config: config, env: {}, probe: ->(_) { false }) }
+    assert_raises(::PackmanNova::ConfigError) { ::PackmanNova::Container::Runtime.detect(config:, probe: ->(_) { false }) }
   end
 
   it 'builds removal commands for podman and docker' do
@@ -45,16 +46,16 @@ end
 
 describe ::PackmanNova::Container::Runner do
   let(:runtime) { ::PackmanNova::Container::Runtime.new(executable: 'podman') }
-  let(:runner) { ::PackmanNova::Container::Runner.new(runtime: runtime, logger: null_logger, subprocess: ::PackmanNova::Utils::Subprocess.new(logger: null_logger)) }
+  let(:runner) { ::PackmanNova::Container::Runner.new(runtime:, logger: null_logger, subprocess: ::PackmanNova::Utils::Subprocess.new(logger: null_logger)) }
 
   it 'builds the full run command' do
     argv = runner.command(
-      image: 'localhost/img:latest', args: %w[pbuild /project], privileged: true, name: 'nova-1', workdir: '/project',
+      image: 'localhost/img:latest', args: %w[pbuild /project], privileged: true, name: 'nova-1',
       mounts: [::PackmanNova::Container::Mount.new(source: '/w/project', target: '/project')], env: { 'LANG' => 'C.UTF-8' }
     )
 
     assert_equal %w[
-      podman run --rm --privileged --name nova-1 -w /project --mount type=bind,source=/w/project,target=/project
+      podman run --rm --privileged --name nova-1 --mount type=bind,source=/w/project,target=/project
       -e LANG=C.UTF-8 localhost/img:latest pbuild /project
     ], argv
   end
@@ -68,7 +69,7 @@ describe ::PackmanNova::Container::Image do
   it 'builds the image build command from config' do
     config = load_config(env: {})
     image = ::PackmanNova::Container::Image.new(
-      runtime: ::PackmanNova::Container::Runtime.new(executable: 'podman'), config: config, logger: null_logger,
+      runtime: ::PackmanNova::Container::Runtime.new(executable: 'podman'), config:, logger: null_logger,
       subprocess: ::PackmanNova::Utils::Subprocess.new(logger: null_logger), workdir: ::PackmanNova::Workdir.new(root: '/w')
     )
     containerfile = config.resolve('container/Containerfile')

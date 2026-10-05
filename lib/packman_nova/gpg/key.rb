@@ -7,10 +7,6 @@ module PackmanNova
         ::PackmanNova::Gpg.to_base64(private_armor)
       end
 
-      def short_id
-        key_id[-8..].downcase
-      end
-
       def inspect
         "#<#{self.class.name} key_id=#{key_id} fingerprint=#{fingerprint}>"
       end

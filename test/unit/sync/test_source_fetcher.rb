@@ -1,22 +1,19 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-require_relative 'sync_fixture'
 
-describe ::PackmanNova::Sync::SourceFetcher do
-  include ::SyncFixture
-
+describe ::PackmanNova::Sync::SourceFetcher, :sync do
   let(:server) { ::HttpStubServer.new }
   let(:dir) { ::Dir.mktmpdir('packman-nova-fetcher-') }
   let(:config) { sync_config(dir, server) }
   let(:services) do
     http = ::PackmanNova::Utils::Http.new(logger: null_logger, timeout_sec: 5, retries: 0)
-    downloader = ::PackmanNova::Sources::Downloader.new(http: http, logger: null_logger)
-    ::PackmanNova::Sync::Services.new(config: config, logger: null_logger, workdir: config.workdir, downloader: downloader)
+    downloader = ::PackmanNova::Sources::Downloader.new(http:, logger: null_logger)
+    ::PackmanNova::Sync::Services.new(config:, logger: null_logger, workdir: config.workdir, downloader:)
   end
 
   def source(urls, sha256: sha256_of(tarball))
-    ::PackmanNova::Manifest::Source.new(file: 'hello-1.0.tar.gz', urls: urls, sha256: sha256, size: tarball.bytesize)
+    ::PackmanNova::Manifest::Source.new(file: 'hello-1.0.tar.gz', urls:, sha256:, size: tarball.bytesize)
   end
 
   after do

@@ -14,9 +14,7 @@ packages/**/*.o
 packages/**/*.rpm
 packages/**/*.7z
 packages/**/*.jar
-packages/**/provenance.yaml
 .env.*
 !.env.example
 *.log
 .rubocop-*
-.byebug_history

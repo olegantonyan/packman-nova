@@ -1,6 +1,6 @@
 # packman-nova tool reference
 
-Ruby CLI that syncs package sources into a pbuild project, builds them in a rootless podman container, and publishes a signed rpm-md repository. Design contract: `docs/12-tool-design.md`. This file describes what is implemented (2026-09-29).
+Ruby CLI that syncs package sources into a pbuild project, builds them in a rootless podman container, and publishes a signed rpm-md repository.
 
 ## Setup
 
@@ -32,7 +32,7 @@ Errors print `Class: message` (backtrace with `-v`) and exit 1; Ctrl-C exits 130
 
 | command | options | behaviour, exit code |
 |---|---|---|
-| `check` | | doctor: config, workdir writable, free disk (warn < 30 GB), runtime, image present and built from the current Containerfile, manifests valid, gpg key decodes, network (OBS API, TW snapshot URL; skipped with `--offline`). 0 ok / 1 any fail |
+| `check` | | doctor: config, workdir writable, free disk (warn < 30 GB), runtime, image present and built from the current Containerfile, manifests valid, gpg key decodes, network (`prjconf.base_url`, `distro.snapshot_url`; skipped with `--offline`). 0 ok / 1 any fail |
 | `sync` | `--check`, `--package NAME` (repeatable), `--update-checksums`, `--[no-]prjconf` | materializes `project/`. `--check` writes nothing but caches and reports drift. 1 if any package failed, else 2 for `--check` with drift, else 0 |
 | `build` | `--package NAME`... (pbuild `--rebuild-pkg`), `--rebuild` (all), `--single NAME`, `--[no-]sync`, `--dry-run`, `--release STR`, `--buildjobs N`, `--jobs N`, `--[no-]checks`, `--debuginfo`, `--[no-]repo-refresh` | sync (unless `--no-sync`), allocate run and release, run pbuild for x86_64, then the i586 baselibs pass, write the build record. 0 if no package is failed/unresolvable/broken, else 1; `BuildError` if pbuild itself exits non-zero without a failed package. `--dry-run` prints the podman command |
 | `publish` | `--provider localfs\|s3`, `--unsigned`, `--dry-run`, `--[no-]site`, `--arch A` | sign new rpms, createrepo, sign repomd, write state/site, provider sync. `--dry-run` prints add/replace/remove/re-sign lists. `--unsigned` refused for s3 while `signing.require_signature` |
@@ -54,14 +54,14 @@ Defaults: `config/packman-nova.yml`. Layers, later wins: defaults, user file, no
 | key | default | notes |
 |---|---|---|
 | `workdir` | `${PACKMAN_NOVA_WORKDIR}` | required |
-| `project_name`, `vendor` | `packman-nova` | |
-| `distro.{id,suse_version,arches,repos,snapshot_url}` | `opensuse_tumbleweed`, `1699`, `[x86_64]`, TW oss, TW `media.1/media` | first arch is built |
+| `project_name` | `packman-nova` | |
+| `distro.{id,name,suse_version,arches,repos,snapshot_url}` | `opensuse_tumbleweed`, `openSUSE Tumbleweed`, `1699`, `[x86_64]`, TW oss, TW `media.1/media` | first arch is built; `name` is the display name |
 | `distro.baselibs.{arch,repos}` | `i586`, TW i586 port oss | second pbuild pass with `--baselibs`; `arch: ""` disables it |
 | `release.template` | `%{suse_version}.%{run}.nova.1` | |
 | `prjconf.{base_url,base_fallback,local}` | Factory `_config`, `prjconf/factory-base.conf`, `prjconf/packman-nova-macros.conf` | |
 | `sources.obs_api` | OBS public API | |
 | `sources.http.{timeout_sec,retries}` | `600`, `5` | |
-| `container.{runtime,image,containerfile,privileged,extra_args}` | `auto`, `localhost/packman-nova-builder:latest`, `container/Containerfile`, `true`, `[]` | |
+| `container.{runtime,image,containerfile,privileged,extra_args}` | `auto`, `localhost/packman-nova-builder:latest`, `container/Containerfile`, `true`, `[]` | `auto` = podman, then docker |
 | `pbuild.{reponame,buildjobs,jobs,checks,debuginfo,repo_refresh,timeout_sec,extra_args}` | `tumbleweed`, `2`, `8`, `true`, `false`, `true`, `43200`, `[]` | `timeout_sec` bounds each pbuild pass |
 | `signing.{gpg_private_key_base64,require_signature}` | `${GPG_PRIVATE_KEY_BASE64}`, `true` | the public key is always derived from the private one |
 | `repository.{slug,path,public_url,publish_srpms,publish_debuginfo,provider}` | `packman-nova-essentials`, `opensuse_tumbleweed/essentials`, `${PACKMAN_NOVA_PUBLIC_URL}`, `true`, `false`, `localfs` | `slug` = zypper repo alias; empty `public_url` = `file://<localfs root>` |
@@ -84,7 +84,7 @@ project/                           pbuild project dir
   _build.tumbleweed.i586/<pkg>/    baselibs pass: i586 rpms (not published) + *-32bit*.x86_64.rpm
 build-root/<n>/                    one build root per builder, subuid-owned
 cache/blobs/{sha256,md5}/<hex>     content-addressed sources; cache/obs/, cache/prjconf/
-state/sync.json                    per package kind, origin, srcmd5, files; TW snapshot, prjconf md5s, rebuild_all_required
+state/sync.json                    per package kind, origin, srcmd5, files; distro_snapshot, base_prjconf_md5, local_config_md5, rebuild_all_required
 state/run-counter.json             last run number and release
 state/builds/<run>.json            build record; state/last-build.json = newest
 state/image.json                   image tag, id, Containerfile sha256
@@ -96,18 +96,18 @@ repo-mirror/                       local mirror of the s3 bucket
 
 Published layout (localfs root or bucket prefix): `index.html`, `packages.json`, `packman-nova.key`, `opensuse_tumbleweed/essentials/{packman-nova.repo,state.json}`, `.../x86_64/*.rpm` (x86_64 + noarch) with `repodata/{repomd.xml,repomd.xml.asc,repomd.xml.key,...}`, `.../src/*.src.rpm` with its own `repodata/`.
 
-State schemas: `PackmanNova::State::Schemas::{SYNC_STATE,BUILD_RECORD,REPO_STATE}`. Build record keys: `schema run release image_id started_at finished_at arch tumbleweed_snapshot pbuild_argv pbuild_exit built codes packages`; per package `code flavor reason rpms debuginfo_rpms srpm log built_at duration_sec details`. Repo `state.json` `files` entries carry `sha256 size package source_sha256 key_id`.
+Required state keys: `PackmanNova::State::Schemas`. Build record keys: `schema run release image_id started_at finished_at arch distro_snapshot pbuild_argv pbuild_exit built codes packages`; per package `code flavor reason rpms debuginfo_rpms srpm log built_at duration_sec details`. Repo `state.json` `files` entries carry `sha256 size package source_sha256 key_id`.
 
 ## How each step decides what to do
 
-**sync** (`Sync#call`). Prjconf: fetch Factory `_config` unless offline/`--no-prjconf`, write `_configs/tumbleweed.conf` and `_config`; a changed `_config` md5 sets `rebuild_all_required`, which stays set until a build with `--rebuild` succeeds. Snapshot id from `media.1/media`. Per enabled manifest:
+**sync** (`Sync#call`). Prjconf: fetch `prjconf.base_url` unless offline/`--no-prjconf`, write `_configs/<pbuild.reponame>.conf` and `_config`; a changed `_config` md5 sets `rebuild_all_required`, which stays set until a build with `--rebuild` succeeds. Snapshot id from `media.1/media`. Per enabled manifest:
 - obs-link: `GET <obs_api>/source/<project>/<package>?expand=1[&rev=pin]`; unchanged when srcmd5, file list and every on-disk md5 equal `sync.json`. Otherwise files not in `link.delete` are fetched with `?rev=<srcmd5>` into `cache/blobs/md5/`, assembled in `project/.<pkg>.tmp/` and renamed into place.
 - native: every file in `packages/<pkg>/` except `package.yml` plus each `sources[]` entry. Remote files come from the cache, else from `urls` in order, else from the source archive `<public_url>/_sources/sha256/<sha256>`; a source without `urls` is archive-only. `path:` copies a repo file; `generated: public-key` writes the public key derived from `GPG_PRIVATE_KEY_BASE64`. sha256 must match.
 - A failing package keeps its previous `sync.json` entry and project dir; the others continue. Full runs prune project dirs without an enabled manifest.
 
 Source endpoints verified 2026-09-29: OBS serves link packages' files with `?rev=<expanded srcmd5>`. Offline sync uses cached OBS listings, blobs, the existing prjconf copy (else `base_fallback`) and the recorded snapshot. `openSUSE:Factory/fdk-aac` does not exist; Factory scmsync packages (ffmpeg-4/7/8/9) carry `_scmsync.obsinfo` and `build.specials.obscpio`, which pbuild ignores.
 
-**build** (`Build#call`). Sync, then lock. Run number = max(`run-counter.json`, repo `state.json` run, max run in result rpm names) + 1, persisted before pbuild starts; release from `release.template`. A run that builds nothing gives its number back. pbuild itself decides what to build: a package is rebuilt when its `_meta` (source md5 + hdrmd5 of every build dependency) changes, so a new Factory srcmd5 or a changed dependency rebuilds exactly the affected tree. Failed packages are retried only when their meta changes or with `--package`/`--rebuild`. Implicit `--rebuild all` when `rebuild_all_required` and no explicit selection. Afterwards results are collected with `pbuild --result-code all` (with details) and cross-checked with the files in `_build.*/<pkg>/`.
+**build** (`Build#call`). Sync, then lock. Run number = max(`run-counter.json`, repo `state.json` run, max run in result rpm names) + 1, persisted before pbuild starts; release from `release.template`. A run that builds nothing gives its number back. pbuild itself decides what to build: a package is rebuilt when its `_meta` (source md5 + hdrmd5 of every build dependency) changes, so a new Factory srcmd5 or a changed dependency rebuilds exactly the affected tree. Failed packages are retried only when their meta changes or with `--package`/`--rebuild`. Implicit `--rebuild all` when `rebuild_all_required` and no explicit selection. Afterwards results are collected with `pbuild --result-code all` (with details) and cross-checked with the files in `_build.*/<pkg>/`. Each failed/unresolvable/broken package is logged with its details and the last 100 lines of its `_log` (the i586 log when the baselibs pass failed), so the CI console shows why.
 
 **-32bit** (as Packman). A second pass `pbuild --arch i586 --baselibs` against the TW i586 port, same release, builds only the `onlybuild` list in `prjconf/packman-nova-macros.conf` (the packages with a `baselibs.conf`). mkbaselibs turns their i586 libraries into `*-32bit*.x86_64.rpm`; the build record keeps them under `packages.<name>.baselibs` and publish puts them into `x86_64/`. i586 rpms are not published. A package whose i586 build fails counts as failed, so its previously published files are kept.
 
@@ -115,7 +115,7 @@ Source endpoints verified 2026-09-29: OBS serves link packages' files with `?rev
 
 ## Adding a package
 
-1. `packages/<name>/package.yml` (schema in design 4.2). obs-link: `kind: obs-link`, `origin.project/package`, optional `pin`, `link.delete`. native: vendor spec, patches, changes, `_service` next to `package.yml`; list remote files under `sources:` with upstream `urls`; a file with no upstream (git snapshot, vanished blob) gets `sha256`/`size` only and is served from the source archive after the next publish.
+1. `packages/<name>/package.yml` (model: `PackmanNova::Manifest`; copy a similar package). obs-link: `kind: obs-link`, `origin.project/package`, optional `pin`, `link.delete`. native: vendor spec, patches, changes, `_service` next to `package.yml`; list remote files under `sources:` with upstream `urls`; a file with no upstream (git snapshot, vanished blob) gets `sha256`/`size` only and is served from the source archive after the next publish.
 2. `packman-nova sync --package <name> --update-checksums` fills `sha256`/`size` (rewrites the yml: comments and flow style are lost).
 3. `packman-nova build --package <name>` (or `--single <name>` to build only it), check `project/_build.tumbleweed.x86_64/<name>/_log`.
 4. `packman-nova publish`. Set `enabled: false` to drop a package: the next full sync removes its project dir, the next publish its rpms.
@@ -138,7 +138,17 @@ Source endpoints verified 2026-09-29: OBS serves link packages' files with `?rev
 - **Cleaning**: `clean --build-root --yes` is always safe (roots are recreated). `clean --results` forces a full rebuild and loses `.pbuild/_base`. Never `rm -rf build-root` directly: its content is subuid-owned; use `clean` or `podman unshare rm -rf`.
 - **Stale lock**: `.lock` is an flock; it is released when the process dies, the file itself can stay.
 - **Sync failures**: `sync` exit 1 lists the package and message; the previous sources stay in place, so a build still uses them.
-- `tools/build-in-container.sh` is the milestone 1-3 script and no longer works with the entrypoint-less image.
+- **pbuild internals** (`/usr/lib/build/PBuild/*.pm`): `_meta` = srcmd5 + hdrmd5 of every expanded build dep; hdrmd5 of a TW rpm is known only once it sits in `.pbuild/_base`, hence that dir must persist (`state push/pull` carries it). `.pbuild/_result` is Perl Storable: parse `--result-code all` text instead. pbuild never fetches `Source:` URLs and runs only `mode="buildtime"` services, so sync must materialize every file. obs-build ignores the prjconf `Release:` line (the OBS scheduler evaluates it), hence `--release`.
+- **Rootless podman**: uid 0 in the container is the host user, so `_build.*` is host-owned and only `build-root/` is subuid-owned. `--userns=keep-id` breaks pbuild's chroot. Docker (rootful) leaves root-owned results: untested.
+- **Half-initialised build root**: obs-build asks an interactive question and fails; `clean --build-root --yes`.
+- **Cold full run**: ffmpeg-8 and libheif depend on each other, so ffmpeg-8 builds twice.
+
+## Risks
+
+- Packman shuts down 2026-12-31. Archive-only sources (no live upstream: tar_scm/obs_scm products, dead hosts) exist only on PMBS and in our `_sources/sha256/`; confirm the archive holds all of them before then.
+- Factory sources move fast (srcmd5 can change between fetch and build); sync fetches listing and files at one `rev`. No upstream webhooks: the nightly run is the change detector.
+- GitHub-hosted runners guarantee only 14 GB of disk; the warm workdir (see Disk) must stay under it.
+- Proprietary blobs are tagged `proprietary`; legal exposure is controlled per package with `enabled`.
 
 ## GitHub Actions
 
@@ -148,4 +158,4 @@ Source endpoints verified 2026-09-29: OBS serves link packages' files with `?rev
 
 ## Code map
 
-`lib/packman_nova/`: `cli/*` (one class per command), `config*`, `workdir.rb`, `logging/`, `utils/`, `container/` (runtime, runner, image), `manifest/`, `sources/` (OBS, downloads, source archive), `sync/`, `pbuild/` (command, executor, results, run allocation), `build.rb`, `state/`, `gpg/`, `repo/` (layout, diff, signer, createrepo, providers localfs/s3, state archive), `publish.rb`, `site/` (ERB page), `pipeline.rb` (`run`). Tests: `test/unit/**` mirror the tree; `test/integration/test_smoke.rb` (fdk-aac end to end, `PACKMAN_NOVA_INTEGRATION=1`, optional `PACKMAN_NOVA_SMOKE_ROOT`).
+`lib/packman_nova/`: `cli/*` (one class per command), `config*`, `workdir.rb`, `logging/`, `utils/`, `container/` (runtime, runner, image), `manifest/`, `sources/` (OBS, downloads, source archive), `sync/`, `pbuild/` (command, executor, results, run allocation), `build.rb`, `state/`, `gpg/`, `repo/` (layout, diff, signer, createrepo, providers localfs/s3, state archive), `publish.rb`, `site/` (ERB page). Tests: `test/unit/**` mirror the tree; `test/integration/test_smoke.rb` (fdk-aac end to end, `PACKMAN_NOVA_INTEGRATION=1`, optional `PACKMAN_NOVA_SMOKE_ROOT`).

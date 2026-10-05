@@ -4,13 +4,12 @@ module PackmanNova
   module Logging
     class Multioutput
       LEVEL_PATTERN = /\A(\d\d:\d\d:\d\d )\[([DIWE])\]/
-      STANDARD_STREAMS = [$stdout, $stderr].freeze
 
       attr_reader :outputs
 
       def initialize(*outputs, env: ::ENV)
         @outputs = outputs
-        @colored = outputs.to_h { |io| [io, ::PackmanNova::Utils::Color.enabled?(io, env: env)] }
+        @colored = outputs.to_h { |io| [io, ::PackmanNova::Utils::Color.enabled?(io, env:)] }
       end
 
       def write(message)
@@ -21,9 +20,7 @@ module PackmanNova
         message.bytesize
       end
 
-      def close
-        outputs.each { |io| io.close unless STANDARD_STREAMS.include?(io) || io.closed? }
-      end
+      def close; end
 
       private
 

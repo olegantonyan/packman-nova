@@ -1,8 +1,9 @@
 workdir: ${PACKMAN_NOVA_WORKDIR}
 project_name: packman-nova
-vendor: packman-nova
+offline: false
 distro:
   id: opensuse_tumbleweed
+  name: openSUSE Tumbleweed
   suse_version: 1699
   arches: [x86_64]
   repos:

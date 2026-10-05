@@ -61,12 +61,12 @@ describe ::PackmanNova::Utils::JsonFile do
 end
 
 describe ::PackmanNova::Utils::Digest do
-  it 'hashes files and strings' do
+  it 'hashes files' do
     with_tmpdir do |dir|
       path = ::File.join(dir, 'f')
       ::File.write(path, 'abc')
 
-      assert_equal ::PackmanNova::Utils::Digest.sha256_string('abc'), ::PackmanNova::Utils::Digest.sha256_file(path)
+      assert_equal ::Digest::SHA256.hexdigest('abc'), ::PackmanNova::Utils::Digest.sha256_file(path)
       assert_equal '900150983cd24fb0d6963f7d28e17f72', ::PackmanNova::Utils::Digest.md5_file(path)
     end
   end
@@ -76,7 +76,6 @@ describe ::PackmanNova::Utils::Xml do
   let(:document) { ::PackmanNova::Utils::Xml.parse('<directory srcmd5="abc"><entry name="a" md5="1"/><entry name="b" md5="2"/></directory>') }
 
   it 'reads attributes via xpath' do
-    assert_equal 'abc', ::PackmanNova::Utils::Xml.attribute(document, '/directory', 'srcmd5')
     assert_equal [{ 'name' => 'a', 'md5' => '1' }, { 'name' => 'b', 'md5' => '2' }], ::PackmanNova::Utils::Xml.attributes(document, '//entry')
   end
 
@@ -86,11 +85,19 @@ describe ::PackmanNova::Utils::Xml do
 end
 
 describe ::PackmanNova::Utils::Yaml do
+  def load_yaml(content, **)
+    with_tmpdir do |dir|
+      path = ::File.join(dir, 'f.yml')
+      ::File.write(path, content)
+      ::PackmanNova::Utils::Yaml.load_file(path, **)
+    end
+  end
+
   it 'loads with aliases and symbolized names' do
-    assert_equal({ a: { x: 1 }, b: { x: 1 } }, ::PackmanNova::Utils::Yaml.load("a: &x\n  x: 1\nb: *x\n", symbolize_names: true))
+    assert_equal({ a: { x: 1 }, b: { x: 1 } }, load_yaml("a: &x\n  x: 1\nb: *x\n", symbolize_names: true))
   end
 
   it 'refuses arbitrary objects' do
-    assert_raises(::Psych::DisallowedClass) { ::PackmanNova::Utils::Yaml.load('!ruby/object:Object {}') }
+    assert_raises(::Psych::DisallowedClass) { load_yaml('!ruby/object:Object {}') }
   end
 end

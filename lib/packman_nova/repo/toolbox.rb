@@ -8,9 +8,8 @@ module PackmanNova
 
       class << self
         def build(config:, logger:, subprocess:)
-          runtime = ::PackmanNova::Container::Runtime.detect(config: config)
-          runner = ::PackmanNova::Container::Runner.new(runtime: runtime, logger: logger, subprocess: subprocess)
-          new(runner: runner, image: config.container.image, extra_args: config.container.extra_args)
+          runner = ::PackmanNova::Container::Runner.from_config(config:, logger:, subprocess:)
+          new(runner:, image: config.container.image, extra_args: config.container.extra_args)
         end
       end
 
@@ -21,21 +20,21 @@ module PackmanNova
       end
 
       def capture(script, mounts:, args: [], env: {})
-        runner.capture(**command(script, mounts: mounts, args: args, env: env))
+        runner.capture(**command(script, mounts:, args:, env:))
       end
 
       def run(script, mounts:, args: [], env: {})
-        options = command(script, mounts: mounts, args: args, env: env)
+        options = command(script, mounts:, args:, env:)
         lines = []
         status = runner.run(**options) { |line| lines << line }
-        raise ::PackmanNova::SubprocessError.new(cli: runner.command(**options), status: status, output: lines.join) unless status.success?
+        raise ::PackmanNova::SubprocessError.new(cli: runner.command(**options), status:, output: lines.join) unless status.success?
 
         lines
       end
 
       def command(script, mounts:, args:, env:)
         {
-          image: image, mounts: mounts, env: env,
+          image:, mounts:, env:,
           args: ['-euo', 'pipefail', '-c', script, SCRIPT_NAME, *args],
           extra_args: ['--entrypoint', SHELL, *extra_args]
         }

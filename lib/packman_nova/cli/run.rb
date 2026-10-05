@@ -17,21 +17,66 @@ module PackmanNova
         end
       end
 
+      def initialize(sync: nil, build: nil, publisher: nil, **)
+        super(**)
+        @sync = sync
+        @build = build
+        @publisher = publisher
+      end
+
       def call
-        result = pipeline.call(publish: options.fetch(:publish, true), provider: options[:provider])
-        logger.info("run summary: #{result.summary}")
-        exit_code(result)
+        sync_failed = sync.call.log(logger).failed.keys
+        build.call(sync: false)
+        record = ::PackmanNova::State::BuildRecord.new(workdir: config.workdir).last || {}
+        publish_error, publish_part = publish
+        log_summary(record, sync_failed, publish_part)
+        exit_code(publish_error, [*sync_failed, *::PackmanNova::State::BuildRecord.failed_packages(record)])
       end
 
       private
 
-      def pipeline
-        ::PackmanNova::Pipeline.new(config: config, logger: logger, out: out)
+      def sync
+        @sync ||= ::PackmanNova::Sync.new(config:, logger:)
       end
 
-      def exit_code(result)
-        return PUBLISH_FAILED_EXIT_CODE if result.publish_failed?
-        return 1 if result.packages_failed? && options.fetch(:fail_on_failed_packages, true)
+      def build
+        @build ||= ::PackmanNova::Build.new(config:, logger:, out:)
+      end
+
+      def publisher
+        @publisher ||= ::PackmanNova::Publish.new(config:, logger:, out:)
+      end
+
+      def publish
+        return [nil, 'publish skipped'] unless options.fetch(:publish, true)
+
+        [nil, published_part(publisher.call(provider: options[:provider]))]
+      rescue ::StandardError => e
+        logger.error("publish failed: #{e.class}: #{e.message}")
+        [e, "publish failed: #{e.message}"]
+      end
+
+      def published_part(diff)
+        format('published %<add>d added, %<replace>d replaced, %<remove>d removed', add: diff.to_add.size, replace: diff.to_replace.size, remove: diff.to_remove.size)
+      end
+
+      def log_summary(record, sync_failed, publish_part)
+        logger.info("run summary: #{[build_part(record), sync_part(sync_failed), publish_part].compact.join('; ')}")
+      end
+
+      def build_part(record)
+        failed = ::PackmanNova::State::BuildRecord.failed_packages(record)
+        failed_text = failed.empty? ? '0 failed' : "#{failed.size} failed (#{failed.join(', ')})"
+        "run #{record['run'] || '-'}, release #{record['release'] || '-'}: built #{record.fetch('built', []).size} of #{record.fetch('packages', {}).size}, #{failed_text}"
+      end
+
+      def sync_part(sync_failed)
+        "sync failed: #{sync_failed.join(', ')}" unless sync_failed.empty?
+      end
+
+      def exit_code(publish_error, failed)
+        return PUBLISH_FAILED_EXIT_CODE if publish_error
+        return 1 if failed.any? && options.fetch(:fail_on_failed_packages, true)
 
         0
       end

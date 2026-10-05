@@ -4,10 +4,11 @@ module PackmanNova
   module Pbuild
     class Results
       JOB_HISTORY = '_jobhistory'
+      SHORT_MD5 = 8
 
       class << self
         def scan(results_dir)
-          new(results_dir: results_dir).scan
+          new(results_dir:).scan
         end
       end
 
@@ -27,7 +28,7 @@ module PackmanNova
         meta = ::File.join(dir, '_meta')
         return nil unless ::File.file?(meta)
         return 'failed' if ::File.file?("#{meta}.fail")
-        return 'succeeded' if ::File.file?("#{meta}.success") && ::FileUtils.identical?(meta, "#{meta}.success")
+        return ::PackmanNova::Pbuild::ResultParser::SUCCEEDED if ::File.file?("#{meta}.success") && ::FileUtils.identical?(meta, "#{meta}.success")
 
         'unknown'
       end
@@ -41,8 +42,8 @@ module PackmanNova
       def package_result(key)
         dir = ::File.join(results_dir, key)
         ::PackmanNova::Pbuild::PackageResult.new(
-          key: key, dir: dir, rpm_files: ::Dir.children(dir).select { |file| file.end_with?('.rpm') }, status: status_of(dir),
-          reason: ::PackmanNova::Pbuild::Reason.read(::File.join(dir, '_reason')), log: existing(::File.join(dir, '_log')), **timing(key, dir)
+          key:, dir:, rpm_files: ::Dir.children(dir).select { |file| file.end_with?('.rpm') }, status: status_of(dir),
+          reason: read_reason(::File.join(dir, '_reason')), log: existing(::File.join(dir, '_log')), **timing(key, dir)
         )
       end
 
@@ -52,7 +53,40 @@ module PackmanNova
       end
 
       def job_history
-        @job_history ||= ::PackmanNova::Pbuild::JobHistory.read(::File.join(results_dir, JOB_HISTORY))
+        @job_history ||= read_xml(::File.join(results_dir, JOB_HISTORY), {}) do |doc|
+          ::PackmanNova::Utils::Xml.attributes(doc, '/jobhistlist/jobhist').select { |job| job['package'] }.to_h { |job| [job['package'], job_entry(job)] }
+        end
+      end
+
+      def job_entry(job)
+        start = time(job['starttime'])
+        finish = time(job['endtime'])
+        { endtime: finish, duration_sec: start && finish ? (finish - start).to_i : nil }
+      end
+
+      def time(value)
+        value.to_s.match?(/\A\d+\z/) ? ::Time.at(::Kernel.Integer(value, 10)).utc : nil
+      end
+
+      def read_reason(path)
+        read_xml(path, nil) do |doc|
+          explain = ::PackmanNova::Utils::Xml.text(doc, '/reason/explain').to_s.strip
+          [explain, reason_details(doc)].compact.join(': ') unless explain.empty?
+        end
+      end
+
+      def reason_details(doc)
+        oldsource = ::PackmanNova::Utils::Xml.text(doc, '/reason/oldsource')
+        return "old source #{oldsource[0, SHORT_MD5]}" if oldsource
+
+        changes = ::PackmanNova::Utils::Xml.attributes(doc, '/reason/packagechange').map { |change| "#{change['key']} (#{change['change']})" }
+        changes.empty? ? nil : changes.join(', ')
+      end
+
+      def read_xml(path, fallback)
+        ::File.file?(path) ? yield(::PackmanNova::Utils::Xml.parse(::File.read(path))) : fallback
+      rescue ::PackmanNova::Error
+        fallback
       end
 
       def existing(path)

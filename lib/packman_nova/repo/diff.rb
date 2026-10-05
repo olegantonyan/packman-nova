@@ -20,10 +20,9 @@ module PackmanNova
       def initialize(build_record:, results_dir:, state:, enabled:, arch:, repo_dir:, baselibs_dir: nil, publish_srpms: true, publish_debuginfo: false, key_id: nil,
                      check_files: true)
         @outputs = ::PackmanNova::Repo::BuildOutputs.new(
-          build_record: build_record, results_dir: results_dir, baselibs_dir: baselibs_dir, enabled: enabled, arch: arch,
-          publish_srpms: publish_srpms, publish_debuginfo: publish_debuginfo
+          build_record:, results_dir:, baselibs_dir:, enabled:, arch:,
+          publish_srpms:, publish_debuginfo:
         )
-        @retention = ::PackmanNova::Repo::Retention.new(state: state, build_record: build_record, enabled: enabled)
         @state = state
         @arch = arch
         @repo_dir = repo_dir
@@ -35,15 +34,19 @@ module PackmanNova
         built = outputs.entries
         retained = retained_entries.reject { |relative, _entry| built.key?(relative) }
         desired = retained.merge(built).sort.to_h
-        Result.new(desired: desired, **compare(built, retained), to_remove: removals(desired), **packages)
+        Result.new(desired:, **compare(built, retained), to_remove: removals(desired), **packages)
       end
 
       private
 
-      attr_reader :outputs, :retention, :state, :arch, :repo_dir, :key_id, :check_files
+      attr_reader :outputs, :state, :arch, :repo_dir, :key_id, :check_files
 
       def packages
-        { retained_packages: retention.packages, succeeded_packages: outputs.packages, ignored: outputs.ignored.sort }
+        { retained_packages:, succeeded_packages: outputs.packages, ignored: outputs.ignored.sort }
+      end
+
+      def retained_packages
+        @retained_packages ||= state.package_names.select { |name| outputs.retained?(name) }
       end
 
       def published
@@ -51,11 +54,11 @@ module PackmanNova
       end
 
       def retained_entries
-        retention.files.each_with_object({}) do |(relative, entry), acc|
-          next unless in_scope?(relative)
+        state.files.each_with_object({}) do |(relative, entry), acc|
+          next unless retained_packages.include?(entry['package']) && in_scope?(relative)
           next outputs.ignored << "#{relative}: retained for #{entry['package']} but missing on disk" if missing?(relative)
 
-          acc[relative] = ::PackmanNova::Repo::BuildOutputs::Entry.new(relative: relative, package: entry['package'], source: nil, source_sha256: source_sha256(entry))
+          acc[relative] = ::PackmanNova::Repo::BuildOutputs::Entry.new(relative:, package: entry['package'], source: nil, source_sha256: source_sha256(entry))
         end
       end
 

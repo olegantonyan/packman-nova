@@ -46,7 +46,7 @@ module PackmanNova
       end
 
       def environment
-        @environment ||= ::PackmanNova::Pbuild::Environment.new(config: config, logger: logger)
+        @environment ||= ::PackmanNova::Pbuild::Environment.new(config:, logger:)
       end
 
       def workdir
@@ -78,7 +78,7 @@ module PackmanNova
 
         argv = environment.runtime.remove_tree_argv(path, image: config.container.image)
         status = environment.subprocess.execute(argv)
-        raise ::PackmanNova::SubprocessError.new(cli: argv, status: status) unless status.success?
+        raise ::PackmanNova::SubprocessError.new(cli: argv, status:) unless status.success?
       end
     end
   end

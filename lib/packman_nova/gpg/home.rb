@@ -10,7 +10,7 @@ module PackmanNova
         def open(executor)
           dir = ::Dir.mktmpdir('packman-nova-gpg-')
           ::File.chmod(0o700, dir)
-          yield new(dir: dir, executor: executor)
+          yield new(dir:, executor:)
         ensure
           if dir
             executor.shutdown(dir)

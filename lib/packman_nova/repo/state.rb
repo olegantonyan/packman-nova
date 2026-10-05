@@ -14,7 +14,7 @@ module PackmanNova
         def empty
           new(
             'schema' => ::PackmanNova::State::Schemas::VERSION, 'generated_at' => nil, 'run' => nil, 'release' => nil,
-            'tumbleweed_snapshot' => nil, 'key' => nil, 'files' => {}, 'packages' => {}
+            'distro_snapshot' => nil, 'key' => nil, 'files' => {}, 'packages' => {}
           )
         end
       end
@@ -27,15 +27,6 @@ module PackmanNova
       def packages = data.fetch('packages') || {}
       def run = data['run']
       def release = data['release']
-      def key_id = data.dig('key', 'id')
-
-      def empty?
-        files.empty? && packages.empty?
-      end
-
-      def files_of(package)
-        files.select { |_relative, entry| entry['package'] == package }.keys.sort
-      end
 
       def package_names
         (packages.keys | files.values.map { |entry| entry['package'] }).compact.sort

@@ -14,7 +14,7 @@ describe ::PackmanNova::Pbuild::Summary do
   end
 
   it 'renders a table and a footer' do
-    assert_equal <<~TEXT, ::PackmanNova::Pbuild::Summary.new(record: record).to_s
+    assert_equal <<~TEXT, ::PackmanNova::Pbuild::Summary.new(record:).to_s
       package  code       rpms  time   reason
       fdk-aac  succeeded  2     1m15s  new build
       vlc      failed     0     9s     -
@@ -24,12 +24,12 @@ describe ::PackmanNova::Pbuild::Summary do
 
   it 'shortens long reasons' do
     record['packages']['fdk-aac']['reason'] = "meta change: #{'x' * 200}"
-    line = ::PackmanNova::Pbuild::Summary.new(record: record).to_s.lines[1]
+    line = ::PackmanNova::Pbuild::Summary.new(record:).to_s.lines[1]
 
     assert_equal "fdk-aac  succeeded  2     1m15s  meta change: #{'x' * 84}...\n", line
   end
 
   it 'lists failed packages' do
-    assert_equal ['vlc'], ::PackmanNova::Pbuild::Summary.failed_packages(record)
+    assert_equal ['vlc'], ::PackmanNova::State::BuildRecord.failed_packages(record)
   end
 end

@@ -5,16 +5,16 @@ require 'time'
 module PackmanNova
   module Repo
     class StateBuilder
-      SUCCEEDED = 'succeeded'
+      SUCCEEDED = ::PackmanNova::Pbuild::ResultParser::SUCCEEDED
 
-      def initialize(previous:, build_record:, diff:, layout:, manifests:, sync_state: {}, versions: {}, key: nil, now: ::Time.now)
+      def initialize(previous:, build_record:, diff:, layout:, manifests:, sync_packages: {}, versions: {}, key: nil, now: ::Time.now)
         @previous = previous
         @build_record = build_record
         @build_packages = build_record.fetch('packages', {})
         @diff = diff
         @layout = layout
         @manifests = manifests.to_h { |manifest| [manifest.name, manifest] }
-        @sync_packages = sync_state.fetch('packages', {}) || {}
+        @sync_packages = sync_packages
         @versions = versions
         @key = key
         @now = now
@@ -32,7 +32,7 @@ module PackmanNova
       def header
         {
           'schema' => ::PackmanNova::State::Schemas::VERSION, 'generated_at' => now.utc.iso8601, 'run' => run,
-          'release' => build_record['release'] || previous.release, 'tumbleweed_snapshot' => snapshot, 'key' => key_entry
+          'release' => build_record['release'] || previous.release, 'distro_snapshot' => snapshot, 'key' => key_entry
         }
       end
 
@@ -41,7 +41,7 @@ module PackmanNova
       end
 
       def snapshot
-        build_record['tumbleweed_snapshot'] || previous.to_h['tumbleweed_snapshot']
+        build_record['distro_snapshot'] || previous.to_h['distro_snapshot']
       end
 
       def key_entry
@@ -125,7 +125,7 @@ module PackmanNova
       end
 
       def base(name)
-        name.split(':', 2).first
+        ::PackmanNova::Manifest.base_name(name)
       end
     end
   end

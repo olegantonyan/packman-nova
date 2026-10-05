@@ -32,7 +32,7 @@ module PackmanNova
       end
 
       def to_h
-        { file: file, urls: urls, sha256: sha256, size: size, path: path, generated: generated }.compact
+        { file:, urls:, sha256:, size:, path:, generated: }.compact
       end
     end
   end

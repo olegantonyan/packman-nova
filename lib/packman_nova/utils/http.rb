@@ -26,6 +26,10 @@ module PackmanNova
         @sleeper = sleeper
       end
 
+      def offline?
+        offline
+      end
+
       def get(url)
         request(:get, url, &:read_body)
       end
@@ -51,14 +55,14 @@ module PackmanNova
       attr_reader :logger, :timeout_sec, :retries, :offline, :sleeper
 
       def request(method, url, &)
-        raise ::PackmanNova::DownloadError.new("offline, not fetching #{url}", url: url, attempts: 0) if offline
+        raise ::PackmanNova::DownloadError, "offline, not fetching #{url}" if offline
 
         attempt = 0
         loop do
           attempt += 1
           outcome, value = perform_once(method, url, &)
           return value if outcome == :ok
-          raise ::PackmanNova::DownloadError.new("#{url}: #{value}", url: url, attempts: attempt) if outcome == :fail || attempt > retries
+          raise ::PackmanNova::DownloadError, "#{url}: #{value}" if outcome == :fail || attempt > retries
 
           pause(attempt, url, value)
         end
@@ -106,9 +110,9 @@ module PackmanNova
         uri = ::URI.parse(url)
         return uri if uri.is_a?(::URI::HTTP) && uri.host
 
-        raise ::PackmanNova::DownloadError.new("unsupported URL: #{url}", url: url, attempts: 0)
+        raise ::PackmanNova::DownloadError, "unsupported URL: #{url}"
       rescue ::URI::InvalidURIError
-        raise ::PackmanNova::DownloadError.new("invalid URL: #{url}", url: url, attempts: 0)
+        raise ::PackmanNova::DownloadError, "invalid URL: #{url}"
       end
 
       def pause(attempt, url, reason)

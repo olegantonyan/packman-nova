@@ -16,12 +16,12 @@ module PackmanNova
         listing = fetch_listing
         files = expected_files(listing)
         detail = change_detail(previous, listing, files)
-        return outcome(:unchanged, listing, files, previous: previous) unless detail
-        return outcome(:changed, listing, files, detail: detail) if check_only
+        return outcome(:unchanged, listing, files, previous:) unless detail
+        return outcome(:changed, listing, files, detail:) if check_only
 
         files.each { |file| ensure_blob(file, listing) }
         package_dir.materialize(files)
-        outcome(:changed, listing, files, detail: detail)
+        outcome(:changed, listing, files, detail:)
       end
 
       private
@@ -41,7 +41,7 @@ module PackmanNova
       end
 
       def expected_files(listing)
-        listing.entries.reject { |entry| manifest.link_rules.deletes?(entry.name) }.map do |entry|
+        listing.entries.reject { |entry| manifest.link_delete.include?(entry.name) }.map do |entry|
           ::PackmanNova::Sync::ExpectedFile.new(name: entry.name, source: services.cache.md5_path(entry.md5), md5: entry.md5, blob: true)
         end
       end
@@ -71,7 +71,7 @@ module PackmanNova
           'files' => files.to_h { |file| [file.name, file.md5] },
           'synced_at' => previous&.fetch('synced_at', nil) || ::Time.now.utc.iso8601
         }
-        ::PackmanNova::Sync::Outcome.new(name: manifest.name, status: status, record: record, detail: detail)
+        ::PackmanNova::Sync::Outcome.new(name: manifest.name, status:, record:, detail:)
       end
     end
   end

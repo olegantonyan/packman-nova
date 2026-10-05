@@ -1,2 +1,0 @@
-addFilter("use-of-home-in-%post")
-addFilter("backup-file-in-package")

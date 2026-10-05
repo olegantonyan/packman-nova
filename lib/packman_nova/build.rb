@@ -10,39 +10,35 @@ require 'packman_nova/state/build_record'
 require 'packman_nova/pbuild/project_dir'
 require 'packman_nova/pbuild/command'
 require 'packman_nova/pbuild/result_parser'
-require 'packman_nova/pbuild/reason'
-require 'packman_nova/pbuild/job_history'
 require 'packman_nova/pbuild/package_result'
 require 'packman_nova/pbuild/results'
-require 'packman_nova/pbuild/baselibs'
 require 'packman_nova/pbuild/record_writer'
 require 'packman_nova/pbuild/executor'
-require 'packman_nova/pbuild/run_floor'
 require 'packman_nova/pbuild/run_allocator'
 require 'packman_nova/pbuild/table'
 require 'packman_nova/pbuild/summary'
-require 'packman_nova/pbuild/sync_state'
-require 'packman_nova/pbuild/sync_runner'
 require 'packman_nova/pbuild/environment'
 
 module PackmanNova
   class Build
+    FAILURE_LOG_LINES = 100
+
     def initialize(config:, logger:, out: $stdout, environment: nil, sync: nil, clock: -> { ::Time.now.utc })
       @config = config
       @logger = logger
       @out = out
-      @environment = environment || ::PackmanNova::Pbuild::Environment.new(config: config, logger: logger)
+      @environment = environment || ::PackmanNova::Pbuild::Environment.new(config:, logger:)
       @sync = sync
       @clock = clock
     end
 
-    def call(packages: [], rebuild: false, single: nil, buildjobs: nil, jobs: nil, checks: nil, debuginfo: nil, no_repo_refresh: nil,
+    def call(packages: [], rebuild: false, single: nil, buildjobs: nil, jobs: nil, checks: nil, debuginfo: nil, repo_refresh: nil,
              release: nil, sync: true, dry_run: false)
-      selection = { rebuild_packages: packages, rebuild: rebuild, single: single }
-      tuning = { buildjobs: buildjobs, jobs: jobs, checks: checks, debuginfo: debuginfo, repo_refresh: no_repo_refresh.nil? ? nil : !no_repo_refresh }.compact
+      selection = { rebuild_packages: packages, rebuild:, single: }
+      tuning = { buildjobs:, jobs:, checks:, debuginfo:, repo_refresh: }.compact
       return print_dry_run(selection, tuning, release) if dry_run
 
-      ::PackmanNova::Pbuild::SyncRunner.new(config: config, logger: logger, sync: @sync).call if sync
+      (@sync || ::PackmanNova::Sync.new(config:, logger:)).call.log(logger) if sync
       workdir.with_lock { build(selection, tuning, release) }
     end
 
@@ -59,11 +55,11 @@ module PackmanNova
     end
 
     def build_record
-      @build_record ||= ::PackmanNova::State::BuildRecord.new(workdir: workdir)
+      @build_record ||= ::PackmanNova::State::BuildRecord.new(workdir:)
     end
 
     def allocator
-      @allocator ||= ::PackmanNova::Pbuild::RunAllocator.new(config: config, environment: environment, clock: clock)
+      @allocator ||= ::PackmanNova::Pbuild::RunAllocator.new(config:, environment:, clock:)
     end
 
     def print_dry_run(selection, tuning, release)
@@ -78,7 +74,7 @@ module PackmanNova
       run, release = allocator.allocate(release)
       started_at = clock.call
       passes = run_passes(commands(selection, tuning, release), run)
-      report(record_writer.call(*passes, run: run, release: release, image_id: image_id, started_at: started_at), passes)
+      report(record_writer.call(*passes, run:, release:, image_id:, started_at:), passes)
     end
 
     def commands(selection, tuning, release)
@@ -94,32 +90,57 @@ module PackmanNova
 
     def run_pass(command)
       logger.info("pbuild --arch #{command.arch}#{' --baselibs' if command.baselibs?}")
-      ::PackmanNova::Pbuild::RecordWriter::Pass.new(command: command, status: executor.run(command.argv, timeout_sec: config.pbuild.timeout_sec))
+      ::PackmanNova::Pbuild::RecordWriter::Pass.new(command:, status: executor.run(command.argv, timeout_sec: config.pbuild.timeout_sec))
     end
 
     def report(record, passes)
-      out.print(::PackmanNova::Pbuild::Summary.new(record: record).to_s)
-      return 1 unless ::PackmanNova::Pbuild::Summary.failed_packages(record).empty?
+      out.print(::PackmanNova::Pbuild::Summary.new(record:).to_s)
+      failed = ::PackmanNova::State::BuildRecord.failed_packages(record)
+      return log_failures(record, failed) unless failed.empty?
 
       check_exits!(passes)
       sync_state.clear_rebuild_all! if passes.first.command.rebuild?
       0
     end
 
+    def log_failures(record, failed)
+      failed.each do |key|
+        entry = record.fetch('packages').fetch(key)
+        logger.error("#{key}: #{[entry['code'], entry['details'] || entry['reason']].compact.join(': ')}")
+        log_tail(key, failure_log(key, entry))
+      end
+      1
+    end
+
+    def failure_log(key, entry)
+      baselibs = entry['baselibs']
+      return ::File.join(config.results_dir(baselibs['arch']), key, '_log') if baselibs && ::PackmanNova::Pbuild::ResultParser::FAILURE_CODES.include?(baselibs['code'])
+
+      entry['log'] && ::File.join(workdir.root, entry['log'])
+    end
+
+    def log_tail(key, path)
+      return logger.error("#{key}: no build log") unless path && ::File.file?(path)
+
+      lines = ::File.readlines(path).last(FAILURE_LOG_LINES)
+      logger.error("#{key}: last #{lines.size} lines of #{path}")
+      lines.each { |line| logger.add(::Logger::ERROR, line.scrub, ::PackmanNova::Logging::Formatter::RAW_PROGNAME) }
+    end
+
     def check_exits!(passes)
       failed = passes.reject { |pass| pass.status.success? }
       return if failed.empty?
 
-      raise ::PackmanNova::BuildError.new(failed.map { |pass| "pbuild --arch #{pass.command.arch} exited with #{pass.status.exitstatus.inspect}" }.join('; '), failed_packages: [])
+      raise ::PackmanNova::BuildError, failed.map { |pass| "pbuild --arch #{pass.command.arch} exited with #{pass.status.exitstatus.inspect}" }.join('; ')
     end
 
     def record_writer
-      ::PackmanNova::Pbuild::RecordWriter.new(environment: environment, build_record: build_record, allocator: allocator, logger: logger, clock: clock)
+      ::PackmanNova::Pbuild::RecordWriter.new(environment:, build_record:, allocator:, logger:, clock:)
     end
 
     def pbuild_command(selection, tuning, release, baselibs: false)
       implicit = selection[:rebuild_packages].empty? && selection[:single].nil? && sync_state.rebuild_all_required?
-      environment.command(release: release, baselibs: baselibs, **tuning, **selection, rebuild: selection[:rebuild] || implicit)
+      environment.command(release:, baselibs:, **tuning, **selection, rebuild: selection[:rebuild] || implicit)
     end
   end
 end

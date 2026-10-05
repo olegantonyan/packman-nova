@@ -32,15 +32,14 @@ describe ::PackmanNova::Utils::Http do
     server.on('/down', status: 500)
     error = assert_raises(::PackmanNova::DownloadError) { http.get(server.url('/down')) }
 
-    assert_equal 3, error.attempts
-    assert_equal server.url('/down'), error.url
+    assert_match(/HTTP 500/, error.message)
+    assert_equal [1, 2], delays
   end
 
   it 'does not retry client errors' do
     server.on('/missing', status: 404)
-    error = assert_raises(::PackmanNova::DownloadError) { http.get(server.url('/missing')) }
+    assert_raises(::PackmanNova::DownloadError) { http.get(server.url('/missing')) }
 
-    assert_equal 1, error.attempts
     assert_empty delays
   end
 

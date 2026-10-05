@@ -15,18 +15,16 @@ describe ::PackmanNova::Utils::Subprocess do
     assert_match(/\[I\] \$ sh -c .*\n(one|two)\n(one|two)\n\z/, log.last.string)
   end
 
-  it 'passes env and chdir' do
-    with_tmpdir do |dir|
-      lines = []
-      subprocess.execute(['sh', '-c', 'echo "$FOO $(pwd)"'], env: { 'FOO' => 'bar' }, chdir: dir, log_output: false) { |line| lines << line }
+  it 'passes env' do
+    lines = []
+    subprocess.execute(['sh', '-c', 'echo "$FOO"'], env: { 'FOO' => 'bar' }) { |line| lines << line }
 
-      assert_equal ["bar #{::File.realpath(dir)}\n"], lines
-    end
+    assert_equal ["bar\n"], lines
   end
 
   it 'terminates the process on timeout' do
     started = ::Process.clock_gettime(::Process::CLOCK_MONOTONIC)
-    status = subprocess.execute(%w[sleep 30], timeout_sec: 0.2, term_timeout_sec: 2)
+    status = subprocess.execute(%w[sleep 30], timeout_sec: 0.2)
 
     assert_predicate status, :signaled?
     assert_operator ::Process.clock_gettime(::Process::CLOCK_MONOTONIC) - started, :<, 5

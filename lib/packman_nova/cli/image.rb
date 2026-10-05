@@ -30,7 +30,7 @@ module PackmanNova
       private
 
       def image
-        @image ||= ::PackmanNova::Pbuild::Environment.new(config: config, logger: logger).image(tag: options[:tag])
+        @image ||= ::PackmanNova::Pbuild::Environment.new(config:, logger:).image(tag: options[:tag])
       end
 
       def build

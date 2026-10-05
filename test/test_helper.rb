@@ -10,7 +10,7 @@ require 'tmpdir'
 
 require 'support/http_stub_server'
 
-module TestHelpers
+class PackmanNovaSpec < ::Minitest::Spec
   FIXTURES_DIR = ::File.expand_path('fixtures', __dir__)
 
   def fixture_path(*parts)
@@ -31,7 +31,7 @@ module TestHelpers
 
   def string_logger(level: ::Logger::DEBUG, filters: [])
     io = ::StringIO.new
-    [::PackmanNova::Logging::Logger.new(outputs: [io], level: level, filters: filters), io]
+    [::PackmanNova::Logging::Logger.new(outputs: [io], level:, filters:), io]
   end
 
   def null_logger
@@ -40,9 +40,12 @@ module TestHelpers
 
   def load_config(env: {}, cwd: nil, **)
     with_env(env) do
-      cwd ? ::PackmanNova::Config.load(cwd: cwd, **) : with_tmpdir { |dir| ::PackmanNova::Config.load(cwd: dir, **) }
+      cwd ? ::PackmanNova::Config.load(cwd:, **) : with_tmpdir { |dir| ::PackmanNova::Config.load(cwd: dir, **) }
     end
   end
 end
 
-::Minitest::Test.include(::TestHelpers)
+::Minitest::Spec.register_spec_type(//, ::PackmanNovaSpec)
+
+require 'support/sync_spec'
+require 'support/site_spec'

@@ -25,12 +25,12 @@ describe 'packman-nova smoke' do
 
   def cli(*argv, environment: env)
     out = ::StringIO.new
-    code = with_env(environment) { ::PackmanNova::Cli.new(argv: ['-c', config_file, '-w', workdir, *argv], out: out, err: out).call }
+    code = with_env(environment) { ::PackmanNova::Cli.new(argv: ['-c', config_file, '-w', workdir, *argv], out:, err: out).call }
     [code, out.string]
   end
 
   def cli!(*argv, environment: env)
-    code, text = cli(*argv, environment: environment)
+    code, text = cli(*argv, environment:)
 
     assert_equal 0, code, "packman-nova #{argv.join(' ')}:\n#{text.lines.last(40).join}"
     text
@@ -44,8 +44,8 @@ describe 'packman-nova smoke' do
   end
 
   def in_builder(script)
-    config = load_config(env: env, path: config_file)
-    runtime = ::PackmanNova::Container::Runtime.detect(config: config)
+    config = load_config(env:, path: config_file)
+    runtime = ::PackmanNova::Container::Runtime.detect(config:)
     argv = [runtime.executable, 'run', '--rm', '-v', "#{repo}:/repo:ro", '--entrypoint', '/bin/bash', config.container.image, '-euo', 'pipefail', '-c', script]
     text, status = ::Open3.capture2e(*argv)
 

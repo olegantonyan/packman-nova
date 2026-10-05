@@ -32,10 +32,6 @@ module PackmanNova
         @config_error = config_error
       end
 
-      def call
-        raise ::PackmanNova::NotImplementedError, "#{self.class.name}#call"
-      end
-
       private
 
       attr_reader :config, :logger, :options, :args, :out, :config_error

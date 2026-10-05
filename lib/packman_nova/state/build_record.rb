@@ -5,6 +5,12 @@ require 'time'
 module PackmanNova
   module State
     class BuildRecord
+      class << self
+        def failed_packages(record)
+          record.fetch('packages', {}).select { |_key, entry| ::PackmanNova::Pbuild::ResultParser::FAILURE_CODES.include?(entry['code']) }.keys
+        end
+      end
+
       def initialize(workdir:)
         @workdir = workdir
       end
@@ -28,8 +34,11 @@ module PackmanNova
         ::PackmanNova::Utils::JsonFile.read(workdir.last_build_file)
       end
 
-      def read(run)
-        ::PackmanNova::Utils::JsonFile.read(workdir.build_record_file(run))
+      def last!
+        record = last
+        raise ::PackmanNova::PublishError, "no build record at #{workdir.last_build_file}; run 'packman-nova build' first" unless record
+
+        ::PackmanNova::State::Schemas.validate!(:build_record, record)
       end
 
       private

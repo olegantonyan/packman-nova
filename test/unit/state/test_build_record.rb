@@ -5,14 +5,14 @@ require 'test_helper'
 describe ::PackmanNova::State::BuildRecord do
   def result(key, rpm_files:, status: 'succeeded', dir: '/w/project/_build.tumbleweed.x86_64')
     ::PackmanNova::Pbuild::PackageResult.new(
-      key: key, dir: ::File.join(dir, key), rpm_files: rpm_files, status: status, reason: 'new build',
+      key:, dir: ::File.join(dir, key), rpm_files:, status:, reason: 'new build',
       log: ::File.join(dir, key, '_log'), built_at: ::Time.utc(2026, 9, 29, 11, 0, 0), duration_sec: 42
     )
   end
 
   let(:workdir) { ::PackmanNova::Workdir.new(root: '/w') }
   let(:record) do
-    ::PackmanNova::State::BuildRecord.new(workdir: workdir).compose(
+    ::PackmanNova::State::BuildRecord.new(workdir:).compose(
       results: {
         'libx264:x264' => result('libx264:x264', rpm_files: %w[x264-0.165-1699.2.nova.1.x86_64.rpm libx264-0.165-1699.2.nova.1.src.rpm]),
         'vlc' => result('vlc', rpm_files: [], status: 'failed')
@@ -51,7 +51,7 @@ describe ::PackmanNova::State::BuildRecord do
       path = store.write(record)
 
       assert_equal ::File.join(dir, 'state', 'builds', '2.json'), path
-      assert_equal store.read(2), store.last
+      assert_equal ::JSON.parse(::File.read(path)), store.last
       assert_equal record, ::JSON.parse(::JSON.generate(store.last))
     end
   end

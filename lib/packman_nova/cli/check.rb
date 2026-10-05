@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require 'base64'
 require 'securerandom'
 
 module PackmanNova
   class Cli
     class Check < ::PackmanNova::Cli::Command
       MIN_FREE_BYTES = 30 * (1024**3)
-      ARMORED_PRIVATE_KEY_HEADER = '-----BEGIN PGP PRIVATE KEY BLOCK-----'
       CHECKS = %i[check_workdir check_container check_manifests check_signing check_network].freeze
+      LABELS = { ok: ['ok', :green], warn: ['warn', :yellow], fail: ['fail', :red], skip: ['skip', :dim] }.freeze
+      PROBE_TIMEOUT_SEC = 20
 
       class << self
         def summary
@@ -25,14 +25,12 @@ module PackmanNova
       end
 
       def call
-        @reporter = ::PackmanNova::Cli::Report.new(out: out)
+        @failures = 0
         config_error ? report(:fail, 'config', config_error.message) : run_checks
-        reporter.failures.zero? ? 0 : 1
+        @failures.zero? ? 0 : 1
       end
 
       private
-
-      attr_reader :reporter
 
       def run_checks
         report(:ok, 'config', config.files.map { |file| relative(file) }.join(' + '))
@@ -63,10 +61,10 @@ module PackmanNova
       end
 
       def check_container
-        subprocess = ::PackmanNova::Utils::Subprocess.new(logger: logger)
-        runtime = ::PackmanNova::Container::Runtime.detect(config: config)
+        subprocess = ::PackmanNova::Utils::Subprocess.new(logger:)
+        runtime = ::PackmanNova::Container::Runtime.detect(config:)
         report(:ok, 'runtime', subprocess.capture([runtime.executable, '--version']).strip)
-        image = ::PackmanNova::Container::Image.new(runtime: runtime, config: config, logger: logger, subprocess: subprocess, workdir: config.workdir)
+        image = ::PackmanNova::Container::Image.new(runtime:, config:, logger:, subprocess:, workdir: config.workdir)
         report_image(image)
       end
 
@@ -78,7 +76,7 @@ module PackmanNova
       end
 
       def check_manifests
-        loader = ::PackmanNova::Manifest::Loader.new(packages_dir: config.resolve('packages'))
+        loader = ::PackmanNova::Manifest::Loader.new(packages_dir: config.packages_dir)
         loader.errors.each { |error| report(:fail, 'manifest', error.message) }
         report(:warn, 'manifests', "no package.yml in: #{loader.skipped.join(', ')}") unless loader.skipped.empty?
         report_manifest_count(loader.manifests)
@@ -98,18 +96,24 @@ module PackmanNova
       end
 
       def report_private_key(encoded)
-        decoded = ::Base64.strict_decode64(encoded.gsub(/\s+/, ''))
-        return report(:ok, 'gpg key', 'decodes to an armored private key') if decoded.include?(ARMORED_PRIVATE_KEY_HEADER)
+        return report(:ok, 'gpg key', 'decodes to an armored private key') if ::PackmanNova::Gpg.to_armor(encoded).include?('PRIVATE KEY')
 
         report(:fail, 'gpg key', 'GPG_PRIVATE_KEY_BASE64 does not decode to an armored PGP private key')
-      rescue ::ArgumentError
-        report(:fail, 'gpg key', 'GPG_PRIVATE_KEY_BASE64 is not valid base64')
+      rescue ::PackmanNova::GpgError => e
+        report(:fail, 'gpg key', "GPG_PRIVATE_KEY_BASE64: #{e.message}")
       end
 
       def check_network
         return report(:skip, 'network', 'offline') if config.offline?
 
-        ::PackmanNova::Sources::Reachability.new(config: config, logger: logger).call.each { |result| report(*result) }
+        http = ::PackmanNova::Utils::Http.new(logger:, timeout_sec: PROBE_TIMEOUT_SEC, retries: 0)
+        [['obs api', config.prjconf.base_url], ['tw repo', config.distro.snapshot_url]].each { |name, url| probe(http, name, url) }
+      end
+
+      def probe(http, name, url)
+        report(:ok, name, "#{url} HTTP #{http.head(url).code}")
+      rescue ::PackmanNova::DownloadError => e
+        report(:fail, name, e.message)
       end
 
       def writable?(dir)
@@ -122,11 +126,14 @@ module PackmanNova
       end
 
       def report(status, name, detail)
-        reporter.call(status, name, detail)
+        @failures += 1 if status == :fail
+        text, color = LABELS.fetch(status)
+        label = ::PackmanNova::Utils::Color.enabled?(out) ? ::PackmanNova::Utils::Color.paint(text.ljust(4), color) : text.ljust(4)
+        out.puts("#{label}  #{name.ljust(10)} #{detail}")
       end
 
       def relative(path)
-        path.delete_prefix("#{config&.project_root || ::PackmanNova::Config::PROJECT_ROOT}/")
+        path.delete_prefix("#{::PackmanNova::Config::PROJECT_ROOT}/")
       end
     end
   end

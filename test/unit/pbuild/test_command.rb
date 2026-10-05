@@ -55,14 +55,6 @@ describe ::PackmanNova::Pbuild::Command do
   end
 
   it 'builds the result query argv' do
-    assert_equal %w[pbuild --reponame tumbleweed --arch x86_64 --result-code all --terse /project], command.result_argv
-    assert_equal %w[pbuild --reponame tumbleweed --arch x86_64 --result-code all /project], command.result_argv(details: true)
-  end
-
-  it 'builds the repoquery argv' do
-    assert_equal %w[
-      pbuild --dist /project/_configs/tumbleweed.conf --reponame tumbleweed --arch x86_64
-      --repo https://download.opensuse.org/tumbleweed/repo/oss/ --no-repo-refresh --repoquery libfdk-aac2 /project
-    ], command.repoquery_argv('libfdk-aac2')
+    assert_equal %w[pbuild --reponame tumbleweed --arch x86_64 --result-code all /project], command.result_argv
   end
 end

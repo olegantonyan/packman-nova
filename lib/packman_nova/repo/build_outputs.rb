@@ -3,7 +3,7 @@
 module PackmanNova
   module Repo
     class BuildOutputs
-      SUCCEEDED = 'succeeded'
+      SUCCEEDED = ::PackmanNova::Pbuild::ResultParser::SUCCEEDED
 
       Entry = ::Data.define(:relative, :package, :source, :source_sha256) do
         def retained?
@@ -28,6 +28,10 @@ module PackmanNova
         @packages ||= succeeded_names.select { |name| enabled?(name) }
       end
 
+      def retained?(name)
+        enabled?(name) && build_packages.dig(name, 'code') != SUCCEEDED
+      end
+
       def entries
         @entries ||= packages.each_with_object({}) do |name, acc|
           outputs(name).each do |path|
@@ -35,7 +39,7 @@ module PackmanNova
             next unless relative
 
             claim!(acc, relative, name)
-            acc[relative] = Entry.new(relative: relative, package: name, source: path, source_sha256: ::PackmanNova::Utils::Digest.sha256_file(path))
+            acc[relative] = Entry.new(relative:, package: name, source: path, source_sha256: ::PackmanNova::Utils::Digest.sha256_file(path))
           end
         end
       end
@@ -51,7 +55,7 @@ module PackmanNova
       end
 
       def enabled?(name)
-        enabled.include?(name.split(':', 2).first)
+        enabled.include?(::PackmanNova::Manifest.base_name(name))
       end
 
       def claim!(acc, relative, name)

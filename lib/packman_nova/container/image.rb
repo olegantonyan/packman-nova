@@ -43,9 +43,9 @@ module PackmanNova
       end
 
       def build!(no_cache: false)
-        argv = build_command(no_cache: no_cache)
+        argv = build_command(no_cache:)
         status = subprocess.execute(argv)
-        raise ::PackmanNova::SubprocessError.new(cli: argv, status: status) unless status.success?
+        raise ::PackmanNova::SubprocessError.new(cli: argv, status:) unless status.success?
 
         write_record
       end

@@ -22,10 +22,6 @@ module PackmanNova
         "#{datetime.strftime('%H:%M:%S')} [#{severity[0]}] #{text}\n"
       end
 
-      def add_filters(new_filters)
-        self.class.new(filters: filters + new_filters)
-      end
-
       private
 
       def mask(text)

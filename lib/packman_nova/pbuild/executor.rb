@@ -13,8 +13,8 @@ module PackmanNova
         @image = image
       end
 
-      def run(argv, timeout_sec: ::PackmanNova::Container::Runner::DEFAULT_TIMEOUT_SEC, &)
-        runner.run(**options(argv), name: "#{NAME_PREFIX}-#{::Process.pid}", timeout_sec: timeout_sec, &)
+      def run(argv, timeout_sec: ::PackmanNova::Utils::Subprocess::DEFAULT_TIMEOUT_SEC, &)
+        runner.run(**options(argv), name: "#{NAME_PREFIX}-#{::Process.pid}", timeout_sec:, &)
       end
 
       def capture(argv)
@@ -31,7 +31,7 @@ module PackmanNova
 
       def options(argv)
         {
-          image: image, args: argv, mounts: project_dir.mounts, env: ENV,
+          image:, args: argv, mounts: project_dir.mounts, env: ENV,
           privileged: config.container.privileged?, extra_args: config.container.extra_args
         }
       end

@@ -1,18 +1,15 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-require_relative 'sync_fixture'
 
-describe ::PackmanNova::Sync do
-  include ::SyncFixture
-
+describe ::PackmanNova::Sync, :sync do
   let(:server) { ::HttpStubServer.new }
   let(:dir) { ::Dir.mktmpdir('packman-nova-sync-') }
   let(:config) { sync_config(dir, server) }
   let(:packages_dir) { ::File.join(dir, 'packages') }
   let(:workdir) { config.workdir }
   let(:link_files) { { 'demo.spec' => "Name: demo\n", '_multibuild' => "<multibuild/>\n", 'demo-1.0.tar.gz' => tarball } }
-  let(:sync) { ::PackmanNova::Sync.new(config: config, logger: null_logger, packages_dir: packages_dir) }
+  let(:sync) { ::PackmanNova::Sync.new(config:, logger: null_logger, packages_dir:) }
 
   before do
     stub_common(server)
@@ -63,11 +60,19 @@ describe ::PackmanNova::Sync do
 
   it 'writes the project config files and the sync state' do
     sync.call
-    state = ::PackmanNova::Sync::State.new(workdir: workdir).load
+    state = ::PackmanNova::Sync::State.new(workdir:).load
 
     assert_equal "Prefer: foo\n", ::File.read(workdir.config_file)
-    assert_equal ::SyncFixture::FACTORY_PRJCONF, ::File.read(::File.join(workdir.configs_dir, 'tumbleweed.conf'))
-    assert_equal ['20260924', 'a' * 32, %w[demo hello]], [state['tumbleweed_snapshot'], state.dig('packages', 'demo', 'srcmd5'), state['packages'].keys]
+    assert_equal ::SyncSpec::FACTORY_PRJCONF, ::File.read(workdir.dist_config_file('tumbleweed'))
+    assert_equal ['20260924', 'a' * 32, %w[demo hello]], [state['distro_snapshot'], state.dig('packages', 'demo', 'srcmd5'), state['packages'].keys]
+  end
+
+  it 'keeps the previous snapshot when the snapshot URL fails' do
+    sync.call
+    server.on('/media', status: 404)
+    sync.call
+
+    assert_equal '20260924', ::PackmanNova::Sync::State.new(workdir:).snapshot
   end
 
   it 'reports no drift when nothing changed' do
@@ -102,10 +107,10 @@ describe ::PackmanNova::Sync do
     gpg = ::Object.new
     gpg.define_singleton_method(:public_key_from_private) { |encoded| "public of #{encoded}\n" }
     keyed = with_env('GPG_PRIVATE_KEY_BASE64' => private_key) { sync_config(dir, server) }
-    services = ::PackmanNova::Sync::Services.from_config(config: keyed, logger: null_logger, workdir: keyed.workdir, gpg: gpg)
+    services = ::PackmanNova::Sync::Services.from_config(config: keyed, logger: null_logger, workdir: keyed.workdir, gpg:)
     write_package(packages_dir, { 'name' => 'keyring', 'kind' => 'native', 'sources' => [{ 'file' => 'k.key', 'generated' => 'public-key' }] },
                   'keyring.spec' => "Name: keyring\n")
-    ::PackmanNova::Sync.new(config: keyed, logger: null_logger, packages_dir: packages_dir, services: services).call(packages: ['keyring'])
+    ::PackmanNova::Sync.new(config: keyed, logger: null_logger, packages_dir:, services:).call(packages: ['keyring'])
   end
 
   it 'derives generated public key sources from the private key' do
@@ -124,7 +129,7 @@ describe ::PackmanNova::Sync do
     report = sync.call
 
     assert report.rebuild_all_required
-    assert ::PackmanNova::Sync::State.new(workdir: workdir).load['rebuild_all_required']
+    assert ::PackmanNova::Sync::State.new(workdir:).load['rebuild_all_required']
   end
 
   it 'limits the run to the named packages' do

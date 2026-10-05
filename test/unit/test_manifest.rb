@@ -16,7 +16,7 @@ describe ::PackmanNova::Manifest do
 
   def manifest_error(yaml, name: 'pkg', files: { 'pkg.spec' => '' })
     with_tmpdir do |dir|
-      path = write_manifest(dir, name, yaml, files: files)
+      path = write_manifest(dir, name, yaml, files:)
       assert_raises(::PackmanNova::ManifestError) { ::PackmanNova::Manifest.load_file(path) }
     end
   end
@@ -34,8 +34,7 @@ describe ::PackmanNova::Manifest do
     end
 
     it 'parses link rules' do
-      assert_equal %w[_multibuild ffmpeg-8.changes], obs_link.link_rules.delete
-      assert obs_link.link_rules.deletes?('_multibuild')
+      assert_equal %w[_multibuild ffmpeg-8.changes], obs_link.link_delete
     end
 
     it 'defaults the origin project and spec name' do
@@ -85,7 +84,7 @@ describe ::PackmanNova::Manifest do
       assert_equal 'public-key', source.generated
     end
 
-    it 'lists vendored files without manifest, provenance and source files' do
+    it 'lists vendored files without manifest and source files' do
       assert_equal(%w[build_what_we_need_only.patch gstreamer-plugins-bad-codecs.spec], native.vendored_files.map { |path| ::File.basename(path) })
       assert_equal native.dir, ::File.dirname(native.vendored_files.first)
     end
@@ -175,10 +174,6 @@ describe ::PackmanNova::Manifest::Loader do
 
   it 'loads all manifests sorted by name' do
     assert_equal %w[ffmpeg-8 gstreamer-plugins-bad-codecs], loader.all.map(&:name)
-  end
-
-  it 'filters enabled manifests' do
-    assert_equal %w[ffmpeg-8], loader.enabled.map(&:name)
   end
 
   it 'skips directories without package.yml and ignores _ and . dirs' do

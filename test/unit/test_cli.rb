@@ -6,7 +6,7 @@ describe ::PackmanNova::Cli do
   def run_cli(*argv, env: { 'PACKMAN_NOVA_WORKDIR' => nil })
     out = ::StringIO.new
     err = ::StringIO.new
-    code = with_env(env) { ::PackmanNova::Cli.new(argv: argv, out: out, err: err).call }
+    code = with_env(env) { ::PackmanNova::Cli.new(argv:, out:, err:).call }
     [code, out.string, err.string]
   end
 

@@ -32,7 +32,7 @@ module PackmanNova
       end
 
       def gpg
-        @gpg ||= ::PackmanNova::Gpg.build(config: config, logger: logger)
+        @gpg ||= ::PackmanNova::Gpg.build(config:, logger:)
       end
     end
   end

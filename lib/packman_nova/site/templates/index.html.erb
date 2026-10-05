@@ -21,7 +21,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
     <button type="button" data-mode="dark">Dark</button>
   </div>
   <h1><%= h title %></h1>
-  <p>Packman Essentials, rebuilt from public sources. Not affiliated with Packman or openSUSE.</p>
+  <p><%= h description %> Not affiliated with Packman or openSUSE.</p>
   <p>Packman <a href="https://lists.links2linux.de/pipermail/packman/2026-August/018314.html">shuts down</a> on 2026-12-31. This repo keeps the packages going.</p>
 <%- if pipeline_api_url -%>
   <p id="pipeline" class="pipeline" data-api="<%= h pipeline_api_url %>" hidden></p>
@@ -66,7 +66,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
 <%- baseurls.each do |baseurl| -%>
     <dt><%= h baseurl.arch %></dt><dd><code><%= h baseurl.url %></code></dd>
 <%- end -%>
-    <dt>Tumbleweed</dt><dd><% if tumbleweed_snapshot %><%= h tumbleweed_snapshot %><% else %>unknown<% end %></dd>
+    <dt><%= h distro_name %></dt><dd><% if distro_snapshot %><%= h distro_snapshot %><% else %>unknown<% end %></dd>
     <dt>Updated</dt><dd><% if generated_at %><time datetime="<%= h generated_at_iso %>"><%= h generated_at %></time><% else %>unknown<% end %></dd>
     <dt>Run</dt><dd><%= h run %><% if release %> <code><%= h release %></code><% end %></dd>
     <dt>Packages</dt><dd><%= h totals.succeeded %> of <%= h totals.packages %> built</dd>

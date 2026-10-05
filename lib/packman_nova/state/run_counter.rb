@@ -20,16 +20,12 @@ module PackmanNova
         run.is_a?(::Integer) && run.positive? ? run : 0
       end
 
-      def last_release
-        read['last_release']
-      end
-
       def peek(floor: 0)
         [current, floor.to_i].max + 1
       end
 
       def next!(floor: 0)
-        run = peek(floor: floor)
+        run = peek(floor:)
         release = block_given? ? yield(run) : nil
         ::PackmanNova::Utils::JsonFile.write(path, { 'run' => run, 'updated_at' => clock.call.iso8601, 'last_release' => release })
         run

@@ -29,6 +29,14 @@ module PackmanNova
         ::PackmanNova::Utils::JsonFile.write(path, data)
       end
 
+      def packages = load['packages'] || {}
+      def snapshot = load['distro_snapshot']
+      def rebuild_all_required? = load['rebuild_all_required'] == true
+
+      def clear_rebuild_all!
+        save(load.merge('rebuild_all_required' => false)) if ::File.file?(path)
+      end
+
       private
 
       attr_reader :workdir

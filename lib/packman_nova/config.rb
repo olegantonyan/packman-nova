@@ -11,9 +11,8 @@ module PackmanNova
       workdir: ::String,
       offline: BOOLEAN,
       project_name: ::String,
-      vendor: ::String,
       distro: {
-        id: ::String, suse_version: ::Integer, arches: STRINGS, repos: STRINGS, snapshot_url: ::String,
+        id: ::String, name: ::String, suse_version: ::Integer, arches: STRINGS, repos: STRINGS, snapshot_url: ::String,
         baselibs: { arch: ::String, repos: STRINGS }
       },
       release: { template: ::String },
@@ -43,7 +42,7 @@ module PackmanNova
 
     class << self
       def load(path: nil, overrides: {}, cwd: ::Dir.pwd)
-        ::PackmanNova::Config::Loader.new(path: path, overrides: overrides, cwd: cwd).call
+        ::PackmanNova::Config::Loader.new(path:, overrides:, cwd:).call
       end
     end
 
@@ -62,14 +61,18 @@ module PackmanNova
       define_method(:"#{name}?") { root.public_send(name) } if type == BOOLEAN
     end
 
-    def workdir_path
-      root.workdir
+    def workdir
+      raise ::PackmanNova::ConfigError, 'workdir is not set (PACKMAN_NOVA_WORKDIR or --workdir)' if root.workdir.empty?
+
+      ::PackmanNova::Workdir.new(root: ::File.expand_path(root.workdir))
     end
 
-    def workdir
-      raise ::PackmanNova::ConfigError, 'workdir is not set (PACKMAN_NOVA_WORKDIR or --workdir)' if workdir_path.empty?
+    def results_dir(arch)
+      workdir.results_dir(reponame: pbuild.reponame, arch:)
+    end
 
-      ::PackmanNova::Workdir.new(root: ::File.expand_path(workdir_path))
+    def packages_dir
+      resolve('packages')
     end
 
     def secrets
@@ -80,16 +83,8 @@ module PackmanNova
       ].reject(&:empty?)
     end
 
-    def project_root
-      PROJECT_ROOT
-    end
-
     def resolve(path)
-      ::File.expand_path(path, project_root)
-    end
-
-    def to_h
-      root.to_h
+      ::File.expand_path(path, PROJECT_ROOT)
     end
 
     private

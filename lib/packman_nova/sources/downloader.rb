@@ -6,29 +6,24 @@ module PackmanNova
       class << self
         def from_config(config:, logger:)
           http = ::PackmanNova::Utils::Http.new(
-            logger: logger, timeout_sec: config.sources.http.timeout_sec, retries: config.sources.http.retries, offline: config.offline?
+            logger:, timeout_sec: config.sources.http.timeout_sec, retries: config.sources.http.retries, offline: config.offline?
           )
-          new(http: http, logger: logger, offline: config.offline?)
+          new(http:, logger:)
         end
       end
 
-      def initialize(http:, logger:, offline: false)
+      def initialize(http:, logger:)
         @http = http
         @logger = logger
-        @offline = offline
       end
 
       def offline?
-        offline
+        http.offline?
       end
 
       def get(url)
         logger.debug("GET #{url}")
         http.get(url)
-      end
-
-      def head(url)
-        http.head(url)
       end
 
       def download(url, path)
@@ -38,7 +33,7 @@ module PackmanNova
 
       private
 
-      attr_reader :http, :logger, :offline
+      attr_reader :http, :logger
     end
   end
 end

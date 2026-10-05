@@ -1,13 +1,10 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-require_relative 'site_test_support'
 
-describe ::PackmanNova::Site::Generator do
-  include ::SiteTestSupport
-
+describe ::PackmanNova::Site::Generator, :site do
   let(:state) { site_state }
-  let(:generator) { ::PackmanNova::Site::Generator.new(config: site_config, state: state, logger: null_logger) }
+  let(:generator) { ::PackmanNova::Site::Generator.new(config: site_config, state:, logger: null_logger) }
   let(:html) { generator.render_index }
 
   it 'renders the install commands' do

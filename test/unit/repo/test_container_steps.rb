@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-require_relative '../publish/fakes'
+require 'support/publish_fakes'
 
 describe ::PackmanNova::Repo::Toolbox do
   let(:runtime) { ::PackmanNova::Container::Runtime.new(executable: 'podman') }
-  let(:runner) { ::PackmanNova::Container::Runner.new(runtime: runtime, logger: null_logger, subprocess: ::PackmanNova::Utils::Subprocess.new(logger: null_logger)) }
-  let(:toolbox) { ::PackmanNova::Repo::Toolbox.new(runner: runner, image: 'img', extra_args: ['--net=none']) }
+  let(:runner) { ::PackmanNova::Container::Runner.new(runtime:, logger: null_logger, subprocess: ::PackmanNova::Utils::Subprocess.new(logger: null_logger)) }
+  let(:toolbox) { ::PackmanNova::Repo::Toolbox.new(runner:, image: 'img', extra_args: ['--net=none']) }
 
   it 'runs bash scripts with positional arguments in the builder image' do
     options = toolbox.command('echo "$@"', mounts: [::PackmanNova::Container::Mount.new(source: '/a', target: '/repo')], args: %w[x y], env: { 'K' => 'v' })
@@ -37,14 +37,14 @@ describe ::PackmanNova::Repo::RpmQuery do
   end
 
   it 'queries files mounted read-only and fails on missing answers' do
-    result = ::PackmanNova::Repo::RpmQuery.new(toolbox: toolbox).call(dir: '/stage', files: ['x86_64/a-1.0-2.x86_64.rpm'])
+    result = ::PackmanNova::Repo::RpmQuery.new(toolbox:).call(dir: '/stage', files: ['x86_64/a-1.0-2.x86_64.rpm'])
     _kind, script, mounts, _args, env = toolbox.calls.last
 
     assert_equal '1.0', result.fetch('x86_64/a-1.0-2.x86_64.rpm').version
     assert_equal ::PackmanNova::Repo::RpmQuery::SCRIPT, script
     assert_predicate mounts.first, :readonly?
     assert_equal ::PackmanNova::Repo::RpmQuery::FORMAT, env.fetch('QUERY_FORMAT')
-    assert_empty ::PackmanNova::Repo::RpmQuery.new(toolbox: toolbox).call(dir: '/stage', files: [])
+    assert_empty ::PackmanNova::Repo::RpmQuery.new(toolbox:).call(dir: '/stage', files: [])
 
     silent = ::Object.new
     def silent.capture(*, **) = ''
@@ -58,7 +58,7 @@ describe ::PackmanNova::Repo::Signer do
       ::FileUtils.mkdir_p(::File.join(dir, 'x86_64'))
       ::File.write(::File.join(dir, 'x86_64', 'a-1-1.x86_64.rpm'), 'rpm')
       toolbox = PublishFakes::Toolbox.new
-      ::PackmanNova::Repo::Signer.new(toolbox: toolbox).call(dir: dir, files: ['x86_64/a-1-1.x86_64.rpm'], key_dir: '/keys', key_id: PublishFakes::KEY_ID)
+      ::PackmanNova::Repo::Signer.new(toolbox:).call(dir:, files: ['x86_64/a-1-1.x86_64.rpm'], key_dir: '/keys', key_id: PublishFakes::KEY_ID)
       _kind, script, mounts, args, env = toolbox.calls.last
 
       assert_equal ::PackmanNova::Repo::Signer::SCRIPT, script
@@ -73,7 +73,7 @@ describe ::PackmanNova::Repo::Signer do
       ::File.write(::File.join(dir, 'a.rpm'), 'rpm')
       signer = ::PackmanNova::Repo::Signer.new(toolbox: PublishFakes::Toolbox.new(verify: 'NOKEY'))
 
-      assert_raises(::PackmanNova::PublishError) { signer.call(dir: dir, files: ['a.rpm'], key_dir: '/k', key_id: PublishFakes::KEY_ID) }
+      assert_raises(::PackmanNova::PublishError) { signer.call(dir:, files: ['a.rpm'], key_dir: '/k', key_id: PublishFakes::KEY_ID) }
     end
   end
 
@@ -91,7 +91,7 @@ describe ::PackmanNova::Repo::Createrepo do
   it 'creates metadata for each dir and signs it only with a key' do
     with_tmpdir do |dir|
       toolbox = PublishFakes::Toolbox.new
-      createrepo = ::PackmanNova::Repo::Createrepo.new(toolbox: toolbox)
+      createrepo = ::PackmanNova::Repo::Createrepo.new(toolbox:)
       createrepo.call(repo_dir: dir, dirs: %w[x86_64 src], key_dir: '/keys')
 
       assert ::File.file?(::File.join(dir, 'src', 'repodata', 'repomd.xml.asc'))

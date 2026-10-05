@@ -13,10 +13,6 @@ module PackmanNova
           @logger = logger
         end
 
-        def name
-          self.class.name.split('::').last.downcase
-        end
-
         def remote?
           false
         end

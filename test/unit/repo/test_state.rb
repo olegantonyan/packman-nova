@@ -5,7 +5,7 @@ require 'test_helper'
 describe ::PackmanNova::Repo::State do
   let(:data) do
     {
-      'schema' => 1, 'generated_at' => '2026-09-29T10:00:00Z', 'run' => 3, 'release' => '1699.3.nova.1', 'tumbleweed_snapshot' => '20260924',
+      'schema' => 1, 'generated_at' => '2026-09-29T10:00:00Z', 'run' => 3, 'release' => '1699.3.nova.1', 'distro_snapshot' => '20260924',
       'key' => { 'id' => 'ABCD', 'fingerprint' => 'FFFF' },
       'files' => {
         'x86_64/a-1-1.x86_64.rpm' => { 'sha256' => 's1', 'size' => 1, 'package' => 'a' },
@@ -24,8 +24,6 @@ describe ::PackmanNova::Repo::State do
 
       assert_equal data, state.to_h
       assert_equal 3, state.run
-      assert_equal 'ABCD', state.key_id
-      assert_equal ['src/a-1-1.src.rpm', 'x86_64/a-1-1.x86_64.rpm'], state.files_of('a')
       assert_equal %w[a b c], state.package_names
     end
   end
@@ -34,9 +32,9 @@ describe ::PackmanNova::Repo::State do
     with_tmpdir do |dir|
       state = ::PackmanNova::Repo::State.load(::File.join(dir, 'state.json'))
 
-      assert_predicate state, :empty?
       assert_nil state.run
       assert_empty state.files
+      assert_empty state.packages
     end
   end
 

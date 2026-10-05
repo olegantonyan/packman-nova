@@ -1,7 +1,0 @@
-<project name="openSUSE.org">
-  <title>build.openSUSE.org</title>
-  <description>This project allows access to all resources on build.opensuse.org OBS instance. This is needed to build against base distributions.</description>
-  <remoteurl>https://api.opensuse.org/public</remoteurl>
-  <person userid="Admin" role="maintainer"/>
-  <person userid="Admin" role="bugowner"/>
-</project>

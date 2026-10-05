@@ -7,7 +7,7 @@ module PackmanNova
     class Loader
       USER_FILE_NAME = 'packman-nova.yml'
       DOTENV_FILE_NAME = '.env'
-      IMPLICIT_DEFAULTS = { offline: false }.freeze
+      ENV_PATTERN = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/
       ENV_OVERRIDES = {
         'PACKMAN_NOVA_WORKDIR' => %i[workdir],
         'PACKMAN_NOVA_CONTAINER_RUNTIME' => %i[container runtime],
@@ -15,26 +15,18 @@ module PackmanNova
         'PACKMAN_NOVA_REPO_PATH' => %i[repository localfs path]
       }.freeze
 
-      class << self
-        def deep_merge(base, override)
-          base.merge(override) do |_key, old, new|
-            old.is_a?(::Hash) && new.is_a?(::Hash) ? deep_merge(old, new) : new
-          end
-        end
-      end
-
       def initialize(path:, overrides:, cwd:, env: ::ENV)
         @path = path
         @overrides = overrides
         @cwd = cwd
         @env = env
+        @used = []
       end
 
       def call
         load_dotenv
-        expander = ::PackmanNova::Config::EnvExpander.new(env: env)
-        merged = [*files.map { |file| expander.expand(read_file(file)) }, env_overrides, overrides.compact].reduce(IMPLICIT_DEFAULTS) { |acc, layer| merge(acc, layer) }
-        ::PackmanNova::Config.new(merged, files: files, env_vars_used: expander.used_names, env_vars_missing: expander.missing_names)
+        merged = [*files.map { |file| expand(read_file(file)) }, env_overrides, overrides.compact].reduce { |acc, layer| merge(acc, layer) }
+        ::PackmanNova::Config.new(merged, files:, env_vars_used: used.uniq.sort, env_vars_missing: missing_names)
       end
 
       def files
@@ -43,7 +35,20 @@ module PackmanNova
 
       private
 
-      attr_reader :path, :overrides, :cwd, :env
+      attr_reader :path, :overrides, :cwd, :env, :used
+
+      def missing_names
+        used.uniq.sort.select { |name| env.fetch(name, '').empty? }
+      end
+
+      def expand(value)
+        case value
+        when ::Hash then value.transform_values { |nested| expand(nested) }
+        when ::Array then value.map { |nested| expand(nested) }
+        when ::String then value.gsub(ENV_PATTERN) { env.fetch(used.push(::Regexp.last_match(1)).last, '') }
+        else value
+        end
+      end
 
       def load_dotenv
         dotenv_path = ::File.join(cwd, DOTENV_FILE_NAME)
@@ -75,7 +80,9 @@ module PackmanNova
       end
 
       def merge(base, override)
-        self.class.deep_merge(base, override)
+        base.merge(override) do |_key, old, new|
+          old.is_a?(::Hash) && new.is_a?(::Hash) ? merge(old, new) : new
+        end
       end
     end
   end

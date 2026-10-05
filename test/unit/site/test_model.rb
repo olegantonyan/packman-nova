@@ -1,13 +1,10 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-require_relative 'site_test_support'
 
-describe ::PackmanNova::Site::Model do
-  include ::SiteTestSupport
-
+describe ::PackmanNova::Site::Model, :site do
   let(:state) { site_state }
-  let(:model) { ::PackmanNova::Site::Model.new(config: site_config, state: state) }
+  let(:model) { ::PackmanNova::Site::Model.new(config: site_config, state:) }
   let(:rows) { model.packages.to_h { |row| [row.fetch('name'), row] } }
 
   it 'derives URLs from the public URL' do
@@ -20,13 +17,13 @@ describe ::PackmanNova::Site::Model do
   it 'falls back to a file URL of the localfs path' do
     config = site_config('PACKMAN_NOVA_PUBLIC_URL' => nil, 'PACKMAN_NOVA_REPO_PATH' => '/srv/nova')
 
-    assert_equal 'file:///srv/nova/opensuse_tumbleweed/essentials', ::PackmanNova::Site::Model.new(config: config, state: state).repo_url
+    assert_equal 'file:///srv/nova/opensuse_tumbleweed/essentials', ::PackmanNova::Site::Model.new(config:, state:).repo_url
   end
 
   it 'falls back to the workdir repo dir when no localfs path is set' do
     config = site_config('PACKMAN_NOVA_PUBLIC_URL' => nil)
 
-    assert_equal 'file:///w/repo', ::PackmanNova::Site::Model.new(config: config, state: state).public_url
+    assert_equal 'file:///w/repo', ::PackmanNova::Site::Model.new(config:, state:).public_url
   end
 
   it 'builds the install commands' do
@@ -100,8 +97,8 @@ describe ::PackmanNova::Site::Model do
   end
 
   it 'exposes every template variable' do
-    assert_equal %w[baseurls commands description generated_at generated_at_iso key key_url packages pipeline_api_url public_url release repo_file_url repo_url
-                    run slug source_url title totals tumbleweed_snapshot], model.to_h.keys.sort
+    assert_equal %w[baseurls commands description distro_name distro_snapshot generated_at generated_at_iso key key_url packages pipeline_api_url public_url release
+                    repo_file_url repo_url run slug source_url title totals], model.to_h.keys.sort
     assert_equal '2026-09-29 08:15 UTC', model.to_h.fetch('generated_at')
     assert_equal 'https://github.com/olegantonyan/packman-nova', model.to_h.fetch('source_url')
     assert_equal 'https://api.github.com/repos/olegantonyan/packman-nova/actions/workflows/build-publish.yml/runs?per_page=1', model.pipeline_api_url
@@ -111,9 +108,9 @@ describe ::PackmanNova::Site::Model do
     with_tmpdir do |dir|
       path = ::File.join(dir, 'packman-nova.yml')
       ::File.write(path, "site:\n  source_url: https://github.com/example/packman-nova\n")
-      config = load_config(env: ::SiteTestSupport::PUBLIC_ENV, path: path)
+      config = load_config(env: ::SiteSpec::PUBLIC_ENV, path:)
 
-      assert_equal 'https://github.com/example/packman-nova', ::PackmanNova::Site::Model.new(config: config, state: state).source_url
+      assert_equal 'https://github.com/example/packman-nova', ::PackmanNova::Site::Model.new(config:, state:).source_url
     end
   end
 
@@ -121,9 +118,9 @@ describe ::PackmanNova::Site::Model do
     with_tmpdir do |dir|
       path = ::File.join(dir, 'packman-nova.yml')
       ::File.write(path, "site:\n  source_url: https://gitlab.com/example/packman-nova\n")
-      config = load_config(env: ::SiteTestSupport::PUBLIC_ENV, path: path)
+      config = load_config(env: ::SiteSpec::PUBLIC_ENV, path:)
 
-      assert_nil ::PackmanNova::Site::Model.new(config: config, state: state).pipeline_api_url
+      assert_nil ::PackmanNova::Site::Model.new(config:, state:).pipeline_api_url
     end
   end
 end

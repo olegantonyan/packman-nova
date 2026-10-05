@@ -3,19 +3,11 @@
 module PackmanNova
   module Repo
     class RepoFile
-      DISTRO_NAMES = { 'opensuse_tumbleweed' => 'openSUSE Tumbleweed' }.freeze
       PRIORITY = 80
 
-      class << self
-        def base_url(config:, root:)
-          url = config.repository.public_url.to_s.strip
-          url.empty? ? "file://#{::File.expand_path(root)}" : url.delete_suffix('/')
-        end
-      end
-
-      def initialize(config:, base_url:, signed: true)
+      def initialize(config:, layout:, signed: true)
         @config = config
-        @base_url = base_url
+        @layout = layout
         @signed = signed
       end
 
@@ -24,7 +16,7 @@ module PackmanNova
           [#{config.repository.slug}]
           name=#{name}
           type=rpm-md
-          baseurl=#{base_url}/#{repository_path}/$basearch
+          baseurl=#{base_url}/#{layout.path}/$basearch
           gpgcheck=#{signed ? 1 : 0}
           gpgkey=#{base_url}/#{::PackmanNova::Repo::Layout::PUBLIC_KEY_FILE}
           enabled=1
@@ -34,16 +26,16 @@ module PackmanNova
       end
 
       def name
-        label = ::File.basename(repository_path).split(/[-_]/).map(&:capitalize).join(' ')
-        "#{config.project_name} #{label} (#{DISTRO_NAMES.fetch(config.distro.id, config.distro.id)})"
+        label = ::File.basename(layout.path).split(/[-_]/).map(&:capitalize).join(' ')
+        "#{config.project_name} #{label} (#{config.distro.name})"
       end
 
       private
 
-      attr_reader :config, :base_url, :signed
+      attr_reader :config, :layout, :signed
 
-      def repository_path
-        config.repository.path.delete_prefix('/').delete_suffix('/')
+      def base_url
+        layout.public_url(config.repository.public_url)
       end
     end
   end

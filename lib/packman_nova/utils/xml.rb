@@ -17,10 +17,6 @@ module PackmanNova
         ::REXML::XPath.match(node, xpath).map { |element| element.attributes.each_with_object({}) { |(name, value), acc| acc[name] = value } }
       end
 
-      def attribute(node, xpath, name)
-        ::REXML::XPath.first(node, xpath)&.attributes&.[](name)
-      end
-
       def text(node, xpath)
         ::REXML::XPath.first(node, xpath)&.text
       end

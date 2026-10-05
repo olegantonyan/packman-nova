@@ -16,10 +16,6 @@ module PackmanNova
         manifests
       end
 
-      def enabled
-        all.select(&:enabled?)
-      end
-
       def find(name)
         all.find { |manifest| manifest.name == name } || raise(::PackmanNova::ManifestError, "unknown package: #{name}")
       end
@@ -50,7 +46,7 @@ module PackmanNova
         path = ::File.join(dir, ::PackmanNova::Manifest::FILE_NAME)
         return acc[:skipped] << ::File.basename(dir) unless ::File.file?(path)
 
-        acc[:manifests] << ::PackmanNova::Manifest.load_file(path, require_checksums: require_checksums)
+        acc[:manifests] << ::PackmanNova::Manifest.load_file(path, require_checksums:)
       rescue ::PackmanNova::ManifestError => e
         acc[:errors] << e
       end

@@ -5,7 +5,9 @@ Packman's ffmpeg, vlc, libheif, libquicktime, xine-lib, shairplay are **unmodifi
 The `_link` files contain no patches (ffmpeg links only delete Factory's `_multibuild` and `.changes`).
 All codec differences come from the Essentials project config, which is inherited by every project below it.
 
-Full file: `reference/pmbs/Essentials._config`. The effective part for Tumbleweed:
+Raw evidence (`reference/`: PMBS `Essentials._config`, Factory specs, Essentials source snapshot) was removed; see `git show c4ee8c6:reference/...`.
+
+Effective part of PMBS `Essentials/_config` for Tumbleweed:
 
 ```
 Release: %{suse_version}.<CI_CNT>.pm.<B_CNT>
@@ -47,7 +49,7 @@ Macros:
 ```
 The `%define` block affects OBS dependency expansion; the `Macros:` block is written to the build root's rpm macros. A replacement needs both effects: expand BuildRequires with these macros, and build with them.
 
-## Evidence in Factory specs (reference/opensuse-factory/)
+## Evidence in Factory specs
 
 ### ffmpeg-8.spec
 - `%bcond_with amf_sdk amrwb cuda_sdk fdk_aac_dlopen opencore smbclient vvenc x264 x265 xvid` default off; `%_with_<name> 1` in macros flips them on (standard rpm bcond semantics).
@@ -66,10 +68,10 @@ The `%define` block affects OBS dependency expansion; the `Macros:` block is wri
 - `gstreamer-plugins-bad-codecs`: Factory gst-plugins-bad tarball + `build_what_we_need_only.patch` that guts `meson.build` to build only `ext/{faac,de265,openaptx,x265}`; installs `libgstde265.so libgstfaac.so libgstopenaptx.so libgstx265.so`; `Supplements: gstreamer-plugins-bad`.
 - `gstreamer-plugins-ugly-codecs`: same idea, x264 plugin only, no patch.
 - `libx264` (multibuild: lib + `x264` CLI flavor needing ffmpeg + l-smash), `x265` (tar_scm from bitbucket, arm patches, pkgconfig patch), `libde265`, `kvazaar`, `fdk-aac`, `faac`, `vo-aacenc`, `amrnb`, `amrwb`, `dcadec`, `l-smash`, `libopenaptx`, `pipewire-aptx`, `gpac`, `rtmpdump`, `libaacs`, `libbdplus`, `libdvdcss2`, `SVT-AV1` (own copy), `broadcom-wl`, `r8168`, firmware and blob packages.
-- Specs, `_service`, patches and `.changes` for all of them: `reference/pmbs/essentials-src-snapshot/<pkg>/`.
+- Specs, `_service`, patches and `.changes` for all of them are vendored in `packages/<pkg>/`.
 
 ## Things that will bite
-- Some Packman specs use `%packman_bs` or `BUILD_ORIG_ADDON`; grep the snapshot before dropping a macro.
+- Some Packman specs use `%packman_bs` or `BUILD_ORIG_ADDON`; grep `packages/` before dropping a macro.
 - packman-nova adds `Prefer: libopenaptx-devel` (not in PMBS): since 2026-10-02 Tumbleweed ships `libfreeaptx-devel`, which also provides `pkgconfig(libfreeaptx)`, so pipewire-aptx was unresolvable. Packman's rpm links `libopenaptx.so.0`.
 - -32bit: `%ifarch i586` block in `prjconf/packman-nova-macros.conf`. `BuildFlags: onlybuild:` limits the i586 pass to the 21 packages with a `baselibs.conf` (Packman's `-32bit` set minus ffmpeg-3) plus the ffmpeg-mini solver stub; add a package there when it gains one. `VMinstall: !kernel-obs-build` because OBS exports that package to i586 from x86_64 and the i586 port lacks it; chroot builds do not need it.
 - `Prefer:` lines resolve "have choice" errors; outside OBS the equivalent is pinning exact package names in the build root or using `zypper --solver` options in the build container.

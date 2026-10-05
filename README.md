@@ -52,7 +52,7 @@ with the new key; users accept it on the next `zypper ref`.
 - `packages/<name>/` package manifests and vendored specs (tarballs are downloaded by `sync`).
 - `prjconf/` Factory config fallback and the Packman macro set.
 - `container/` builder image (Tumbleweed + pbuild).
-- `docs/` findings and tool docs; `reference/` raw evidence from PMBS, OBS and mirrors; `tools/` helper scripts.
+- `docs/` Packman build config findings, replacement plan, CLI reference.
 - `.github/workflows/` tests, and build-publish (nightly, or manual trigger).
 
 "Packman" is their name: never reuse it for the repo, vendor string or key.

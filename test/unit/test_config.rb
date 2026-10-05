@@ -46,6 +46,16 @@ describe ::PackmanNova::Config do
     assert_includes config.env_vars_used, 'GPG_PRIVATE_KEY_BASE64'
   end
 
+  it 'expands ${VAR} inside strings and lists of a user file, leaving $VAR alone' do
+    with_tmpdir do |dir|
+      ::File.write(::File.join(dir, 'packman-nova.yml'), "project_name: x-${NOVA_A}-y\ndistro:\n  arches: ['${NOVA_A}', '$NOVA_A']\n")
+      config = load_config(env: blank_env.merge('NOVA_A' => 'alpha'), cwd: dir)
+
+      assert_equal 'x-alpha-y', config.project_name
+      assert_equal %w[alpha $NOVA_A], config.distro.arches
+    end
+  end
+
   it 'reads variables from .env in the working directory' do
     with_tmpdir do |dir|
       ::File.write(::File.join(dir, '.env'), "PACKMAN_NOVA_PUBLIC_URL=https://from-dotenv.example\n")
@@ -74,10 +84,10 @@ describe ::PackmanNova::Config do
 
   it 'picks up ./packman-nova.yml from the working directory' do
     with_tmpdir do |dir|
-      ::File.write(::File.join(dir, 'packman-nova.yml'), "vendor: from-cwd\n")
+      ::File.write(::File.join(dir, 'packman-nova.yml'), "project_name: from-cwd\n")
       config = load_config(env: blank_env, cwd: dir)
 
-      assert_equal 'from-cwd', config.vendor
+      assert_equal 'from-cwd', config.project_name
     end
   end
 
@@ -128,7 +138,7 @@ describe ::PackmanNova::Config do
   it 'resolves repository-relative paths against the project root' do
     config = load_config(env: blank_env)
 
-    assert_equal ::File.join(config.project_root, 'container', 'Containerfile'), config.resolve(config.container.containerfile)
+    assert_equal ::File.join(::PackmanNova::Config::PROJECT_ROOT, 'container', 'Containerfile'), config.resolve(config.container.containerfile)
     assert_equal '/abs/path', config.resolve('/abs/path')
   end
 end

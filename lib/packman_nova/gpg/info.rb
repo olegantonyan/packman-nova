@@ -35,10 +35,6 @@ module PackmanNova
       def secret?
         secret
       end
-
-      def short_id
-        key_id[-8..].downcase
-      end
     end
   end
 end

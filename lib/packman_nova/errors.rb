@@ -17,26 +17,9 @@ module PackmanNova
 
   class LockError < ::PackmanNova::Error; end
 
-  class NotImplementedError < ::PackmanNova::Error; end
+  class DownloadError < ::PackmanNova::Error; end
 
-  class DownloadError < ::PackmanNova::Error
-    attr_reader :url, :attempts
-
-    def initialize(message = nil, url:, attempts:)
-      @url = url
-      @attempts = attempts
-      super(message || "download failed after #{attempts} attempt(s): #{url}")
-    end
-  end
-
-  class BuildError < ::PackmanNova::Error
-    attr_reader :failed_packages
-
-    def initialize(message = nil, failed_packages:)
-      @failed_packages = failed_packages
-      super(message || "build failed: #{failed_packages.join(', ')}")
-    end
-  end
+  class BuildError < ::PackmanNova::Error; end
 
   class SubprocessError < ::PackmanNova::Error
     OUTPUT_TAIL_LINES = 20

@@ -4,7 +4,7 @@ require 'test_helper'
 
 describe ::PackmanNova::Site::Template do
   def render(source, assigns = {})
-    ::PackmanNova::Site::Template.new(source: source, name: 'snippet').render(assigns)
+    ::PackmanNova::Site::Template.new(source:, name: 'snippet').render(assigns)
   end
 
   it 'renders escaped assigns' do

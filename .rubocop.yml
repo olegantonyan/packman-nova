@@ -12,7 +12,6 @@ AllCops:
   - '.cache/**/*'
   - 'out/**/*'
   - 'tmp/**/*'
-  - 'reference/**/*'
   - 'packages/**/*'
   - 'test/fixtures/**/*'
 
@@ -73,3 +72,9 @@ Metrics/ParameterLists:
 Style/ClassMethodsDefinitions:
   Enabled: true
   EnforcedStyle: self_class
+
+Metrics/ClassLength:
+  Max: 200
+
+Style/HashSyntax:
+  EnforcedShorthandSyntax: always

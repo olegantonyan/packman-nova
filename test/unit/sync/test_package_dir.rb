@@ -9,7 +9,7 @@ describe ::PackmanNova::Sync::PackageDir do
   let(:spec) { ::File.join(dir, 'demo.spec').tap { |path| ::File.write(path, 'spec') } }
   let(:files) do
     [
-      ::PackmanNova::Sync::ExpectedFile.new(name: 'demo.tar.gz', source: blob, sha256: ::PackmanNova::Utils::Digest.sha256_string('tarball'), blob: true),
+      ::PackmanNova::Sync::ExpectedFile.new(name: 'demo.tar.gz', source: blob, sha256: ::Digest::SHA256.hexdigest('tarball'), blob: true),
       ::PackmanNova::Sync::ExpectedFile.new(name: 'demo.spec', source: spec, md5: ::PackmanNova::Utils::Digest.md5_string('spec'))
     ]
   end
@@ -19,7 +19,7 @@ describe ::PackmanNova::Sync::PackageDir do
   it 'materializes files atomically and matches them afterwards' do
     package_dir.materialize(files)
 
-    assert_predicate package_dir, :exist?
+    assert ::File.directory?(package_dir.path)
     assert package_dir.matches?(files)
     assert_equal ['demo'], ::Dir.children(::File.join(dir, 'project'))
   end

@@ -3,25 +3,34 @@
 module PackmanNova
   class Manifest
     FILE_NAME = 'package.yml'
-    PROVENANCE_FILE_NAME = 'provenance.yaml'
     OBS_LINK = 'obs-link'
     NATIVE = 'native'
 
+    Origin = ::Data.define(:project, :package, :pin) do
+      def to_s
+        "#{project}/#{package}"
+      end
+    end
+
     class << self
+      def base_name(key)
+        key.split(':', 2).first
+      end
+
       def load_file(path, require_checksums: true)
         dir = ::File.dirname(::File.expand_path(path))
         data = ::PackmanNova::Utils::Yaml.load_file(path, symbolize_names: true)
-        new(data, dir: dir, require_checksums: require_checksums)
+        new(data, dir:, require_checksums:)
       rescue ::Psych::Exception => e
         raise ::PackmanNova::ManifestError, "package #{::File.basename(dir)}: invalid YAML: #{e.message}"
       end
     end
 
-    attr_reader :name, :kind, :tier, :tags, :notes, :origin, :link_rules, :sources, :spec_name, :dir
+    attr_reader :name, :kind, :tier, :tags, :notes, :origin, :link_delete, :sources, :spec_name, :dir
 
     def initialize(data, dir:, require_checksums: true)
       @dir = ::File.expand_path(dir)
-      attributes = ::PackmanNova::Manifest::Parser.new(data, label: ::File.basename(@dir), require_checksums: require_checksums).call
+      attributes = ::PackmanNova::Manifest::Parser.new(data, label: ::File.basename(@dir), require_checksums:).call
       attributes.each { |key, value| instance_variable_set(:"@#{key}", value.frozen? ? value : value.freeze) }
       validate_spec!
       freeze
@@ -40,7 +49,7 @@ module PackmanNova
     end
 
     def vendored_files
-      excluded = [FILE_NAME, PROVENANCE_FILE_NAME, *sources.map(&:file)]
+      excluded = [FILE_NAME, *sources.map(&:file)]
       ::Dir.children(dir).sort.reject { |entry| entry.start_with?('.') || excluded.include?(entry) }
            .map { |entry| ::File.join(dir, entry) }.select { |path| ::File.file?(path) }
     end

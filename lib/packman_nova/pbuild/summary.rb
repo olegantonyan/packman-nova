@@ -7,10 +7,6 @@ module PackmanNova
       REASON_WIDTH = 100
 
       class << self
-        def failed_packages(record)
-          record.fetch('packages', {}).select { |_key, entry| ::PackmanNova::Pbuild::ResultParser::FAILURE_CODES.include?(entry['code']) }.keys
-        end
-
         def duration(seconds)
           return nil unless seconds
 
@@ -26,7 +22,7 @@ module PackmanNova
         rows = record.fetch('packages', {}).map do |key, entry|
           [key, entry['code'], entry.fetch('rpms', []).size + entry.dig('baselibs', 'rpms').to_a.size, self.class.duration(entry['duration_sec']), reason(entry)]
         end
-        "#{::PackmanNova::Pbuild::Table.new(headers: HEADERS, rows: rows)}#{footer}\n"
+        "#{::PackmanNova::Pbuild::Table.new(headers: HEADERS, rows:)}#{footer}\n"
       end
 
       private

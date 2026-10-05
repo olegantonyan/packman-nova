@@ -14,10 +14,6 @@ module PackmanNova
         freeze
       end
 
-      def to_h
-        values.transform_values { |value| value.is_a?(::PackmanNova::Config::Section) ? value.to_h : value }
-      end
-
       private
 
       attr_reader :values

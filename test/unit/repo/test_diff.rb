@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-require_relative '../publish/fakes'
+require 'support/publish_fakes'
 
 describe ::PackmanNova::Repo::Diff do
   let(:tmp) { ::Dir.mktmpdir('packman-nova-diff-') }
@@ -14,7 +14,7 @@ describe ::PackmanNova::Repo::Diff do
   after { ::FileUtils.rm_rf(tmp) }
 
   def diff(record, state: ::PackmanNova::Repo::State.empty, **)
-    ::PackmanNova::Repo::Diff.new(build_record: record, results_dir: results_dir, state: state, enabled: enabled, arch: 'x86_64', repo_dir: repo_dir, **).call
+    ::PackmanNova::Repo::Diff.new(build_record: record, results_dir:, state:, enabled:, arch: 'x86_64', repo_dir:, **).call
   end
 
   def publish(result, key_id: nil)
@@ -64,11 +64,11 @@ describe ::PackmanNova::Repo::Diff do
     record = PublishFakes.record('fdk-aac' => ['succeeded', fdk], 'ffmpeg-8' => ['succeeded', ffmpeg])
     state = publish(diff(record))
 
-    assert_predicate diff(record, state: state), :empty?
+    assert_predicate diff(record, state:), :empty?
 
     ::File.write(::File.join(results_dir, 'fdk-aac', 'libfdk-aac2-2.0.3-1.x86_64.rpm'), 'rebuilt')
     record['packages']['ffmpeg-8']['rpms'] = ['libavcodec62-8.1.2-1.x86_64.rpm']
-    result = diff(record, state: state)
+    result = diff(record, state:)
 
     assert_equal ['x86_64/libfdk-aac2-2.0.3-1.x86_64.rpm'], result.to_replace
     assert_equal ['x86_64/ffmpeg-8-lang-8.1.2-1.noarch.rpm'], result.to_remove
@@ -80,7 +80,7 @@ describe ::PackmanNova::Repo::Diff do
     state = publish(diff(record))
     ::File.delete(::File.join(repo_dir, 'src', 'fdk-aac-2.0.3-1.src.rpm'))
     ::File.write(::File.join(repo_dir, 'x86_64', 'stray-1-1.x86_64.rpm'), 'x')
-    result = diff(record, state: state)
+    result = diff(record, state:)
 
     assert_equal ['src/fdk-aac-2.0.3-1.src.rpm'], result.to_add
     assert_equal ['x86_64/stray-1-1.x86_64.rpm'], result.to_remove
@@ -88,7 +88,7 @@ describe ::PackmanNova::Repo::Diff do
 
   it 'retains the published files of enabled packages that did not succeed' do
     state = publish(diff(PublishFakes.record('fdk-aac' => ['succeeded', fdk], 'ffmpeg-8' => ['succeeded', ffmpeg])))
-    result = diff(PublishFakes.record('fdk-aac' => ['succeeded', fdk], 'ffmpeg-8' => ['failed', []]), state: state)
+    result = diff(PublishFakes.record('fdk-aac' => ['succeeded', fdk], 'ffmpeg-8' => ['failed', []]), state:)
 
     assert_predicate result, :empty?
     assert_equal ['ffmpeg-8'], result.retained_packages
@@ -98,7 +98,7 @@ describe ::PackmanNova::Repo::Diff do
   it 'retains enabled packages missing from the build record but drops disabled ones' do
     state = publish(diff(PublishFakes.record('fdk-aac' => ['succeeded', fdk], 'ffmpeg-8' => ['succeeded', ffmpeg])))
     enabled.delete('fdk-aac')
-    result = diff(PublishFakes.record({}), state: state)
+    result = diff(PublishFakes.record({}), state:)
 
     assert_equal ['ffmpeg-8'], result.retained_packages
     assert_equal ['src/fdk-aac-2.0.3-1.src.rpm', 'x86_64/libfdk-aac2-2.0.3-1.x86_64.rpm'], result.to_remove
@@ -116,7 +116,7 @@ describe ::PackmanNova::Repo::Diff do
     record = PublishFakes.record('fdk-aac' => ['succeeded', fdk], 'ffmpeg-8' => ['succeeded', ffmpeg])
     state = publish(diff(record))
     failed = PublishFakes.record('fdk-aac' => ['succeeded', fdk], 'ffmpeg-8' => ['failed', []])
-    result = diff(failed, state: state, key_id: 'NEWKEY')
+    result = diff(failed, state:, key_id: 'NEWKEY')
 
     assert_equal state.files.keys.sort, result.to_resign
     assert_predicate diff(failed, state: publish(diff(record), key_id: 'NEWKEY'), key_id: 'NEWKEY'), :empty?
@@ -127,7 +127,7 @@ describe ::PackmanNova::Repo::Diff do
     state = publish(diff(record))
     ::FileUtils.rm_rf(repo_dir)
 
-    assert_predicate diff(record, state: state, check_files: false), :empty?
+    assert_predicate diff(record, state:, check_files: false), :empty?
   end
 
   it 'fails on missing build outputs and on files claimed by two packages' do
@@ -149,7 +149,7 @@ describe ::PackmanNova::Repo::Diff do
     PublishFakes.results(baselibs_dir, 'fdk-aac' => rpms)
     record = PublishFakes.record('fdk-aac' => ['succeeded', fdk])
     record['packages']['fdk-aac']['baselibs'] = { 'arch' => 'i586', 'code' => 'succeeded', 'rpms' => rpms }
-    result = diff(record, baselibs_dir: baselibs_dir)
+    result = diff(record, baselibs_dir:)
 
     assert_equal %w[src/fdk-aac-2.0.3-1.src.rpm x86_64/libfdk-aac2-2.0.3-1.x86_64.rpm x86_64/libfdk-aac2-32bit-2.0.3-1.x86_64.rpm], result.to_add
     assert_equal ::File.join(baselibs_dir, 'fdk-aac', 'libfdk-aac2-32bit-2.0.3-1.x86_64.rpm'), result.desired.fetch('x86_64/libfdk-aac2-32bit-2.0.3-1.x86_64.rpm').source
@@ -160,7 +160,7 @@ describe ::PackmanNova::Repo::Diff do
     PublishFakes.results(results_dir, 'fdk-aac' => ['libfdk-aac2-2.0.3-1.i586.rpm'])
     record = PublishFakes.record('fdk-aac' => ['succeeded', [*fdk, 'libfdk-aac2-2.0.3-1.i586.rpm']])
     state = ::PackmanNova::Repo::State.new(::PackmanNova::Repo::State.empty.to_h.merge('files' => { 'aarch64/a-1-1.aarch64.rpm' => { 'package' => 'fdk-aac' } }))
-    result = diff(record, state: state)
+    result = diff(record, state:)
 
     assert_empty result.to_remove
     assert_includes result.ignored, 'libfdk-aac2-2.0.3-1.i586.rpm: arch i586 is not published into x86_64/'

@@ -38,7 +38,7 @@ module PackmanNova
       def mounts(repo_dir, key_dir)
         return [::PackmanNova::Container::Mount.new(source: repo_dir, target: ::PackmanNova::Repo::Signer::REPO_MOUNT)] unless key_dir
 
-        ::PackmanNova::Repo::Signer.mounts(dir: repo_dir, key_dir: key_dir)
+        ::PackmanNova::Repo::Signer.mounts(dir: repo_dir, key_dir:)
       end
     end
   end

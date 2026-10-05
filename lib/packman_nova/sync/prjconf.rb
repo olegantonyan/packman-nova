@@ -3,10 +3,9 @@
 module PackmanNova
   class Sync
     class Prjconf
-      FACTORY_CONF_NAME = 'tumbleweed.conf'
       RELEASE_LINE = /\A\s*Release\s*:/i
 
-      Result = ::Data.define(:factory_md5, :local_md5, :factory_source)
+      Result = ::Data.define(:factory_md5, :local_md5)
 
       def initialize(config:, workdir:, downloader:, logger:)
         @config = config
@@ -16,17 +15,17 @@ module PackmanNova
       end
 
       def call(refresh: true, write: true)
-        factory, source = factory_content(refresh)
+        factory = factory_content(refresh)
         local = local_content
         if write
           write_if_changed(factory_path, factory)
           write_if_changed(workdir.config_file, local)
         end
-        Result.new(factory_md5: md5(factory), local_md5: md5(local), factory_source: source)
+        Result.new(factory_md5: md5(factory), local_md5: md5(local))
       end
 
       def factory_path
-        ::File.join(workdir.configs_dir, FACTORY_CONF_NAME)
+        workdir.dist_config_file(config.pbuild.reponame)
       end
 
       def local_content
@@ -39,24 +38,21 @@ module PackmanNova
 
       def factory_content(refresh)
         fetched = fetch if refresh && !downloader.offline?
-        fetched ? [fetched, config.prjconf.base_url] : offline_content
+        fetched || offline_content
       end
 
       def offline_content
-        return [::File.read(factory_path), factory_path] if ::File.file?(factory_path)
+        return ::File.read(factory_path) if ::File.file?(factory_path)
 
         fallback = config.resolve(config.prjconf.base_fallback)
         logger.warn("using fallback prjconf #{fallback}")
-        [::File.read(fallback), fallback]
+        ::File.read(fallback)
       end
 
       def fetch
-        content = downloader.get(config.prjconf.base_url)
-        cache_path = ::File.join(workdir.prjconf_cache_dir, "factory-#{md5(content)}.conf")
-        ::PackmanNova::Utils::Path.atomic_write(cache_path, content) unless ::File.file?(cache_path)
-        content
+        downloader.get(config.prjconf.base_url)
       rescue ::PackmanNova::DownloadError => e
-        logger.warn("Factory prjconf: #{e.message}")
+        logger.warn("base prjconf: #{e.message}")
         nil
       end
 

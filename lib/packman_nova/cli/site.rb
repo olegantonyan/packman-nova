@@ -3,8 +3,6 @@
 module PackmanNova
   class Cli
     class Site < ::PackmanNova::Cli::Command
-      STATE_FILE = 'state.json'
-
       class << self
         def summary
           'regenerate index.html and packages.json from the repo state'
@@ -20,7 +18,7 @@ module PackmanNova
       end
 
       def call
-        generator = ::PackmanNova::Site::Generator.new(config: config, state: load_state, logger: logger)
+        generator = ::PackmanNova::Site::Generator.new(config:, state: load_state, logger:)
         generator.write(::PackmanNova::Utils::Path.mkpath(output_dir)).each { |path| out.puts(path) }
         0
       end
@@ -28,14 +26,10 @@ module PackmanNova
       private
 
       def load_state
-        state = ::PackmanNova::Utils::JsonFile.read(state_file)
-        raise ::PackmanNova::Error, "repo state not found: #{state_file} (run publish first or check repository.localfs.path)" unless state
+        state_file = ::PackmanNova::Repo::Layout.from_config(config, root: repo_dir).state_file
+        raise ::PackmanNova::Error, "repo state not found: #{state_file} (run publish first or check repository.localfs.path)" unless ::File.file?(state_file)
 
-        ::PackmanNova::State::Schemas.validate!(:repo_state, state)
-      end
-
-      def state_file
-        ::File.join(repo_dir, config.repository.path, STATE_FILE)
+        ::PackmanNova::Repo::State.load(state_file).to_h
       end
 
       def output_dir
@@ -45,7 +39,7 @@ module PackmanNova
       def repo_dir
         return config.workdir.repo_mirror_dir if config.repository.provider == 's3'
 
-        ::PackmanNova::Site::Model.localfs_root(config)
+        ::PackmanNova::Repo::Layout.localfs_root(config)
       end
     end
   end

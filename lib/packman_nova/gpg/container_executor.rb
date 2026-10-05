@@ -8,9 +8,8 @@ module PackmanNova
 
       class << self
         def build(config:, logger:, subprocess:)
-          runtime = ::PackmanNova::Container::Runtime.detect(config: config)
-          runner = ::PackmanNova::Container::Runner.new(runtime: runtime, logger: logger, subprocess: subprocess)
-          new(runner: runner, image: config.container.image, extra_args: config.container.extra_args)
+          runner = ::PackmanNova::Container::Runner.from_config(config:, logger:, subprocess:)
+          new(runner:, image: config.container.image, extra_args: config.container.extra_args)
         end
       end
 
@@ -28,7 +27,7 @@ module PackmanNova
 
       def command(args, home)
         {
-          image: image, args: ['--homedir', HOME, *args], env: { 'GNUPGHOME' => HOME },
+          image:, args: ['--homedir', HOME, *args], env: { 'GNUPGHOME' => HOME },
           mounts: [::PackmanNova::Container::Mount.new(source: home, target: HOME)],
           extra_args: ['--entrypoint', ENTRYPOINT, *extra_args]
         }
