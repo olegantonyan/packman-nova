@@ -13,8 +13,7 @@ module PackmanNova
       def probes
         [
           ['obs api', "#{config.sources.obs_api.chomp('/')}/source/openSUSE:Factory/_config", :fail],
-          ['tw repo', config.distro.snapshot_url, :fail],
-          ['pmbs', config.sources.pmbs_api, :warn]
+          ['tw repo', config.distro.snapshot_url, :fail]
         ]
       end
 

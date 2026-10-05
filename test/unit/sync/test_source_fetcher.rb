@@ -9,21 +9,10 @@ describe ::PackmanNova::Sync::SourceFetcher do
   let(:server) { ::HttpStubServer.new }
   let(:dir) { ::Dir.mktmpdir('packman-nova-fetcher-') }
   let(:config) { sync_config(dir, server) }
-  let(:mirror_calls) { [] }
-  let(:extractor) do
-    calls = mirror_calls
-    content = tarball
-    ::Object.new.tap do |fake|
-      fake.define_singleton_method(:extract) do |srpm:, member:, target:|
-        calls << [::File.basename(srpm), member]
-        ::File.binwrite(target, content)
-      end
-    end
-  end
   let(:services) do
     http = ::PackmanNova::Utils::Http.new(logger: null_logger, timeout_sec: 5, retries: 0)
     downloader = ::PackmanNova::Sources::Downloader.new(http: http, logger: null_logger)
-    ::PackmanNova::Sync::Services.new(config: config, logger: null_logger, workdir: config.workdir, downloader: downloader, extractor: extractor)
+    ::PackmanNova::Sync::Services.new(config: config, logger: null_logger, workdir: config.workdir, downloader: downloader)
   end
 
   def source(urls, sha256: sha256_of(tarball))
@@ -49,12 +38,17 @@ describe ::PackmanNova::Sync::SourceFetcher do
     assert_equal sha256_of(tarball), blob.sha256
   end
 
-  it 'extracts mirror-src members from the newest src.rpm' do
-    server.on('/mirror/', body: '<a href="hello-1.0-1699.1.pm.2.src.rpm">x</a> <a href="hello-1.0-1699.1.pm.10.src.rpm">y</a>')
-    server.on('/mirror/hello-1.0-1699.1.pm.10.src.rpm', body: 'rpm')
-    services.fetcher.fetch(source(['mirror-src:hello']), package: 'hello')
+  it 'falls back to the source archive by sha256' do
+    server.on('/gone', status: 404).on("/pub/_sources/sha256/#{sha256_of(tarball)}", body: tarball)
+    blob = services.fetcher.fetch(source([server.url('/gone')]), package: 'hello')
 
-    assert_equal [['hello-1.0-1699.1.pm.10.src.rpm', 'hello-1.0.tar.gz']], mirror_calls
+    assert_equal tarball, ::File.binread(blob.path)
+  end
+
+  it 'fetches archive-only sources from the archive' do
+    server.on("/pub/_sources/sha256/#{sha256_of(tarball)}", body: tarball)
+
+    assert_equal sha256_of(tarball), services.fetcher.fetch(source([]), package: 'hello').sha256
   end
 
   it 'uses the cache without any request' do
@@ -65,10 +59,9 @@ describe ::PackmanNova::Sync::SourceFetcher do
   end
 
   it 'raises SyncError naming every failed url' do
-    server.on('/pmbs/hello?expand=1', body: obs_listing('b' * 32, 'other.tar.gz' => 'x'))
-    error = assert_raises(::PackmanNova::SyncError) { services.fetcher.fetch(source([server.url('/gone'), 'pmbs:hello']), package: 'hello') }
+    error = assert_raises(::PackmanNova::SyncError) { services.fetcher.fetch(source([server.url('/gone')]), package: 'hello') }
 
     assert_match(%r{/gone: HTTP 404}, error.message)
-    assert_match(/pmbs:hello: PMBS hello has no file hello-1.0.tar.gz/, error.message)
+    assert_match(%r{/pub/_sources/sha256/#{sha256_of(tarball)}: HTTP 404}, error.message)
   end
 end

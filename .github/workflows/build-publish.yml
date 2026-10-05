@@ -29,9 +29,3 @@ jobs:
         run: bundle exec exe/packman-nova run --provider s3
       - if: always() && steps.run.outcome != 'skipped'
         run: bundle exec exe/packman-nova state push
-      - if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: logs
-          path: ${{ env.PACKMAN_NOVA_WORKDIR }}/logs/
-          retention-days: 14

@@ -76,7 +76,7 @@ describe ::PackmanNova::Repo::Providers::S3 do
   end
 
   it 'uploads changed files in repository order, deletes last and purges the CDN' do
-    remote.merge!('packman/tw/ess/x86_64/same.rpm' => 'same', 'packman/tw/ess/x86_64/old.rpm' => 'old', 'packman/_state/state.tar.zst' => 's')
+    remote.merge!('packman/tw/ess/x86_64/same.rpm' => 'same', 'packman/tw/ess/x86_64/old.rpm' => 'old', 'packman/_state/state.tar.zst' => 's', 'packman/_sources/sha256/a' => 'a')
     {
       'tw/ess/x86_64/same.rpm' => 'same', 'tw/ess/x86_64/new.rpm' => 'new', 'tw/ess/x86_64/repodata/repomd.xml' => 'md',
       'tw/ess/x86_64/repodata/repomd.xml.asc' => 'asc', 'tw/ess/x86_64/repodata/repomd.xml.key' => 'key', 'tw/ess/x86_64/repodata/p-primary.xml.zst' => 'p',
@@ -100,6 +100,30 @@ describe ::PackmanNova::Repo::Providers::S3 do
     assert_empty requests(:put_object)
     assert_empty requests(:delete_objects)
     assert_empty purged
+  end
+
+  it 'archives cached sources of enabled packages that the bucket lacks' do
+    with_tmpdir do |dir|
+      workdir = ::PackmanNova::Workdir.new(root: dir)
+      have, need, uncached = %w[have need uncached].map { |content| ::Digest::SHA256.hexdigest(content) }
+      [[have, 'have'], [need, 'need']].each do |sha256, content|
+        ::FileUtils.mkdir_p(::File.dirname(workdir.cache_blob(sha256: sha256)))
+        ::File.write(workdir.cache_blob(sha256: sha256), content)
+      end
+      remote["packman/_sources/sha256/#{have}"] = 'have'
+      source = ->(sha256, **extra) { ::PackmanNova::Manifest::Source.new(file: 'f', sha256: sha256, **extra) }
+      package = ::Data.define(:enabled?, :sources)
+      manifests = [
+        package.new(true, [source.call(have), source.call(need), source.call(uncached), source.call(nil, path: 'x'), source.call(nil, generated: 'public-key')]),
+        package.new(false, [source.call(::Digest::SHA256.hexdigest('disabled'))])
+      ]
+      logger, log = string_logger
+      uploaded = provider.archive_sources!(::PackmanNova::Repo::SourceArchive.new(manifests: manifests, workdir: workdir, logger: logger))
+
+      assert_equal [need], uploaded
+      assert_equal([["packman/_sources/sha256/#{need}", 'application/octet-stream']], requests(:put_object).map { |params| params.values_at(:key, :content_type) })
+      assert_includes log.string, "#{uncached}) is not in the cache"
+    end
   end
 
   it 'builds a client from config and validates required settings' do

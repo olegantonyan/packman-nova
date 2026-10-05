@@ -7,7 +7,5 @@ sources:
   - file: _service:download_files:gst-plugins-bad-1.28.7.tar.xz
     urls:
       - https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-1.28.7.tar.xz
-      - pmbs:gstreamer-plugins-bad-codecs/_service:download_files:gst-plugins-bad-1.28.7.tar.xz
-      - mirror-src:gstreamer-plugins-bad-codecs
     sha256: dc525383c18b2c265bbe6a43d498656cd918aaa130aa4e3abeabcdaa741c3ffe
     size: 8347976

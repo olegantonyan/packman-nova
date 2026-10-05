@@ -7,7 +7,5 @@ sources:
   - file: kvazaar-2.3.2.tar.gz
     urls:
       - https://github.com/ultravideo/kvazaar/archive/v2.3.2.tar.gz
-      - pmbs:kvazaar/kvazaar-2.3.2.tar.gz
-      - mirror-src:kvazaar
     sha256: ddd0038696631ca5368d8e40efee36d2bbb805854b9b1dda8b12ea9b397ea951
     size: 600315

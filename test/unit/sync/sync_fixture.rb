@@ -32,13 +32,14 @@ module SyncFixture
         'base_url' => server.url('/prjconf'), 'base_fallback' => write_file(::File.join(dir, 'fallback.conf'), "Repotype: rpm-md\n"),
         'local' => write_file(::File.join(dir, 'macros.conf'), "Release: %{suse_version}.<CI_CNT>\nPrefer: foo\n")
       },
-      'sources' => source_settings(server)
+      'sources' => source_settings(server),
+      'repository' => { 'public_url' => server.url('/pub') }
     }
   end
 
   def source_settings(server)
     {
-      'obs_api' => server.url('/obs'), 'pmbs_api' => server.url('/pmbs'), 'mirror_src_urls' => [server.url('/mirror/')],
+      'obs_api' => server.url('/obs'),
       'http' => { 'timeout_sec' => 5, 'retries' => 0 }
     }
   end

@@ -49,7 +49,7 @@ lib/packman_nova/logging/{logger,formatter,multioutput}.rb
 lib/packman_nova/utils/{subprocess,yaml,path,http,xml,digest,json_file}.rb
 lib/packman_nova/manifest.rb                 package.yml model + validation
 lib/packman_nova/manifest/{source,link_rules,loader}.rb
-lib/packman_nova/sources/{obs_client,pmbs_client,mirror_src,download_cache,downloader,spec_sources}.rb
+lib/packman_nova/sources/{obs_client,archive,download_cache,downloader}.rb
 lib/packman_nova/sync.rb
 lib/packman_nova/sync/{obs_link_materializer,native_materializer,prjconf,report,state}.rb
 lib/packman_nova/container/{runtime,image,runner,mount}.rb
@@ -129,9 +129,6 @@ prjconf:
   local: prjconf/packman-nova-macros.conf
 sources:
   obs_api: https://api.opensuse.org/public
-  pmbs_api: https://pmbs.links2linux.de/public/source/Essentials
-  mirror_src_urls:
-    - https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Essentials/src/
   http: { timeout_sec: 600, retries: 5 }
 container:
   runtime: auto
@@ -205,8 +202,6 @@ sources:                             # files not in git; everything else in the 
   - file: _service:download_files:gst-plugins-bad-1.28.7.tar.xz
     urls:
       - https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-1.28.7.tar.xz
-      - pmbs:gstreamer-plugins-bad-codecs          # pmbs:<pmbs-package>[/<filename>]
-      - mirror-src:gstreamer-plugins-bad-codecs    # extract from newest src.rpm on the mirror list
     sha256: <hex>
     size: 8347976
   - file: packman-nova.key            # derived from GPG_PRIVATE_KEY_BASE64 at sync time
@@ -223,12 +218,12 @@ Rules: `urls` tried in order; `sha256` mandatory unless `sync --update-checksums
 | vlc, libquicktime, libheif | obs-link | openSUSE:Factory | libheif: delete `_multibuild` (only flavor is `test`); vlc/libquicktime no rules |
 | xine-lib | obs-link | multimedia:xine/xine-lib | PMBS `openSUSE.org:multimedia:xine` maps to api project `multimedia:xine` |
 | shairplay | obs-link | multimedia:libs/shairplay | |
-| libx264 (`:x264` flavor), x265, libde265, kvazaar, fdk-aac, faac, vo-aacenc, amrnb, amrwb, dcadec, l-smash, gpac, libopenaptx, pipewire-aptx, rtmpdump, libaacs, libbdplus, libdvdcss2, gstreamer-plugins-bad-codecs, gstreamer-plugins-ugly-codecs | native | vendored from reference/pmbs/essentials-src-snapshot + tarball URLs from spec `Source:`; obscpio for faac via `pmbs:faac/_service:obs_scm:faac-1.50.obscpio` then `mirror-src:` | libdvdcss2 tarball from download.videolan.org |
-| ffmpeg-6 | native (frozen Factory copy) | `pmbs:A_tw-ffmpeg-6/ffmpeg-6-6.1.3.tar.xz`, mirror-src | |
+| libx264 (`:x264` flavor), x265, libde265, kvazaar, fdk-aac, faac, vo-aacenc, amrnb, amrwb, dcadec, l-smash, gpac, libopenaptx, pipewire-aptx, rtmpdump, libaacs, libbdplus, libdvdcss2, gstreamer-plugins-bad-codecs, gstreamer-plugins-ugly-codecs | native | vendored from reference/pmbs/essentials-src-snapshot + tarball URLs from spec `Source:`; files without upstream (faac obscpio, git snapshots) archive-only | libdvdcss2 tarball from download.videolan.org |
+| ffmpeg-6 | native (frozen Factory copy) | archive-only | |
 | SVT-AV1 | native, `enabled: false` | gitlab tarball | check Factory's SVT-AV1 version; keep disabled if Factory >= 3.0.1 |
 | r8168 | native | Realtek/GitHub tarball | KMP against TW `kernel-syms` from oss |
 | broadcom-wl | native, `enabled: false` | blob only on PMBS/mirror | phase 2; tag `proprietary` |
-| b43legacy-firmware, rtl8761b-firmware | native | pmbs/mirror-src; rtl8761b via amazonaws URL | tag `proprietary` |
+| b43legacy-firmware, rtl8761b-firmware | native | b43legacy from OpenWrt sources; rtl8761b archive-only | tag `proprietary` |
 | libfprint-tod-broadcom, libfprint-tod-goodix | native | `_service:download_url:*.orig.tar.gz` from dell.archive.canonical.com | tag `proprietary` |
 | chromium-plugin-widevinecdm | native | Google blob URL from spec | 117 MB; tag `proprietary` |
 | ffmpeg-mini | native, authored | PMBS spec plus `ffmpeg-9-mini-devel/libs` subpackages | `Version: %suse_version` |
@@ -264,7 +259,7 @@ The exe rescues `::PackmanNova::Error` and `::StandardError` (prints `Class: mes
 4. TW snapshot: GET `snapshot_url`, record.
 5. For each enabled manifest:
    - obs-link: `ObsClient#directory(project:, package:, expand: true, rev: pin)` -> `{srcmd5, entries[{name,md5,size}]}` (REXML). Compare with `state/sync.json[pkg].srcmd5` and on-disk md5s; skip if identical and link rules unchanged. Else for each entry not in `link.delete`: ensure `cache/blobs/md5/<md5>` (download `<obs_api>/source/<proj>/<pkg>/<name>?rev=<srcmd5>` to temp, verify md5, rename), assemble `project/.<pkg>.tmp/` via hardlink or copy, swap into place. Record srcmd5, files, `synced_at`.
-   - native: copy every regular file from `packages/<pkg>/` except `package.yml`, `provenance.yaml`; for each `sources[]` entry: if `cache/blobs/sha256/<sha>` missing, try `urls` in order (`https?://` direct; `pmbs:<pkg>[/<file>]` = `<pmbs_api>/<pkg>/<file>?expand=1`; `mirror-src:<pkg>` = list the mirror dir, pick newest `<pkg>-*.src.rpm`, download, extract the member with `rpm2cpio | cpio -i --to-stdout <file>` inside the builder container); verify sha256 (or record with `--update-checksums`); link into tmp dir; swap.
+   - native: copy every regular file from `packages/<pkg>/` except `package.yml`, `provenance.yaml`; for each `sources[]` entry: if `cache/blobs/sha256/<sha>` missing, try `urls` in order, then the source archive `<public_url>/_sources/sha256/<sha>`; verify sha256 (or record with `--update-checksums`); link into tmp dir; swap.
    - Removed/disabled packages: delete `project/<pkg>`.
 6. Write `state/sync.json`; print report (changed / unchanged / removed, TW snapshot, prjconf changes). `--check` returns 2 on any change.
 
@@ -391,6 +386,6 @@ Interfaces frozen by WP0: `Config` attribute names (4.1), `Workdir` path methods
 8. rpmlint/post-build checks on by default (parity with PMBS); `pbuild.checks: false` disables.
 9. Failed rebuilds wipe old rpms: publish retains via `state.json`.
 10. GitHub Actions: rootless podman `--privileged` expected to work on ubuntu-26.04 (unverified); 14 GB runner disk forces `buildjobs: 1`; state must include `.pbuild/_base` (`state push/pull` to R2 `_state/`); run counter recovers from published `state.json`; concurrency group without cancel.
-11. PMBS shutdown: tarballs from upstream URLs first, PMBS second, mirror src.rpm third; after first publish our own `src/` dir joins `mirror_src_urls`.
+11. PMBS shutdown: no runtime dependency on Packman. Upstream URLs first, then our content-addressed source archive in R2 (`_sources/sha256/`), which publish fills from the local cache; it must be seeded by a publish before Packman shuts down.
 12. Legal: proprietary blobs tagged; `enabled` per package.
 13. Upstream change detection has no webhooks (OBS/src.opensuse.org Gitea webhooks need repo admin); cron `sync --check` (exit 2 triggers a build); per-package Atom feeds optional.

@@ -16,7 +16,7 @@ module PackmanNova
       release: { template: ::String },
       prjconf: { base_url: ::String, base_fallback: ::String, local: ::String },
       sources: {
-        obs_api: ::String, pmbs_api: ::String, mirror_src_urls: STRINGS,
+        obs_api: ::String,
         http: { timeout_sec: ::Integer, retries: ::Integer }
       },
       container: { runtime: ::String, image: ::String, containerfile: ::String, privileged: BOOLEAN, extra_args: STRINGS },

@@ -5,9 +5,6 @@ tier: 1
 tags: [codec]
 sources:
   - file: x264-20250608.b35605ac.tar.xz
-    urls:
-      - pmbs:libx264/x264-20250608.b35605ac.tar.xz
-      - mirror-src:libx264
     sha256: d44e13fa7a3da4d168fd97a1bb0f3c01fc9ee351aa4d24d2f1d72369c155d95b
     size: 747276
 notes: "tar_scm (mode disabled, update.sh) of code.videolan.org/videolan/x264.git rev b35605ac; no upstream URL. _multibuild flavor x264 builds the CLI and needs l-smash and ffmpeg."

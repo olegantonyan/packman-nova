@@ -16,9 +16,6 @@ prjconf:
   local: prjconf/packman-nova-macros.conf
 sources:
   obs_api: https://api.opensuse.org/public
-  pmbs_api: https://pmbs.links2linux.de/public/source/Essentials
-  mirror_src_urls:
-    - https://ftp.gwdg.de/pub/linux/misc/packman/suse/openSUSE_Tumbleweed/Essentials/src/
   http: { timeout_sec: 600, retries: 5 }
 container:
   runtime: auto

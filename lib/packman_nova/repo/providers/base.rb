@@ -30,6 +30,10 @@ module PackmanNova
           layout
         end
 
+        def archive_sources!(_archive)
+          []
+        end
+
         private
 
         attr_reader :logger

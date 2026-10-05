@@ -7,8 +7,6 @@ sources:
   - file: _service:download_files:pipewire-1.6.9.tar.bz2
     urls:
       - https://gitlab.freedesktop.org/pipewire/pipewire/-/archive/1.6.9/pipewire-1.6.9.tar.bz2
-      - pmbs:pipewire-aptx/_service:download_files:pipewire-1.6.9.tar.bz2
-      - mirror-src:pipewire-aptx
     sha256: 0cde58c124825bad462b32ab79f9aa286ee7b113cc73a5cda923a4365e752657
     size: 2065479
 notes: "Tracks Factory's pipewire version; bump together."

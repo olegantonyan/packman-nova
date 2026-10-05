@@ -8,8 +8,6 @@ sources:
   - file: _service:download_url:libfprint-2-tod1-broadcom_5.15.285-5.15.010.0.orig.tar.gz
     urls:
       - http://dell.archive.canonical.com/updates/pool/public/libf/libfprint-2-tod1-broadcom/libfprint-2-tod1-broadcom_5.15.285-5.15.010.0.orig.tar.gz
-      - pmbs:libfprint-tod-broadcom/_service:download_url:libfprint-2-tod1-broadcom_5.15.285-5.15.010.0.orig.tar.gz
-      - mirror-src:libfprint-2-tod1-broadcom
     sha256: 67dc8dd47a58e0f9005a42b9bb7048345831257bfd28f34ddd0db1ef07a0e9bc
     size: 11727635
 notes: "Spec and rpm are named libfprint-2-tod1-broadcom. _service download_url + verify_file (same sha256) run on the server only; pbuild needs the file present. Dell archive is plain http."

@@ -5,11 +5,10 @@ module PackmanNova
     class SourceFetcher
       FETCH_ERRORS = [::PackmanNova::Error, ::SystemCallError].freeze
 
-      def initialize(cache:, downloader:, pmbs:, mirror:, logger:)
+      def initialize(cache:, downloader:, archive:, logger:)
         @cache = cache
         @downloader = downloader
-        @pmbs = pmbs
-        @mirror = mirror
+        @archive = archive
         @logger = logger
       end
 
@@ -19,7 +18,7 @@ module PackmanNova
 
       private
 
-      attr_reader :cache, :downloader, :pmbs, :mirror, :logger
+      attr_reader :cache, :downloader, :archive, :logger
 
       def cached(source)
         source.sha256 && cache.cached(sha256: source.sha256, size: source.size)
@@ -27,35 +26,25 @@ module PackmanNova
 
       def fetch_from_urls(source, package)
         errors = []
-        source.urls.each do |url|
-          return try_url(source, url)
+        candidate_urls(source).each do |url|
+          return cache.fetch(sha256: source.sha256, size: source.size) { |tmp| downloader.download(url, tmp) }
         rescue *FETCH_ERRORS => e
           errors << note_failure(package, source, url, e)
         end
         raise ::PackmanNova::SyncError, "#{source.file}: no url worked (#{errors.join('; ')})"
       end
 
+      def candidate_urls(source)
+        urls = [*source.urls, archive.url(source.sha256)].compact
+        raise ::PackmanNova::SyncError, "#{source.file}: no urls and no source archive (repository.public_url)" if urls.empty?
+
+        urls
+      end
+
       def note_failure(package, source, url, error)
         message = "#{url}: #{error.message.lines.first.to_s.strip}"
         logger.warn("#{package}: #{source.file}: #{message}")
         message
-      end
-
-      def try_url(source, url)
-        cache.fetch(sha256: source.sha256, size: source.size) { |tmp| download(source, url, tmp) }
-      end
-
-      def download(source, url, tmp)
-        case source.scheme(url)
-        when :http then downloader.download(url, tmp)
-        when :pmbs then download_pmbs(source, url, tmp)
-        when :mirror_src then mirror.fetch(package: source.mirror_package(url), file: source.file, target: tmp)
-        end
-      end
-
-      def download_pmbs(source, url, tmp)
-        file_url, = pmbs.resolve(package: source.pmbs_package(url), file: source.pmbs_file(url))
-        downloader.download(file_url, tmp)
       end
     end
   end

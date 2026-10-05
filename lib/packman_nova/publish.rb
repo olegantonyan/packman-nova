@@ -35,6 +35,7 @@ require 'packman_nova/repo/providers/localfs'
 require 'packman_nova/repo/providers/s3'
 require 'packman_nova/repo/providers'
 require 'packman_nova/repo/state_archive'
+require 'packman_nova/repo/source_archive'
 
 module PackmanNova
   class Publish
@@ -82,6 +83,7 @@ module PackmanNova
       new_state = build_state(state, last_build.record, diff, layout, versions: versions, key: key)
       outputs.write(layout: layout, previous: state, state: new_state, key: key, site: site)
       provider.sync!(layout: layout)
+      provider.archive_sources!(::PackmanNova::Repo::SourceArchive.new(manifests: manifests, workdir: workdir, logger: logger))
       diff
     end
 

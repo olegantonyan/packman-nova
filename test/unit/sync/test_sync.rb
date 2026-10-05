@@ -18,8 +18,7 @@ describe ::PackmanNova::Sync do
     stub_common(server)
     stub_obs_package(server, project: 'openSUSE:Factory', package: 'demo', srcmd5: 'a' * 32, files: link_files)
     server.on('/upstream/hello-1.0.tar.gz', status: 404)
-    server.on('/pmbs/hello?expand=1', body: obs_listing('b' * 32, 'hello-1.0.tar.gz' => tarball))
-    server.on("/pmbs/hello/hello-1.0.tar.gz?rev=#{'b' * 32}", body: tarball)
+    server.on("/pub/_sources/sha256/#{sha256_of(tarball)}", body: tarball)
     write_package(packages_dir, { 'name' => 'demo', 'kind' => 'obs-link', 'link' => { 'delete' => ['_multibuild', 'missing.changes'] } })
     write_package(packages_dir, hello_manifest, 'hello.spec' => "Name: hello\n", 'hello.changes' => "- init\n")
     write_package(packages_dir, { 'name' => 'old', 'kind' => 'native', 'enabled' => false }, 'old.spec' => "Name: old\n")
@@ -31,8 +30,8 @@ describe ::PackmanNova::Sync do
     ::FileUtils.rm_rf(dir)
   end
 
-  def hello_manifest(sha256: sha256_of(tarball))
-    source = { 'file' => 'hello-1.0.tar.gz', 'urls' => [server.url('/upstream/hello-1.0.tar.gz'), 'pmbs:hello'], 'sha256' => sha256, 'size' => tarball.bytesize }
+  def hello_manifest(sha256: sha256_of(tarball), url: server.url('/upstream/hello-1.0.tar.gz'))
+    source = { 'file' => 'hello-1.0.tar.gz', 'urls' => [url], 'sha256' => sha256, 'size' => tarball.bytesize }
     { 'name' => 'hello', 'kind' => 'native', 'sources' => [source.compact] }
   end
 
@@ -48,7 +47,7 @@ describe ::PackmanNova::Sync do
     assert_equal %w[demo hello], report.changed.map(&:name).sort
   end
 
-  it 'materializes native packages from vendored files and the first working url' do
+  it 'materializes native packages from vendored files, falling back to the source archive' do
     sync.call
 
     assert_equal %w[hello-1.0.tar.gz hello.changes hello.spec], children('hello')
@@ -136,7 +135,8 @@ describe ::PackmanNova::Sync do
   end
 
   it 'fills missing checksums with --update-checksums' do
-    write_package(packages_dir, hello_manifest(sha256: nil))
+    server.on('/new/hello-1.0.tar.gz', body: tarball)
+    write_package(packages_dir, hello_manifest(sha256: nil, url: server.url('/new/hello-1.0.tar.gz')))
     sync.call(update_checksums: true, packages: ['hello'])
     manifest = ::PackmanNova::Manifest.load_file(::File.join(packages_dir, 'hello', 'package.yml'))
 

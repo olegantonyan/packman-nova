@@ -64,18 +64,9 @@ describe ::PackmanNova::Manifest do
       assert_equal '9c4a5b0e7a1f3c2d4b6e8f0a1c3e5b7d9f1a3c5e7b9d1f3a5c7e9b1d3f5a7c9e', source.sha256
     end
 
-    it 'classifies url schemes' do
-      source = native.sources.first
-
-      assert_equal(%i[http pmbs pmbs mirror_src], source.urls.map { |url| source.scheme(url) })
-    end
-
-    it 'parses pmbs and mirror-src urls' do
-      source = native.sources.first
-
-      assert_equal ['gstreamer-plugins-bad-codecs', source.file], [source.pmbs_package(source.urls[1]), source.pmbs_file(source.urls[1])]
-      assert_equal 'gst-plugins-bad-1.28.7.tar.xz', source.pmbs_file(source.urls[2])
-      assert_equal 'gstreamer-plugins-bad-codecs', source.mirror_package(source.urls[3])
+    it 'keeps the urls in order' do
+      assert_equal 2, native.sources.first.urls.size
+      assert_predicate native.sources.first, :remote?
     end
 
     it 'parses local path sources' do
@@ -137,7 +128,7 @@ describe ::PackmanNova::Manifest do
       assert_match(/sources\[0\]\.generated: must be one of public-key/, manifest_error("name: pkg\nkind: native\nsources:\n  - file: a\n    generated: x\n").message)
       error = manifest_error("name: pkg\nkind: native\nsources:\n  - file: a\n    path: a\n    generated: public-key\n")
 
-      assert_match(/sources\[0\]: needs exactly one of urls, path or generated/, error.message)
+      assert_match(/sources\[0\]: urls, path and generated are mutually exclusive/, error.message)
     end
 
     it 'rejects unsupported url schemes' do
@@ -154,10 +145,23 @@ describe ::PackmanNova::Manifest do
       assert_match(/unknown key\(s\) sources/, manifest_error("name: pkg\nkind: obs-link\nsources: []\n").message)
     end
 
-    it 'requires exactly one of urls, path or generated' do
-      error = manifest_error("name: pkg\nkind: native\nsources:\n  - file: a\n")
+    it 'requires sha256 for archive-only sources even when checksums are optional' do
+      with_tmpdir do |dir|
+        path = write_manifest(dir, 'pkg', "name: pkg\nkind: native\nsources:\n  - file: a\n", files: { 'pkg.spec' => '' })
+        error = assert_raises(::PackmanNova::ManifestError) { ::PackmanNova::Manifest.load_file(path, require_checksums: false) }
 
-      assert_match(/sources\[0\]: needs exactly one of urls, path or generated/, error.message)
+        assert_match(/sources\[0\]\.sha256: required for a source without urls/, error.message)
+      end
+    end
+
+    it 'accepts archive-only sources with a sha256' do
+      with_tmpdir do |dir|
+        path = write_manifest(dir, 'pkg', "name: pkg\nkind: native\nsources:\n  - file: a\n    sha256: #{'a' * 64}\n", files: { 'pkg.spec' => '' })
+        source = ::PackmanNova::Manifest.load_file(path).sources.first
+
+        assert_empty source.urls
+        assert_predicate source, :remote?
+      end
     end
 
     it 'rejects non-boolean enabled' do

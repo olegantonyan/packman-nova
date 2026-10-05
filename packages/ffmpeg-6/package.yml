@@ -5,15 +5,9 @@ tier: 2
 tags: [codec]
 sources:
   - file: ffmpeg-6-6.1.3.tar.xz
-    urls:
-      - pmbs:A_tw-ffmpeg-6/ffmpeg-6-6.1.3.tar.xz
-      - mirror-src:ffmpeg-6
     sha256: 8265eb4e1172b3a753019041f3592a87b8b0e31c6de77eab1af57a2b766d7ab1
     size: 8599320
   - file: ffmpeg-dlopen-headers.tar.xz
-    urls:
-      - pmbs:A_tw-ffmpeg-6/ffmpeg-dlopen-headers.tar.xz
-      - mirror-src:ffmpeg-6
     sha256: 0cc860a1940704082c81502fe9245aaefeeee9a1674797ccd74a123ab054cf77
     size: 15532
 notes: "Frozen copy of Factory's dropped ffmpeg-6 (PMBS A_tw-ffmpeg-6). Tarball is tar_scm (mode disabled) of git.ffmpeg.org rev 01d3f764 with excludes, so ffmpeg.org's release tarball differs. Spec carries a local svtav1 bcond (off): Factory SVT-AV1 is 4.x, this ffmpeg needs < 4, and a private SVT-AV1 3.0.1 would shadow Factory's for every ffmpeg build."

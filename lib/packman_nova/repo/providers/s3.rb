@@ -73,6 +73,10 @@ module PackmanNova
           layout
         end
 
+        def archive_sources!(archive)
+          archive.call(bucket)
+        end
+
         private
 
         attr_reader :purger, :public_url
