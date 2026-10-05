@@ -41,7 +41,8 @@ describe ::PackmanNova::Site::Generator do
   end
 
   it 'is self-contained' do
-    assert_includes html, 'prefers-color-scheme: dark'
+    assert_includes html, 'light-dark('
+    assert_includes html, 'id="theme-toggle"'
     refute_match(/<link |<script src/, html)
     refute_match(/<!--/, html)
   end

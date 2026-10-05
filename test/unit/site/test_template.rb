@@ -30,6 +30,6 @@ describe ::PackmanNova::Site::Template do
   end
 
   it 'loads bundled templates' do
-    assert_includes ::PackmanNova::Site::Template.read('style.css'), 'prefers-color-scheme: dark'
+    assert_includes ::PackmanNova::Site::Template.read('style.css'), 'light-dark('
   end
 end
