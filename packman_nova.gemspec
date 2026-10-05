@@ -22,7 +22,6 @@ require_relative 'lib/packman_nova/version'
   spec.add_dependency 'aws-sdk-s3', '~> 1'
   spec.add_dependency 'base64'
   spec.add_dependency 'dotenv'
-  spec.add_dependency 'liquid', '~> 5'
   spec.add_dependency 'logger'
   spec.add_dependency 'rexml'
 end

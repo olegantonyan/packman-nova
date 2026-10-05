@@ -11,7 +11,7 @@ module PackmanNova
     class Generator
       INDEX_FILE = 'index.html'
       PACKAGES_FILE = 'packages.json'
-      INDEX_TEMPLATE = 'index.html.liquid'
+      INDEX_TEMPLATE = 'index.html.erb'
       STYLESHEET = 'style.css'
 
       def initialize(config:, state:, logger:)

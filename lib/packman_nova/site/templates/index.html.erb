@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="{{ description | escape }}">
-<title>{{ title | escape }}</title>
+<meta name="description" content="<%= h description %>">
+<title><%= h title %></title>
 <script>
 try { document.documentElement.dataset.theme = localStorage.getItem('theme') || ''; } catch (e) {}
 </script>
 <style>
-{{ style }}</style>
+<%= style %></style>
 </head>
 <body>
 <div class="container">
@@ -20,57 +20,57 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
     <button type="button" data-mode="">Auto</button>
     <button type="button" data-mode="dark">Dark</button>
   </div>
-  <h1>{{ title | escape }}</h1>
+  <h1><%= h title %></h1>
   <p>Packman Essentials, rebuilt from public sources. Not affiliated with Packman or openSUSE.</p>
   <p>Packman <a href="https://lists.links2linux.de/pipermail/packman/2026-August/018314.html">shuts down</a> on 2026-12-31. This repo keeps the packages going.</p>
-{%- if pipeline_api_url %}
-  <p id="pipeline" class="pipeline" data-api="{{ pipeline_api_url | escape }}" hidden></p>
-{%- endif %}
-  <nav><a href="#install">Install</a><a href="#signing-key">Key</a><a href="#repository">Repo</a><a href="#packages">Packages</a>{% if source_url %}<a href="{{ source_url | escape }}">GitHub</a>{% endif %}</nav>
+<%- if pipeline_api_url -%>
+  <p id="pipeline" class="pipeline" data-api="<%= h pipeline_api_url %>" hidden></p>
+<%- end -%>
+  <nav><a href="#install">Install</a><a href="#signing-key">Key</a><a href="#repository">Repo</a><a href="#packages">Packages</a><% if source_url %><a href="<%= h source_url %>">GitHub</a><% end %></nav>
 </header>
 
 <main>
 <section id="install">
   <h2>Install</h2>
   <ol class="steps">
-{%- for command in commands %}
+<%- commands.each do |command| -%>
     <li>
-      <p class="step-label">{{ command.label | escape }}</p>
+      <p class="step-label"><%= h command.label %></p>
       <div class="code-block">
-        <pre id="{{ command.id }}"><code>{{ command.text | escape }}</code></pre>
-        <button type="button" class="copy-btn" data-target="{{ command.id }}" hidden>Copy</button>
+        <pre id="<%= h command.id %>"><code><%= h command.text %></code></pre>
+        <button type="button" class="copy-btn" data-target="<%= h command.id %>" hidden>Copy</button>
       </div>
     </li>
-{%- endfor %}
+<%- end -%>
   </ol>
   <p class="note">Step 3 replaces openSUSE and Packman builds with these.</p>
 </section>
 
 <section id="signing-key">
   <h2>Key</h2>
-{%- if key %}
+<%- if key -%>
   <dl class="facts">
-    <dt>Key ID</dt><dd><code>{{ key.id | escape }}</code></dd>
-    <dt>Fingerprint</dt><dd><code>{{ key.fingerprint | escape }}</code></dd>
-    <dt>File</dt><dd><a href="{{ key_url | escape }}">{{ key_url | escape }}</a></dd>
+    <dt>Key ID</dt><dd><code><%= h key.id %></code></dd>
+    <dt>Fingerprint</dt><dd><code><%= h key.fingerprint %></code></dd>
+    <dt>File</dt><dd><a href="<%= h key_url %>"><%= h key_url %></a></dd>
   </dl>
-{%- else %}
-  <p>No signing key recorded. <a href="{{ key_url | escape }}">{{ key_url | escape }}</a></p>
-{%- endif %}
+<%- else -%>
+  <p>No signing key recorded. <a href="<%= h key_url %>"><%= h key_url %></a></p>
+<%- end -%>
 </section>
 
 <section id="repository">
   <h2>Repo</h2>
   <dl class="facts">
-    <dt>Repo file</dt><dd><a href="{{ repo_file_url | escape }}">{{ repo_file_url | escape }}</a></dd>
-{%- for baseurl in baseurls %}
-    <dt>{{ baseurl.arch | escape }}</dt><dd><code>{{ baseurl.url | escape }}</code></dd>
-{%- endfor %}
-    <dt>Tumbleweed</dt><dd>{% if tumbleweed_snapshot %}{{ tumbleweed_snapshot | escape }}{% else %}unknown{% endif %}</dd>
-    <dt>Updated</dt><dd>{% if generated_at %}<time datetime="{{ generated_at_iso | escape }}">{{ generated_at | escape }}</time>{% else %}unknown{% endif %}</dd>
-    <dt>Run</dt><dd>{{ run | escape }}{% if release %} <code>{{ release | escape }}</code>{% endif %}</dd>
-    <dt>Packages</dt><dd>{{ totals.succeeded }} of {{ totals.packages }} built</dd>
-    <dt>Files</dt><dd>{{ totals.binary_rpms }} rpms, {{ totals.source_rpms }} src, {{ totals.size }}</dd>
+    <dt>Repo file</dt><dd><a href="<%= h repo_file_url %>"><%= h repo_file_url %></a></dd>
+<%- baseurls.each do |baseurl| -%>
+    <dt><%= h baseurl.arch %></dt><dd><code><%= h baseurl.url %></code></dd>
+<%- end -%>
+    <dt>Tumbleweed</dt><dd><% if tumbleweed_snapshot %><%= h tumbleweed_snapshot %><% else %>unknown<% end %></dd>
+    <dt>Updated</dt><dd><% if generated_at %><time datetime="<%= h generated_at_iso %>"><%= h generated_at %></time><% else %>unknown<% end %></dd>
+    <dt>Run</dt><dd><%= h run %><% if release %> <code><%= h release %></code><% end %></dd>
+    <dt>Packages</dt><dd><%= h totals.succeeded %> of <%= h totals.packages %> built</dd>
+    <dt>Files</dt><dd><%= h totals.binary_rpms %> rpms, <%= h totals.source_rpms %> src, <%= h totals.size %></dd>
     <dt>JSON</dt><dd><a href="packages.json">packages.json</a></dd>
   </dl>
 </section>
@@ -82,21 +82,21 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
       <tr><th>Package</th><th>Version</th><th>Origin</th><th>Status</th><th>Built</th><th>Files</th></tr>
     </thead>
     <tbody>
-{%- for package in packages %}
-      <tr id="{{ package.anchor }}">
-        <td data-label="Package"><a class="name" href="#{{ package.anchor }}">{{ package.name | escape }}</a></td>
-        <td data-label="Version">{% if package.evr %}<code>{{ package.evr | escape }}</code>{% else %}<span class="muted">unknown</span>{% endif %}</td>
-        <td data-label="Origin"><div>{% if package.origin_url %}<a href="{{ package.origin_url | escape }}">{{ package.origin_label | escape }}</a>{% else %}{{ package.origin_label | escape }}{% endif %}<span class="kind">{{ package.kind | escape }}</span></div></td>
-        <td data-label="Status"><div><span class="status status-{{ package.status_class }}">{{ package.status | escape }}</span>{% if package.last_run %} <span class="muted">run {{ package.last_run | escape }}</span>{% endif %}{% if package.reason %}<span class="reason">{{ package.reason | escape }}</span>{% endif %}</div></td>
-        <td data-label="Built">{% if package.built_at %}<time datetime="{{ package.built_at_iso | escape }}">{{ package.built_at | escape }}</time>{% else %}<span class="muted">never</span>{% endif %}</td>
-        <td data-label="Files"><div>{% if package.files.size > 0 %}<button type="button" class="files-toggle" aria-expanded="false" aria-controls="files-{{ package.anchor }}" hidden>{{ package.files.size }} rpms</button>{% else %}<span class="muted">none</span>{% endif %}{% if package.retained %}<span class="reason">from last good build</span>{% endif %}</div></td>
+<%- packages.each do |package| -%>
+      <tr id="<%= h package.anchor %>">
+        <td data-label="Package"><a class="name" href="#<%= h package.anchor %>"><%= h package.name %></a></td>
+        <td data-label="Version"><% if package.evr %><code><%= h package.evr %></code><% else %><span class="muted">unknown</span><% end %></td>
+        <td data-label="Origin"><div><% if package.origin_url %><a href="<%= h package.origin_url %>"><%= h package.origin_label %></a><% else %><%= h package.origin_label %><% end %><span class="kind"><%= h package.kind %></span></div></td>
+        <td data-label="Status"><div><span class="status status-<%= h package.status_class %>"><%= h package.status %></span><% if package.last_run %> <span class="muted">run <%= h package.last_run %></span><% end %><% if package.reason %><span class="reason"><%= h package.reason %></span><% end %></div></td>
+        <td data-label="Built"><% if package.built_at %><time datetime="<%= h package.built_at_iso %>"><%= h package.built_at %></time><% else %><span class="muted">never</span><% end %></td>
+        <td data-label="Files"><div><% if package.files.any? %><button type="button" class="files-toggle" aria-expanded="false" aria-controls="files-<%= h package.anchor %>" hidden><%= h package.files.size %> rpms</button><% else %><span class="muted">none</span><% end %><% if package.retained %><span class="reason">from last good build</span><% end %></div></td>
       </tr>
-{%- if package.files.size > 0 %}
-      <tr class="files-row" id="files-{{ package.anchor }}">
-        <td colspan="6"><ul class="files">{% for file in package.files %}<li><a href="{{ file.url | escape }}">{{ file.name | escape }}</a><span class="muted">{{ file.size }}</span></li>{% endfor %}</ul></td>
+<%- if package.files.any? -%>
+      <tr class="files-row" id="files-<%= h package.anchor %>">
+        <td colspan="6"><ul class="files"><% package.files.each do |file| %><li><a href="<%= h file.url %>"><%= h file.name %></a><span class="muted"><%= h file.size %></span></li><% end %></ul></td>
       </tr>
-{%- endif %}
-{%- endfor %}
+<%- end -%>
+<%- end -%>
     </tbody>
   </table>
 </section>
@@ -104,11 +104,11 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
 
 <footer>
   <p>Some codecs may be patented where you live. Check your local laws.</p>
-{%- if source_url %}
-  <p>Source: <a href="{{ source_url | escape }}">{{ source_url | escape }}</a></p>
-{%- endif %}
+<%- if source_url -%>
+  <p>Source: <a href="<%= h source_url %>"><%= h source_url %></a></p>
+<%- end -%>
   <p>Inspired by <a href="https://omnipackage.org">omnipackage.org</a>.</p>
-  <p>Run {{ run | escape }}{% if generated_at %}, {{ generated_at | escape }}{% endif %}.</p>
+  <p>Run <%= h run %><% if generated_at %>, <%= h generated_at %><% end %>.</p>
 </footer>
 </div>
 <script>

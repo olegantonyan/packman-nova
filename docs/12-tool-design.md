@@ -17,7 +17,7 @@ Ruby CLI that materializes package sources, runs `pbuild` inside a rootless podm
 | Factory public API serves the expanded file list with `srcmd5` and files; fetch files with `?rev=<srcmd5>`. Factory `_config` at `.../openSUSE:Factory/_config`. TW snapshot id from `media.1/media`. | curl | Sync source of truth for links. |
 | Factory prjconf: `Prefer: ffmpeg-N-mini-libs/-devel`; ffmpeg-8 spec `Requires: (libavcodec62 = %version-%release or ffmpeg-8-mini-libs = %version-%release)`. | `prjconf/factory-base.conf` | Our `ffmpeg-mini` stub must cover ffmpeg 5, 6, 7, 8 and 9. |
 | Rootless podman: uid 0 inside = host user, so `_build.*` results are owned by the host user; only build-root contents map to subuids. `--userns=keep-id` is not usable (pbuild needs uid 0 for chroot). | `/etc/subuid` | No chown for results; `clean --build-root` via `podman unshare rm -rf` or a throwaway container. |
-| Host: Ruby 4.0.6, podman 6.0.2, gems dotenv, aws-sdk-s3, minitest, rubocop, rexml. System liquid 2.5.1 is too old: gemspec requires `liquid ~> 5`. Workdir parent exists with 3.1 TB free. | shell | |
+| Host: Ruby 4.0.6, podman 6.0.2, gems dotenv, aws-sdk-s3, minitest, rubocop, rexml. Workdir parent exists with 3.1 TB free. | shell | |
 
 ## 1. Architecture
 
@@ -61,8 +61,8 @@ lib/packman_nova/gpg.rb                      generate/info/convert/import comman
 lib/packman_nova/repo/{layout,state,diff,rpm_query,signer,createrepo,repo_file,retention}.rb
 lib/packman_nova/repo/providers/{base,localfs,s3}.rb
 lib/packman_nova/publish.rb
-lib/packman_nova/site/{generator,model}.rb
-lib/packman_nova/site/templates/{index.html.liquid,packman-nova.repo.liquid,style.css}
+lib/packman_nova/site/{generator,model,package_row,format,template,view}.rb
+lib/packman_nova/site/templates/{index.html.erb,style.css}
 config/packman-nova.yml                      committed defaults with ${VAR}
 .env.example
 packages/<pkg>/package.yml (+ vendored files; tarballs ignored by .gitignore)
@@ -76,7 +76,7 @@ docs/12-tool.md                              CLI reference, workdir layout, stat
 tools/                                       legacy scripts from milestones 1-3
 ```
 
-Gemspec runtime deps: `dotenv`, `liquid ~> 5`, `aws-sdk-s3 ~> 1`, `rexml`, `base64`, `logger`; `required_ruby_version >= 4.0`. Gemfile: `gemspec` + minitest, minitest-fail-fast, rake, rubocop, rubocop-minitest, rubocop-rake, pry. Rakefile tasks: `test` (excludes test/integration), `integration_test`, `rubocop`, default `test rubocop`. `.rubocop.yml` copied from agent-ruby with `TargetRubyVersion: 4.0`, `Exclude: exe/packman-nova, vendor/**/*`.
+Gemspec runtime deps: `dotenv`, `aws-sdk-s3 ~> 1`, `rexml`, `base64`, `logger`; `required_ruby_version >= 4.0`. Gemfile: `gemspec` + minitest, minitest-fail-fast, rake, rubocop, rubocop-minitest, rubocop-rake, pry. Rakefile tasks: `test` (excludes test/integration), `integration_test`, `rubocop`, default `test rubocop`. `.rubocop.yml` copied from agent-ruby with `TargetRubyVersion: 4.0`, `Exclude: exe/packman-nova, vendor/**/*`.
 
 ## 3. Workdir layout (`/run/media/oleg/c3996ce0-a379-4403-9d64-7d4c0536463f/dev/packman-nova`)
 
@@ -340,7 +340,7 @@ Algorithm (rpm/gpg/createrepo steps run inside the builder container with the re
 
 ## 9. Static site
 
-`Site::Model` from `state.json` + config; `index.html.liquid` (light/dark CSS variables, code-block/copy-button styling borrowed from `omnipackage-rs/src/publish/repo_files/install.html.liquid`, content rendered at publish time): what this is (independent rebuild of Packman Essentials, not affiliated with Packman or openSUSE), install block (`zypper ar -f -p 80 <public_url>/opensuse_tumbleweed/essentials/packman-nova.repo`, `zypper --gpg-auto-import-keys ref`, `zypper dup --from packman-nova-essentials --allow-vendor-change`), key id + fingerprint + link, TW snapshot, run and generation time, package table (name, version-release, kind/origin with link to build.opensuse.org for links, status, built date, rpm list in a full-width row toggled per package; native packages link to their src.rpm), a badge with the latest build-publish run (GitHub API, unauthenticated, fetched by the browser; shown only when `site.source_url` is a GitHub repo), footer. `packman-nova.repo.liquid` renders the `.repo` file (also used once to generate the file committed into `packages/packman-nova-keyring/`). Liquid `strict_variables: true`.
+`Site::Model` from `state.json` + config; `index.html.erb` (light/dark CSS variables, code-block/copy-button styling borrowed from `omnipackage-rs/src/publish/repo_files/install.html.liquid`, content rendered at publish time): what this is (independent rebuild of Packman Essentials, not affiliated with Packman or openSUSE), install block (`zypper ar -f -p 80 <public_url>/opensuse_tumbleweed/essentials/packman-nova.repo`, `zypper --gpg-auto-import-keys ref`, `zypper dup --from packman-nova-essentials --allow-vendor-change`), key id + fingerprint + link, TW snapshot, run and generation time, package table (name, version-release, kind/origin with link to build.opensuse.org for links, status, built date, rpm list in a full-width row toggled per package; native packages link to their src.rpm), a badge with the latest build-publish run (GitHub API, unauthenticated, fetched by the browser; shown only when `site.source_url` is a GitHub repo), footer. Rendered with stdlib ERB over `Site::View` (model hashes as `Data`, so an unknown key raises); every `<%=` goes through `h` except the inlined stylesheet, enforced by a test. `Repo::RepoFile` renders the `.repo` file (heredoc).
 
 ## 10. GPG (`::PackmanNova::Gpg`)
 

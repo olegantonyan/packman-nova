@@ -40,6 +40,18 @@ describe ::PackmanNova::Site::Generator do
     refute_includes html, '<8.1.3>'
   end
 
+  it 'escapes hostile state in text, attributes and urls' do
+    payload = %("'><script>alert(1)</script><%= 7 * 7 %>)
+    hostile = state.merge('run' => payload, 'generated_at' => payload, 'key' => { 'id' => payload, 'fingerprint' => payload })
+    hostile['packages'] = state.fetch('packages').merge(payload => { 'status' => payload, 'reason' => payload, 'version' => payload, 'built_at' => payload })
+    hostile['files'] = state.fetch('files').merge("x86_64/#{payload}.rpm" => { 'package' => payload, 'size' => payload })
+    html = ::PackmanNova::Site::Generator.new(config: site_config, state: hostile, logger: null_logger).render_index
+
+    refute_includes html, '<script>alert'
+    refute_includes html, %("'>)
+    assert_includes html, '&quot;&#39;&gt;&lt;script&gt;alert(1)&lt;/script&gt;&lt;%= 7 * 7 %&gt;'
+  end
+
   it 'is self-contained' do
     assert_includes html, 'light-dark('
     assert_includes html, 'id="theme-toggle"'

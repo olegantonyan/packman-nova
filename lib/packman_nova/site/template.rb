@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require 'liquid'
+require 'erb'
+require 'packman_nova/site/view'
 
 module PackmanNova
   module Site
     class Template
       DIR = ::File.join(__dir__, 'templates')
-      RENDER_OPTIONS = { strict_variables: true, strict_filters: true }.freeze
 
       class << self
         def read(name)
@@ -20,22 +20,19 @@ module PackmanNova
 
       def initialize(source:, name: 'template')
         @name = name
-        @liquid = wrap_errors { ::Liquid::Template.parse(source, error_mode: :strict) }
+        @erb = ::ERB.new(source, trim_mode: '-')
+        @erb.filename = name
       end
 
       def render(assigns)
-        wrap_errors { liquid.render!(assigns, RENDER_OPTIONS) }
+        erb.result(::PackmanNova::Site::View.wrap(assigns).instance_eval { binding })
+      rescue ::StandardError, ::SyntaxError => e
+        raise ::PackmanNova::Error, "#{name}: #{e.message}"
       end
 
       private
 
-      attr_reader :name, :liquid
-
-      def wrap_errors
-        yield
-      rescue ::Liquid::Error => e
-        raise ::PackmanNova::Error, "#{name}: #{e.message}"
-      end
+      attr_reader :name, :erb
     end
   end
 end
