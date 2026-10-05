@@ -15,6 +15,9 @@
   <h1>{{ title | escape }}</h1>
   <p>Packman Essentials, rebuilt from public sources. Not affiliated with Packman or openSUSE.</p>
   <p>Packman <a href="https://lists.links2linux.de/pipermail/packman/2026-August/018314.html">shuts down</a> on 2026-12-31. This repo keeps the packages going.</p>
+{%- if pipeline_api_url %}
+  <p id="pipeline" class="pipeline" data-api="{{ pipeline_api_url | escape }}" hidden></p>
+{%- endif %}
   <nav><a href="#install">Install</a><a href="#signing-key">Key</a><a href="#repository">Repo</a><a href="#packages">Packages</a>{% if source_url %}<a href="{{ source_url | escape }}">GitHub</a>{% endif %}</nav>
 </header>
 
@@ -101,6 +104,26 @@
 </footer>
 </div>
 <script>
+var pipeline = document.getElementById('pipeline');
+if (pipeline && window.fetch) {
+  fetch(pipeline.dataset.api).then(function (response) {
+    return response.ok ? response.json() : null;
+  }).then(function (data) {
+    var run = data && data.workflow_runs && data.workflow_runs[0];
+    if (!run) return;
+    var time = function (iso) { return iso.slice(0, 16).replace('T', ' ') + ' UTC'; };
+    var words = { success: 'succeeded', failure: 'failed', timed_out: 'timed out', startup_failure: 'failed to start' };
+    var running = run.status !== 'completed';
+    var failed = ['failure', 'timed_out', 'startup_failure'].indexOf(run.conclusion) >= 0;
+    var link = document.createElement('a');
+    link.href = run.html_url;
+    link.textContent = running ? 'Build #' + run.run_number + ' running since ' + time(run.run_started_at || run.created_at)
+      : 'Last build #' + run.run_number + ' ' + (words[run.conclusion] || run.conclusion || run.status) + ', ' + time(run.updated_at);
+    pipeline.appendChild(link);
+    pipeline.classList.add(running ? 'pipeline-running' : failed ? 'pipeline-failed' : run.conclusion === 'success' ? 'pipeline-ok' : 'pipeline-other');
+    pipeline.hidden = false;
+  }).catch(function () {});
+}
 document.querySelectorAll('.files-toggle').forEach(function (button) {
   var row = document.getElementById(button.getAttribute('aria-controls'));
   row.hidden = true;

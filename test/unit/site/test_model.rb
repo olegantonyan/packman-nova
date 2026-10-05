@@ -100,10 +100,11 @@ describe ::PackmanNova::Site::Model do
   end
 
   it 'exposes every template variable' do
-    assert_equal %w[baseurls commands description generated_at generated_at_iso key key_url packages public_url release repo_file_url repo_url run slug source_url
-                    title totals tumbleweed_snapshot], model.to_h.keys.sort
+    assert_equal %w[baseurls commands description generated_at generated_at_iso key key_url packages pipeline_api_url public_url release repo_file_url repo_url
+                    run slug source_url title totals tumbleweed_snapshot], model.to_h.keys.sort
     assert_equal '2026-09-29 08:15 UTC', model.to_h.fetch('generated_at')
     assert_equal 'https://github.com/olegantonyan/packman-nova', model.to_h.fetch('source_url')
+    assert_equal 'https://api.github.com/repos/olegantonyan/packman-nova/actions/workflows/build-publish.yml/runs?per_page=1', model.pipeline_api_url
   end
 
   it 'takes the source URL from site.source_url' do
@@ -113,6 +114,16 @@ describe ::PackmanNova::Site::Model do
       config = load_config(env: ::SiteTestSupport::PUBLIC_ENV, path: path)
 
       assert_equal 'https://github.com/example/packman-nova', ::PackmanNova::Site::Model.new(config: config, state: state).source_url
+    end
+  end
+
+  it 'has no pipeline status for a non-GitHub source URL' do
+    with_tmpdir do |dir|
+      path = ::File.join(dir, 'packman-nova.yml')
+      ::File.write(path, "site:\n  source_url: https://gitlab.com/example/packman-nova\n")
+      config = load_config(env: ::SiteTestSupport::PUBLIC_ENV, path: path)
+
+      assert_nil ::PackmanNova::Site::Model.new(config: config, state: state).pipeline_api_url
     end
   end
 end

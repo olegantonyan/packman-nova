@@ -23,6 +23,7 @@ describe ::PackmanNova::Site::Generator do
     assert_includes html, '20260927'
     assert_includes html, '<title>packman-nova Essentials for openSUSE Tumbleweed</title>'
     assert_includes html, '<a href="https://github.com/olegantonyan/packman-nova">GitHub</a>'
+    assert_includes html, 'data-api="https://api.github.com/repos/olegantonyan/packman-nova/actions/workflows/build-publish.yml/runs?per_page=1"'
     assert_includes html, 'Inspired by <a href="https://omnipackage.org">omnipackage.org</a>.'
   end
 

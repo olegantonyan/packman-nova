@@ -7,6 +7,8 @@ module PackmanNova
       REPO_FILE_NAME = ::PackmanNova::Repo::Layout::REPO_FILE
       SOURCE_DIR = 'src'
       SUCCEEDED = ::PackmanNova::Site::PackageRow::SUCCEEDED
+      GITHUB_REPO = %r{\Ahttps://github\.com/([^/]+/[^/]+?)/?\z}
+      WORKFLOW_FILE = 'build-publish.yml'
 
       class << self
         def localfs_root(config)
@@ -77,6 +79,11 @@ module PackmanNova
         url.empty? ? nil : url
       end
 
+      def pipeline_api_url
+        repo = GITHUB_REPO.match(source_url.to_s)&.captures&.first
+        "https://api.github.com/repos/#{repo}/actions/workflows/#{WORKFLOW_FILE}/runs?per_page=1" if repo
+      end
+
       def to_h
         links.merge(summary).merge(
           'commands' => commands, 'key' => key, 'baseurls' => baseurls, 'totals' => totals, 'packages' => packages
@@ -104,7 +111,7 @@ module PackmanNova
       def links
         {
           'slug' => slug, 'public_url' => public_url, 'repo_url' => repo_url, 'repo_file_url' => repo_file_url,
-          'key_url' => key_url, 'source_url' => source_url
+          'key_url' => key_url, 'source_url' => source_url, 'pipeline_api_url' => pipeline_api_url
         }
       end
 

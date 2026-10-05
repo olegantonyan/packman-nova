@@ -150,6 +150,14 @@ td time, td[data-label="Version"] code { white-space: nowrap; }
 .status-ok { background: var(--ok-bg); color: var(--ok-text); }
 .status-fail { background: var(--fail-bg); color: var(--fail-text); }
 .status-other { background: var(--other-bg); color: var(--other-text); }
+.pipeline { display: inline-block; margin: 0; padding: .3rem .8rem; border-radius: 999px; font-size: .9rem; font-weight: 600; }
+.pipeline a { color: inherit; }
+.pipeline-running { background: var(--other-bg); color: var(--other-text); }
+.pipeline-running::before { content: "\25CF  "; animation: pulse 1.2s ease-in-out infinite; }
+.pipeline-failed { background: var(--fail-bg); color: var(--fail-text); }
+.pipeline-ok { background: var(--ok-bg); color: var(--ok-text); }
+.pipeline-other { background: var(--other-bg); color: var(--other-text); }
+@keyframes pulse { 50% { opacity: .2; } }
 .files-toggle {
   font: inherit;
   font-size: .85rem;
