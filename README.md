@@ -39,6 +39,22 @@ build log. The previously published rpms of that package stay in the repo.
 To change a package, edit `packages/<name>/` and push to `master`. CI runs the tests, and the next nightly run (or a
 manual dispatch) builds and publishes it.
 
+## Updating native packages
+
+`obs-link` packages follow Factory by themselves. `native` packages change only when bumped, which `update` automates
+for those with a `watch:` block in `package.yml` (an upstream page, git tags or a git branch):
+
+```
+bundle exec exe/packman-nova update --check                 # list packages with a newer upstream version
+bundle exec exe/packman-nova update --package x265          # bump one (omit --package to bump all outdated)
+bundle exec exe/packman-nova update --package faac --version 1.50   # pin an exact version
+```
+
+An update rewrites the spec `Version:`, the `package.yml` sources and checksums, and adds a `.changes` entry by
+`packager` (config). Git snapshots (libx264, x265, faac, rtmpdump, ffmpeg-6) are regenerated with `git archive`, no
+osc or `_service` involved. Nothing is built: review `git diff packages/`, run `build --package <name>`, then push.
+A new upstream version may still need patch work.
+
 ## Build and publish
 
 ```
@@ -76,7 +92,7 @@ with the new key; users accept it on the next `zypper ref`.
 ## Layout
 
 - `lib/`, `exe/` the `packman-nova` CLI; `config/packman-nova.yml` defaults, secrets from `.env`.
-- `packages/<name>/` package manifests and vendored specs (tarballs are downloaded by `sync`).
+- `packages/<name>/` package manifests and vendored specs (tarballs are downloaded by `sync`, versions bumped by `update`).
 - `prjconf/` Factory config fallback and the Packman macro set.
 - `container/` builder image (Tumbleweed + pbuild).
 - `docs/` Packman build config findings, replacement plan, CLI reference.
