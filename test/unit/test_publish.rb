@@ -110,6 +110,16 @@ describe ::PackmanNova::Publish do
     assert_nil state['packages']['ffmpeg-8']['log']
   end
 
+  it 'publishes no stale log for an unresolvable package' do
+    ::File.write(::File.join(results, 'ffmpeg-8', '_log'), "old success\n")
+    record = PublishFakes.record('fdk-aac' => ['succeeded', fdk], 'ffmpeg-8' => ['unresolvable', []])
+    record['packages']['ffmpeg-8']['log'] = 'project/_build.tumbleweed.x86_64/ffmpeg-8/_log'
+    write_record(record)
+    publisher.call(site: false)
+
+    refute_path_exists ::File.join(essentials, 'logs', 'ffmpeg-8.log')
+  end
+
   it 'publishes the i586 log when the baselibs pass failed' do
     i586 = ::File.join(workdir, 'project', '_build.tumbleweed.i586', 'fdk-aac')
     ::FileUtils.mkdir_p(i586)

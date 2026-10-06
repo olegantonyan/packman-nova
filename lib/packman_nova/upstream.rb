@@ -16,12 +16,14 @@ require 'packman_nova/upstream/package_updater'
 module PackmanNova
   class Upstream
     ERRORS = [::PackmanNova::Error, ::SystemCallError].freeze
+    ARCHIVE_LABEL = 'source archive'
 
-    def initialize(config:, logger:, packages_dir: nil, services: nil, clock: -> { ::Time.now })
+    def initialize(config:, logger:, packages_dir: nil, services: nil, bucket: nil, clock: -> { ::Time.now })
       @config = config
       @logger = logger
       @packages_dir = packages_dir || config.packages_dir
       @services = services
+      @bucket = bucket
       @clock = clock
     end
 
@@ -34,7 +36,8 @@ module PackmanNova
       validate_update!(packages, version)
       workdir.with_lock do
         workdir.prepare!
-        manifests(packages).map { |manifest| guarded(manifest, version:) { |current, probe| apply(manifest, current, probe, version) } }
+        results = manifests(packages).map { |manifest| guarded(manifest, version:) { |current, probe| apply(manifest, current, probe, version) } }
+        results + archive_sources(packages, results)
       end
     end
 
@@ -50,6 +53,25 @@ module PackmanNova
       ensure_online!
       raise ::PackmanNova::ConfigError, 'packager is not set' if config.packager.empty?
       raise ::PackmanNova::UpstreamError, '--version needs exactly one --package' if version && packages.to_a.uniq.size != 1
+    end
+
+    def archive_sources(packages, results)
+      bucket = source_bucket
+      return archive_skipped(results) unless bucket
+
+      ::PackmanNova::Repo::SourceArchive.new(manifests: manifests(packages), workdir:, logger:, cached_only: true).call(bucket)
+      []
+    rescue ::StandardError => e
+      [result_for(ARCHIVE_LABEL, :failed, detail: "upload failed: #{e.message.lines.first.to_s.strip}")]
+    end
+
+    def archive_skipped(results)
+      logger.warn('repository.s3 is not configured: new sources are not archived, CI cannot fetch archive-only ones') if results.any? { |result| result.state == :updated }
+      []
+    end
+
+    def source_bucket
+      @source_bucket ||= @bucket || (::PackmanNova::Repo::Providers::S3.configured?(config.repository.s3) && ::PackmanNova::Repo::Providers::S3.build(config:, logger:).bucket)
     end
 
     def manifests(names)
@@ -91,7 +113,11 @@ module PackmanNova
     end
 
     def result(manifest, state, **)
-      ::PackmanNova::Upstream::Result.new(name: manifest.name, state:, **)
+      result_for(manifest.name, state, **)
+    end
+
+    def result_for(name, state, **)
+      ::PackmanNova::Upstream::Result.new(name:, state:, **)
     end
 
     def current_version(manifest)

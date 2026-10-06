@@ -5,10 +5,11 @@ module PackmanNova
     class SourceArchive
       CONTENT_TYPE = 'application/octet-stream'
 
-      def initialize(manifests:, workdir:, logger:)
+      def initialize(manifests:, workdir:, logger:, cached_only: false)
         @manifests = manifests
         @workdir = workdir
         @logger = logger
+        @cached_only = cached_only
       end
 
       def call(bucket)
@@ -21,14 +22,14 @@ module PackmanNova
 
       private
 
-      attr_reader :manifests, :workdir, :logger
+      attr_reader :manifests, :workdir, :logger, :cached_only
 
       def blobs
         @blobs ||= remote_sources.each_with_object({}) do |source, acc|
           path = workdir.cache_blob(sha256: source.sha256)
           next acc[source.sha256] = path if ::File.file?(path)
 
-          logger.warn("source archive: #{source.file} (#{source.sha256}) is not in the cache, run sync first")
+          logger.warn("source archive: #{source.file} (#{source.sha256}) is not in the cache, run sync first") unless cached_only
         end
       end
 

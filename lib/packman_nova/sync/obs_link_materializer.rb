@@ -19,7 +19,7 @@ module PackmanNova
         return outcome(:unchanged, listing, files, previous:) unless detail
         return outcome(:changed, listing, files, detail:) if check_only
 
-        files.each { |file| ensure_blob(file, listing) }
+        files.select(&:blob).each { |file| ensure_blob(file, listing) }
         package_dir.materialize(files)
         outcome(:changed, listing, files, detail:)
       end
@@ -41,9 +41,27 @@ module PackmanNova
       end
 
       def expected_files(listing)
-        listing.entries.reject { |entry| manifest.link_delete.include?(entry.name) }.map do |entry|
-          ::PackmanNova::Sync::ExpectedFile.new(name: entry.name, source: services.cache.md5_path(entry.md5), md5: entry.md5, blob: true)
-        end
+        files = listing.entries.reject { |entry| manifest.link_delete.include?(entry.name) }.map { |entry| listed_file(entry) }
+        link_patches.any? ? patched_files(files, listing) : files
+      end
+
+      def listed_file(entry)
+        ::PackmanNova::Sync::ExpectedFile.new(name: entry.name, source: services.cache.md5_path(entry.md5), md5: entry.md5, blob: true)
+      end
+
+      def patched_files(files, listing)
+        spec = spec_file(files)
+        ensure_blob(spec, listing)
+        patched = link_patches.spec(spec)
+        files.map { |file| file.equal?(spec) ? patched : file } + link_patches.files
+      end
+
+      def spec_file(files)
+        files.find { |file| file.name == manifest.spec_name } || raise(::PackmanNova::SyncError, "#{manifest.name}: #{manifest.spec_name} not in #{origin}")
+      end
+
+      def link_patches
+        @link_patches ||= ::PackmanNova::Sync::LinkPatches.new(manifest:, cache: services.cache)
       end
 
       def change_detail(previous, listing, files)

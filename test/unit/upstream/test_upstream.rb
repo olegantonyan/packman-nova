@@ -2,6 +2,25 @@
 
 require 'test_helper'
 
+class FakeArchiveBucket
+  attr_accessor :failing
+  attr_reader :uploaded
+
+  def initialize
+    @uploaded = []
+  end
+
+  def list(_prefix)
+    uploaded.to_h { |key| [key, {}] }
+  end
+
+  def upload(_path, key, **)
+    raise ::IOError, 'denied' if failing
+
+    uploaded << key
+  end
+end
+
 describe ::PackmanNova::Upstream, :sync do
   let(:server) { ::HttpStubServer.new }
   let(:dir) { ::Dir.mktmpdir('packman-nova-upstream-') }
@@ -96,6 +115,27 @@ describe ::PackmanNova::Upstream, :sync do
       assert_includes read('snap', 'snap.spec'), "%define sover   2\nName:           snap\nVersion:        1.1\n"
       assert_includes read('snap', 'snap.spec'), "Provides:       weakremover(libsnap-1)\nProvides:       weakremover(libsnap-0)\n"
       assert_equal "libsnap-2\n", read('snap', 'baselibs.conf')
+    end
+
+    describe 'with a source archive bucket' do
+      let(:bucket) { FakeArchiveBucket.new }
+      let(:upstream) { ::PackmanNova::Upstream.new(config:, logger: null_logger, packages_dir:, bucket:, clock:) }
+
+      it 'uploads the new snapshot, and a rerun uploads only what is missing' do
+        upstream.update(packages: ['snap'])
+        sha256 = ::PackmanNova::Manifest.load_file(::File.join(packages_dir, 'snap', 'package.yml')).sources.first.sha256
+
+        assert_equal ["_sources/sha256/#{sha256}"], bucket.uploaded
+        assert_equal([], upstream.update(packages: ['snap']).reject { |result| result.state == :ok })
+        assert_equal 1, bucket.uploaded.size
+      end
+
+      it 'reports a failed upload' do
+        bucket.failing = true
+        results = upstream.update(packages: ['snap'])
+
+        assert_equal [%i[updated], [:failed, 'upload failed: denied']], [results.first.to_h.values_at(:state), results.last.to_h.values_at(:state, :detail)]
+      end
     end
   end
 

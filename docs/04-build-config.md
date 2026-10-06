@@ -2,7 +2,7 @@
 
 ## Core finding
 Packman's ffmpeg, vlc, libheif, libquicktime, xine-lib, shairplay are **unmodified openSUSE sources**.
-The `_link` files contain no patches (ffmpeg links only delete Factory's `_multibuild` and `.changes`).
+The `_link` files contain no patches (ffmpeg links only delete Factory's `_multibuild` and `.changes`). Ours add `link.patches` where Factory breaks only under `BUILD_ORIG` (ffmpeg-8/9: liboapvenc vs openapv 1.1).
 All codec differences come from the Essentials project config, which is inherited by every project below it.
 
 Raw evidence (`reference/`: PMBS `Essentials._config`, Factory specs, Essentials source snapshot) was removed; see `git show c4ee8c6:reference/...`.

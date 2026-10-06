@@ -26,13 +26,14 @@ module PackmanNova
       end
     end
 
-    attr_reader :name, :kind, :tier, :tags, :notes, :origin, :link_delete, :sources, :watch, :spec_name, :dir
+    attr_reader :name, :kind, :tier, :tags, :notes, :origin, :link_delete, :link_patches, :sources, :watch, :spec_name, :dir
 
     def initialize(data, dir:, require_checksums: true)
       @dir = ::File.expand_path(dir)
       attributes = ::PackmanNova::Manifest::Parser.new(data, label: ::File.basename(@dir), require_checksums:).call
       attributes.each { |key, value| instance_variable_set(:"@#{key}", value.frozen? ? value : value.freeze) }
       validate_spec!
+      validate_link_patches!
       freeze
     end
 
@@ -55,6 +56,11 @@ module PackmanNova
     end
 
     private
+
+    def validate_link_patches!
+      missing = link_patches.reject { |file| ::File.file?(::File.join(dir, file)) }
+      raise ::PackmanNova::ManifestError, "package #{name}: link.patches: #{missing.join(', ')} not found in #{dir}" unless missing.empty?
+    end
 
     def validate_spec!
       return if obs_link? || spec_available?

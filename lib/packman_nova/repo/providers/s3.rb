@@ -29,11 +29,19 @@ module PackmanNova
             new(root: config.workdir.repo_mirror_dir, logger:, bucket:, purger: purger(settings, logger), public_url: config.repository.public_url)
           end
 
+          def configured?(settings)
+            missing_settings(settings).empty?
+          end
+
           def validate!(settings)
-            missing = REQUIRED_SETTINGS.select { |key| settings.public_send(key).to_s.empty? }
+            missing = missing_settings(settings)
             raise ::PackmanNova::ConfigError, "repository.s3: missing #{missing.join(', ')}" unless missing.empty?
 
             settings
+          end
+
+          def missing_settings(settings)
+            REQUIRED_SETTINGS.select { |key| settings.public_send(key).to_s.empty? }
           end
 
           def purger(settings, logger)
