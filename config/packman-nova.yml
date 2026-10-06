@@ -1,5 +1,6 @@
 workdir: ${PACKMAN_NOVA_WORKDIR}
 project_name: packman-nova
+packager: "Oleg Antonyan <oleg.b.antonyan@gmail.com>"
 offline: false
 distro:
   id: opensuse_tumbleweed

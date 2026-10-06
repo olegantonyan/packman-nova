@@ -21,6 +21,8 @@ module PackmanNova
 
   class BuildError < ::PackmanNova::Error; end
 
+  class UpstreamError < ::PackmanNova::Error; end
+
   class SubprocessError < ::PackmanNova::Error
     OUTPUT_TAIL_LINES = 20
 

@@ -21,7 +21,7 @@
 %define sover   215
 %define libname lib%name
 %define libsoname %{libname}-%{sover}
-%define uver    4_1
+%define uver    %{lua:print((string.gsub(rpm.expand("%{version}"), "%.", "_")))}
 Name:           x265
 Version:        4.1
 Release:        0

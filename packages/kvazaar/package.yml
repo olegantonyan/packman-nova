@@ -9,3 +9,6 @@ sources:
       - https://github.com/ultravideo/kvazaar/archive/v2.3.2.tar.gz
     sha256: ddd0038696631ca5368d8e40efee36d2bbb805854b9b1dda8b12ea9b397ea951
     size: 600315
+watch:
+  git: https://github.com/ultravideo/kvazaar.git
+  tags: '^v(\d+(?:\.\d+)+)$'

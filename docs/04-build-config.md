@@ -67,8 +67,8 @@ The `%define` block affects OBS dependency expansion; the `Macros:` block is wri
 ## Native packages: what they add over Factory
 - `gstreamer-plugins-bad-codecs`: Factory gst-plugins-bad tarball + `build_what_we_need_only.patch` that guts `meson.build` to build only `ext/{faac,de265,openaptx,x265}`; installs `libgstde265.so libgstfaac.so libgstopenaptx.so libgstx265.so`; `Supplements: gstreamer-plugins-bad`.
 - `gstreamer-plugins-ugly-codecs`: same idea, x264 plugin only, no patch.
-- `libx264` (multibuild: lib + `x264` CLI flavor needing ffmpeg + l-smash), `x265` (tar_scm from bitbucket, arm patches, pkgconfig patch), `libde265`, `kvazaar`, `fdk-aac`, `faac`, `vo-aacenc`, `amrnb`, `amrwb`, `dcadec`, `l-smash`, `libopenaptx`, `pipewire-aptx`, `gpac`, `rtmpdump`, `libaacs`, `libbdplus`, `libdvdcss2`, `SVT-AV1` (own copy), `broadcom-wl`, `r8168`, firmware and blob packages.
-- Specs, `_service`, patches and `.changes` for all of them are vendored in `packages/<pkg>/`.
+- `libx264` (multibuild: lib + `x264` CLI flavor needing ffmpeg + l-smash), `x265` (git snapshot from bitbucket, arm patches, pkgconfig patch), `libde265`, `kvazaar`, `fdk-aac`, `faac`, `vo-aacenc`, `amrnb`, `amrwb`, `dcadec`, `l-smash`, `libopenaptx`, `pipewire-aptx`, `gpac`, `rtmpdump`, `libaacs`, `libbdplus`, `libdvdcss2`, `SVT-AV1` (own copy), `broadcom-wl`, `r8168`, firmware and blob packages.
+- Specs, patches and `.changes` for all of them are vendored in `packages/<pkg>/`; `update` bumps versions (`docs/12-tool.md`).
 
 ## Things that will bite
 - Some Packman specs use `%packman_bs` or `BUILD_ORIG_ADDON`; grep `packages/` before dropping a macro.

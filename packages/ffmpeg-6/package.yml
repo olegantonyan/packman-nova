@@ -10,4 +10,55 @@ sources:
   - file: ffmpeg-dlopen-headers.tar.xz
     sha256: 0cc860a1940704082c81502fe9245aaefeeee9a1674797ccd74a123ab054cf77
     size: 15532
-notes: "Frozen copy of Factory's dropped ffmpeg-6 (PMBS A_tw-ffmpeg-6). Tarball is tar_scm (mode disabled) of git.ffmpeg.org rev 01d3f764 with excludes, so ffmpeg.org's release tarball differs. Spec carries a local svtav1 bcond (off): Factory SVT-AV1 is 4.x, this ffmpeg needs < 4, and a private SVT-AV1 3.0.1 would shadow Factory's for every ffmpeg build."
+watch:
+  git: https://git.ffmpeg.org/ffmpeg.git
+  tags: '^n(6\.1\.\d+)$'
+  file: ffmpeg-6-%{version}.tar.xz
+  exclude:
+    - '.git*'
+    - compat/aix
+    - compat/atomics
+    - compat/dispatch_semaphore
+    - compat/djgpp
+    - compat/float
+    - compat/getopt.c
+    - compat/msvcrt
+    - compat/os2threads.h
+    - compat/solaris
+    - compat/strtod.c
+    - compat/w32pthreads.h
+    - compat/windows
+    - doc/doxy
+    - doc/examples
+    - libavcodec/alpha
+    - libavcodec/avr32
+    - libavcodec/bfin
+    - libavcodec/loongarch
+    - libavcodec/mips
+    - libavcodec/ppc
+    - libavcodec/riscv
+    - libavcodec/sh4
+    - libavcodec/sparc
+    - libavcodec/tests
+    - libavdevice/tests
+    - libavfilter/cuda
+    - libavfilter/metal
+    - libavfilter/opencl
+    - libavfilter/tests
+    - libavformat/tests
+    - libavutil/avr32
+    - libavutil/loongarch
+    - libavutil/mips
+    - libavutil/ppc
+    - libavutil/riscv
+    - libavutil/sh4
+    - libavutil/tests
+    - libswresample/tests
+    - libswscale/loongarch
+    - libswscale/ppc
+    - libswscale/riscv
+    - libswscale/tests
+    - tests
+    - tools/python
+  commit: 01d3f764f79b2f571174a4cec855e651258f20ec
+notes: "Frozen copy of Factory's dropped ffmpeg-6 (PMBS A_tw-ffmpeg-6). Tarball is a git archive of the n6.1.x tag with excludes (watch), so ffmpeg.org's release tarball differs. Spec carries a local svtav1 bcond (off): Factory SVT-AV1 is 4.x, this ffmpeg needs < 4, and a private SVT-AV1 3.0.1 would shadow Factory's for every ffmpeg build."

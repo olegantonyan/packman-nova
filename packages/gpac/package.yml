@@ -9,3 +9,6 @@ sources:
       - https://github.com/gpac/gpac/archive/v2.4.0.tar.gz
     sha256: 99c8c994d5364b963d18eff24af2576b38d38b3460df27d451248982ea16157a
     size: 9914579
+watch:
+  git: https://github.com/gpac/gpac.git
+  tags: '^v(\d+(?:\.\d+)+)$'

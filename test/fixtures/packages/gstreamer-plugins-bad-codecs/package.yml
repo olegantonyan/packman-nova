@@ -4,7 +4,7 @@ enabled: false
 tier: 3
 tags: [codec, proprietary]
 sources:
-  - file: _service:download_files:gst-plugins-bad-1.28.7.tar.xz
+  - file: gst-plugins-bad-1.28.7.tar.xz
     urls:
       - https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-1.28.7.tar.xz
       - http://mirror.example.org/gst-plugins-bad-1.28.7.tar.xz

@@ -58,7 +58,7 @@ describe ::PackmanNova::Manifest do
     it 'parses url sources with lowercase sha256 and size' do
       source = native.sources.first
 
-      assert_equal '_service:download_files:gst-plugins-bad-1.28.7.tar.xz', source.file
+      assert_equal 'gst-plugins-bad-1.28.7.tar.xz', source.file
       assert_equal 8_347_976, source.size
       assert_equal '9c4a5b0e7a1f3c2d4b6e8f0a1c3e5b7d9f1a3c5e7b9d1f3a5c7e9b1d3f5a7c9e', source.sha256
     end
@@ -161,6 +161,50 @@ describe ::PackmanNova::Manifest do
         assert_empty source.urls
         assert_predicate source, :remote?
       end
+    end
+
+    it 'parses a url watch and a git snapshot watch' do
+      with_tmpdir do |dir|
+        url = write_manifest(dir, 'pkg', "name: pkg\nkind: native\nwatch:\n  url: https://example.org/\n  pattern: 'pkg-(\\d+)'\n", files: { 'pkg.spec' => '' })
+        git = write_manifest(dir, 'snap', <<~YAML, files: { 'snap.spec' => '' })
+          name: snap
+          kind: native
+          watch:
+            git: https://example.org/snap.git
+            branch: main
+            format: '%cd.%h'
+            file: snap-%{version}.tar.xz
+            exclude: [tests]
+            sover: { path: lib.h, pattern: 'BUILD (\d+)' }
+            commit: #{'a' * 40}
+        YAML
+        watch = ::PackmanNova::Manifest.load_file(git).watch
+
+        assert_predicate ::PackmanNova::Manifest.load_file(url).watch, :http?
+        assert_equal ['main', %w[tests], 'lib.h', 'snap-1.tar.xz', 'snap-1'], [watch.branch, watch.exclude, watch.sover.path, watch.file_for('1'), watch.archive_dir('1')]
+        assert_match watch.file_regexp, 'snap-20260101.abc.tar.xz'
+      end
+    end
+
+    it 'rejects invalid watches' do
+      base = "name: pkg\nkind: native\nwatch:\n"
+
+      {
+        "  url: https://x/\n" => /watch\.pattern: missing/,
+        "  url: https://x/\n  pattern: x\n  git: https://x/x.git\n" => /exactly one of url or git/,
+        "  url: https://x/\n  pattern: x\n  tags: x\n" => /tags need git/,
+        "  git: https://x/x.git\n  branch: main\n" => /branch needs format and file/,
+        "  git: https://x/x.git\n  tags: '('\n" => /watch\.tags: invalid regexp/,
+        "  git: https://x/x.git\n  tags: x\n  exclude: [a]\n" => /need file/,
+        "  git: https://x/x.git\n  tags: x\n  file: x.tar.gz\n" => /must contain %\{version\}/,
+        "  git: https://x/x.git\n  tags: x\n  file: x-%{version}.zip\n" => /must end in \.tar/,
+        "  git: https://x/x.git\n  tags: x\n  file: x-%{version}.tar\n  commit: abc\n" => /40 hex/,
+        "  git: https://x/x.git\n  tags: x\n  nope: 1\n" => /unknown key\(s\) nope/
+      }.each { |yaml, message| assert_match(message, manifest_error(base + yaml).message) }
+    end
+
+    it 'rejects a watch on obs-link packages' do
+      assert_match(/unknown key\(s\) watch/, manifest_error("name: pkg\nkind: obs-link\nwatch: {}\n").message)
     end
 
     it 'rejects non-boolean enabled' do

@@ -11,6 +11,7 @@ module PackmanNova
       workdir: ::String,
       offline: BOOLEAN,
       project_name: ::String,
+      packager: ::String,
       distro: {
         id: ::String, name: ::String, suse_version: ::Integer, arches: STRINGS, repos: STRINGS, snapshot_url: ::String,
         baselibs: { arch: ::String, repos: STRINGS }

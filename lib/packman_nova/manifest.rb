@@ -26,7 +26,7 @@ module PackmanNova
       end
     end
 
-    attr_reader :name, :kind, :tier, :tags, :notes, :origin, :link_delete, :sources, :spec_name, :dir
+    attr_reader :name, :kind, :tier, :tags, :notes, :origin, :link_delete, :sources, :watch, :spec_name, :dir
 
     def initialize(data, dir:, require_checksums: true)
       @dir = ::File.expand_path(dir)

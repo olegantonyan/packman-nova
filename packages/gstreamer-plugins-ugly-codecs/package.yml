@@ -4,8 +4,11 @@ enabled: true
 tier: 3
 tags: [codec]
 sources:
-  - file: _service:download_files:gst-plugins-ugly-1.28.7.tar.xz
+  - file: gst-plugins-ugly-1.28.7.tar.xz
     urls:
       - https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.28.7.tar.xz
     sha256: 2b681170ddc22b6b283cafeed48f427c30a17056974a6a9ed137c354e0f7730c
     size: 245436
+watch:
+  url: https://gstreamer.freedesktop.org/src/gst-plugins-ugly/
+  pattern: 'gst-plugins-ugly-(1\.\d*[02468]\.\d+)\.tar\.xz'

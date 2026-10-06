@@ -28,12 +28,13 @@ Host needs ruby >= 4.0 (`.ruby-version` pins 4.0.7), bundler, podman (docker unt
 | `--[no-]log-file` | write `logs/<YYYYmmdd-HHMMSS>-<command>.log` (default yes; `gpg`, `site` never do) |
 | `--version`, `-h, --help` | |
 
-Errors print `Class: message` (backtrace with `-v`) and exit 1; Ctrl-C exits 130. `sync`, `build`, `publish`, `clean`, `state` take the workdir lock (`.lock`, non-blocking): a second one fails with `LockError` instead of waiting.
+Errors print `Class: message` (backtrace with `-v`) and exit 1; Ctrl-C exits 130. `sync`, `update` (not `--check`), `build`, `publish`, `clean`, `state` take the workdir lock (`.lock`, non-blocking): a second one fails with `LockError` instead of waiting.
 
 | command | options | behaviour, exit code |
 |---|---|---|
 | `check` | | doctor: config, workdir writable, free disk (warn < 30 GB), runtime, image present and built from the current Containerfile, manifests valid, gpg key decodes, network (`prjconf.base_url`, `distro.snapshot_url`; skipped with `--offline`). 0 ok / 1 any fail |
 | `sync` | `--check`, `--package NAME` (repeatable), `--update-checksums`, `--[no-]prjconf` | materializes `project/`. `--check` writes nothing but caches and reports drift. 1 if any package failed, else 2 for `--check` with drift, else 0 |
+| `update` | `--check`, `--package NAME` (repeatable), `--version V` | native packages with a `watch:`: probe upstream, then bump every outdated one (see **update** below). `--version` (one package) sets that version even if not newer; for branch watches it is a commit. Needs the network and `packager`. 1 if any package failed, else 2 for `--check` with a newer version, else 0 |
 | `build` | `--package NAME`... (pbuild `--rebuild-pkg`), `--rebuild` (all), `--single NAME`, `--[no-]sync`, `--dry-run`, `--release STR`, `--buildjobs N`, `--jobs N`, `--[no-]checks`, `--debuginfo`, `--[no-]repo-refresh` | sync (unless `--no-sync`), allocate run and release, run pbuild for x86_64, then the i586 baselibs pass, write the build record. 0 if no package is failed/unresolvable/broken, else 1; `BuildError` if pbuild itself exits non-zero without a failed package. `--dry-run` prints the podman command |
 | `publish` | `--provider localfs\|s3`, `--unsigned`, `--dry-run`, `--[no-]site`, `--arch A` | sign new rpms, createrepo, sign repomd, write state/site, provider sync. `--dry-run` prints add/replace/remove/re-sign lists. `--unsigned` refused for s3 while `signing.require_signature` |
 | `status` | `--json`, `--live` | per package: kind, srcmd5, last code, release, rpm count, built_at, published release. `--live` asks pbuild in the container |
@@ -55,6 +56,7 @@ Defaults: `config/packman-nova.yml`. Layers, later wins: defaults, user file, no
 |---|---|---|
 | `workdir` | `${PACKMAN_NOVA_WORKDIR}` | required |
 | `project_name` | `packman-nova` | |
+| `packager` | `Oleg Antonyan <...>` | author of `.changes` entries written by `update` |
 | `distro.{id,name,suse_version,arches,repos,snapshot_url}` | `opensuse_tumbleweed`, `openSUSE Tumbleweed`, `1699`, `[x86_64]`, TW oss, TW `media.1/media` | first arch is built; `name` is the display name |
 | `distro.baselibs.{arch,repos}` | `i586`, TW i586 port oss | second pbuild pass with `--baselibs`; `arch: ""` disables it |
 | `release.template` | `%{suse_version}.%{run}.nova.1` | |
@@ -74,7 +76,7 @@ Secrets masked as `***` in logs: `signing.gpg_private_key_base64`, `repository.s
 ## Workdir layout
 
 ```
-.lock                              flock for sync/build/publish/clean/state
+.lock                              flock for sync/update/build/publish/clean/state
 project/                           pbuild project dir
   _config                          prjconf/packman-nova-macros.conf minus Release:
   _configs/tumbleweed.conf         Factory _config (fallback prjconf/factory-base.conf)
@@ -84,6 +86,7 @@ project/                           pbuild project dir
   _build.tumbleweed.i586/<pkg>/    baselibs pass: i586 rpms (not published) + *-32bit*.x86_64.rpm
 build-root/<n>/                    one build root per builder, subuid-owned
 cache/blobs/{sha256,md5}/<hex>     content-addressed sources; cache/obs/, cache/prjconf/
+cache/git/<pkg>.git                bare repos of git snapshot watches (only the watched ref)
 state/sync.json                    per package kind, origin, srcmd5, files; distro_snapshot, base_prjconf_md5, local_config_md5, rebuild_all_required
 state/run-counter.json             last run number and release
 state/builds/<run>.json            build record; state/last-build.json = newest
@@ -113,9 +116,17 @@ Source endpoints verified 2026-09-29: OBS serves link packages' files with `?rev
 
 **publish** (`Publish#call`). Lock, decode and match the key. Desired set = binary rpms of `succeeded` packages in `last-build.json` (debuginfo only with `publish_debuginfo`, src.rpms with `publish_srpms`) + for enabled packages that did not succeed, their files from the current `state.json` (retention). Diff by file name and unsigned `source_sha256`: add, replace, remove, re-sign (key changed). Only changed files are staged, signed (`rpm --addsign`, verified with `rpm -Kv`) and moved; createrepo_c and repomd signing run only when an arch dir changed or its metadata/signature is missing. `state.json` is rewritten only when its content changes, so a repeated publish is a no-op. s3: upload changed objects (rpms, repodata, then `repomd.xml*`, then `.repo`/state/site), delete stale managed keys last, purge Cloudflare, then upload every cached source file of the enabled native packages that `_sources/sha256/` lacks (the source archive: no Packman dependency once seeded; never deleted by publish).
 
+**update** (`Upstream`). Per enabled native package with a `watch:` (others are `skip`):
+- `url` + `pattern`: GET the page/feed, every regex match (group 1) is a candidate. `git` + `tags`: `git ls-remote --tags`, tag names matching the regex. `git` + `branch`: newer when the branch head differs from `watch.commit`.
+- Candidates are ordered by rpmvercmp; newer than the spec `Version:` means outdated.
+- Updating fetches everything before writing anything, so a failure leaves the package untouched. Sources whose `file`/`urls` contain the old version are renamed, downloaded and get new `sha256`/`size`. A `watch.file` source (git snapshot) is regenerated instead: fetch only the watched ref into `cache/git/`, `git archive` with `exclude` (unanchored, like tar `--exclude`), optional `xz -9 -T1`; branch versions come from `git log --format=<format>` with `%cd` = `%Y%m%d`. The tarball goes to the cache (publish seeds the source archive) and `watch.commit` is recorded.
+- Spec: `Version:` (upstream `-` becomes `+`), plus the old version in `Source*`/`%define`/`%global` lines. `watch.sover` (file + regex in the snapshot) bumps `%define sover`, `baselibs.conf` and adds a `weakremover()` for the old sover when the spec has some. `.changes` gets `- Update to version X` by `packager`.
+- `package.yml` is edited in place (format and comments kept). No build is triggered; review `git diff packages/`, then `build --package`.
+- git.ffmpeg.org advertises broken all-zero refs, so a whole-repo fetch fails; fetching only the watched ref avoids them.
+
 ## Adding a package
 
-1. `packages/<name>/package.yml` (model: `PackmanNova::Manifest`; copy a similar package). obs-link: `kind: obs-link`, `origin.project/package`, optional `pin`, `link.delete`. native: vendor spec, patches, changes, `_service` next to `package.yml`; list remote files under `sources:` with upstream `urls`; a file with no upstream (git snapshot, vanished blob) gets `sha256`/`size` only and is served from the source archive after the next publish.
+1. `packages/<name>/package.yml` (model: `PackmanNova::Manifest`; copy a similar package). obs-link: `kind: obs-link`, `origin.project/package`, optional `pin`, `link.delete`. native: vendor spec, patches, changes next to `package.yml` (no `_service`); list remote files under `sources:` with upstream `urls`; a file with no upstream (git snapshot, vanished blob) gets `sha256`/`size` only and is served from the source archive after the next publish. Add a `watch:` when upstream is alive: `url`+`pattern`, or `git`+`tags`/`branch`, and for git snapshots `file` (`<name>-%{version}.tar[.xz]`), `format` (branch), `exclude`, `sover {path, pattern}`. Copy a similar package (fdk-aac, gstreamer-plugins-bad-codecs, libx264, x265).
 2. `packman-nova sync --package <name> --update-checksums` fills `sha256`/`size` (rewrites the yml: comments and flow style are lost).
 3. `packman-nova build --package <name>` (or `--single <name>` to build only it), check `project/_build.tumbleweed.x86_64/<name>/_log`.
 4. `packman-nova publish`. Set `enabled: false` to drop a package: the next full sync removes its project dir, the next publish its rpms.
@@ -145,8 +156,8 @@ Source endpoints verified 2026-09-29: OBS serves link packages' files with `?rev
 
 ## Risks
 
-- Packman shuts down 2026-12-31. Archive-only sources (no live upstream: tar_scm/obs_scm products, dead hosts) exist only on PMBS and in our `_sources/sha256/`; confirm the archive holds all of them before then.
-- Factory sources move fast (srcmd5 can change between fetch and build); sync fetches listing and files at one `rev`. No upstream webhooks: the nightly run is the change detector.
+- Packman shuts down 2026-12-31. Archive-only sources (git snapshots, dead hosts) exist only on PMBS and in our `_sources/sha256/`; confirm the archive holds all of them before then.
+- Factory sources move fast (srcmd5 can change between fetch and build); sync fetches listing and files at one `rev`. No upstream webhooks: the nightly run is the change detector for obs-link packages; native packages change only through `update` (`update --check` reports).
 - GitHub-hosted runners guarantee only 14 GB of disk; the warm workdir (see Disk) must stay under it.
 - Proprietary blobs are tagged `proprietary`; legal exposure is controlled per package with `enabled`.
 
@@ -158,4 +169,4 @@ Source endpoints verified 2026-09-29: OBS serves link packages' files with `?rev
 
 ## Code map
 
-`lib/packman_nova/`: `cli/*` (one class per command), `config*`, `workdir.rb`, `logging/`, `utils/`, `container/` (runtime, runner, image), `manifest/`, `sources/` (OBS, downloads, source archive), `sync/`, `pbuild/` (command, executor, results, run allocation), `build.rb`, `state/`, `gpg/`, `repo/` (layout, diff, signer, createrepo, providers localfs/s3, state archive), `publish.rb`, `site/` (ERB page). Tests: `test/unit/**` mirror the tree; `test/integration/test_smoke.rb` (fdk-aac end to end, `PACKMAN_NOVA_INTEGRATION=1`, optional `PACKMAN_NOVA_SMOKE_ROOT`).
+`lib/packman_nova/`: `cli/*` (one class per command), `config*`, `workdir.rb`, `logging/`, `utils/`, `container/` (runtime, runner, image), `manifest/`, `sources/` (OBS, downloads, source archive), `sync/`, `upstream/` (probes, git snapshots, package rewrite), `pbuild/` (command, executor, results, run allocation), `build.rb`, `state/`, `gpg/`, `repo/` (layout, diff, signer, createrepo, providers localfs/s3, state archive), `publish.rb`, `site/` (ERB page). Tests: `test/unit/**` mirror the tree; `test/integration/test_smoke.rb` (fdk-aac end to end, `PACKMAN_NOVA_INTEGRATION=1`, optional `PACKMAN_NOVA_SMOKE_ROOT`).

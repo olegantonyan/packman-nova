@@ -18,7 +18,7 @@
 
 %define soname 1
 Name:           rtmpdump
-Version:        2.4.20151223.fa8646d
+Version:        2.4.20251114.138fdb2
 Release:        0
 Summary:        RTMP Stream Dumper
 License:        GPL-2.0+ and LGPL-2.1+

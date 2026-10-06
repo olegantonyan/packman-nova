@@ -28,6 +28,7 @@ module PackmanNova
     def build_root = join('build-root')
     def cache_dir = join('cache')
     def obs_cache_dir(project:, package:) = ::File.join(cache_dir, 'obs', project, package)
+    def git_repo_dir(name) = ::File.join(cache_dir, 'git', "#{name}.git")
     def public_key_file = ::File.join(cache_dir, 'public-key.asc')
     def state_dir = join('state')
     def state_file(name) = ::File.join(state_dir, name)

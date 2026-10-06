@@ -10,6 +10,7 @@ module PackmanNova
     COMMANDS = {
       'check' => ::PackmanNova::Cli::Check,
       'sync' => ::PackmanNova::Cli::Sync,
+      'update' => ::PackmanNova::Cli::Update,
       'build' => ::PackmanNova::Cli::Build,
       'publish' => ::PackmanNova::Cli::Publish,
       'status' => ::PackmanNova::Cli::Status,

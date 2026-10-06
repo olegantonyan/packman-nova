@@ -14,4 +14,7 @@ sources:
       - https://github.com/mtorromeo/r8168/releases/download/8.053.00/r8168-8.053.00.tar.gz.asc
     sha256: c15201873ffb6b216a4fb24a990b13df85b4164756c10b3625077cedf5519460
     size: 228
+watch:
+  git: https://github.com/mtorromeo/r8168.git
+  tags: '^(\d+(?:\.\d+)+)$'
 notes: "KMP built against TW kernel-syms/kernel-source from oss; must rebuild on every kernel update (PMBS is at pm.518). Tarball signature checked with r8168.keyring."

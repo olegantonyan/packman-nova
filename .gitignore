@@ -8,7 +8,6 @@ tmp/
 packages/**/*.tar*
 packages/**/*.tgz
 packages/**/*.zip
-packages/**/*.obscpio
 packages/**/*.bin
 packages/**/*.o
 packages/**/*.rpm

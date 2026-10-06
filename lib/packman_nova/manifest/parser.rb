@@ -7,7 +7,7 @@ module PackmanNova
       NATIVE = ::PackmanNova::Manifest::NATIVE
       KINDS = [OBS_LINK, NATIVE].freeze
       COMMON_KEYS = %i[name kind enabled tier tags notes spec].freeze
-      KIND_KEYS = { OBS_LINK => %i[origin link], NATIVE => %i[sources] }.freeze
+      KIND_KEYS = { OBS_LINK => %i[origin link], NATIVE => %i[sources watch] }.freeze
       ORIGIN_KEYS = %i[project package pin].freeze
       LINK_KEYS = %i[delete].freeze
       SOURCE_KEYS = %i[file urls sha256 size path generated].freeze
@@ -64,7 +64,8 @@ module PackmanNova
         {
           origin: parse_origin(name),
           link_delete: string_list(link, :delete, 'link.delete'),
-          sources: []
+          sources: [],
+          watch: nil
         }
       end
 
@@ -79,7 +80,7 @@ module PackmanNova
       end
 
       def native_parts
-        { origin: nil, link_delete: [], sources: parse_sources }
+        { origin: nil, link_delete: [], sources: parse_sources, watch: ::PackmanNova::Manifest::WatchParser.new(data[:watch], label:).call }
       end
 
       def parse_sources
