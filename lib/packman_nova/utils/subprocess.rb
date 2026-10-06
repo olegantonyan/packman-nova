@@ -67,6 +67,7 @@ module PackmanNova
       end
 
       def emit(line, line_block)
+        line = visible_part(line)
         logger.add(::Logger::INFO, line, ::PackmanNova::Logging::Formatter::RAW_PROGNAME)
         line_block&.call(line)
       end
@@ -87,6 +88,10 @@ module PackmanNova
         ::Process.kill(name, pid)
       rescue ::Errno::ESRCH
         nil
+      end
+
+      def visible_part(line)
+        line.sub(/\r+\n\z/, "\n").split("\r").last.to_s
       end
 
       def start_thread(&)

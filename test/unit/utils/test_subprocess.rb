@@ -15,6 +15,14 @@ describe ::PackmanNova::Utils::Subprocess do
     assert_match(/\[I\] \$ sh -c .*\n(one|two)\n(one|two)\n\z/, log.last.string)
   end
 
+  it 'keeps only the text after the last carriage return, like a terminal' do
+    lines = []
+    subprocess.execute(['sh', '-c', 'printf "\\r[ 1:1 ]\\r[ 1:2 ]\\ndone\\r\\n"']) { |line| lines << line }
+
+    assert_equal ["[ 1:2 ]\n", "done\n"], lines
+    refute_includes log.last.string, '[ 1:1 ]'
+  end
+
   it 'passes env' do
     lines = []
     subprocess.execute(['sh', '-c', 'echo "$FOO"'], env: { 'FOO' => 'bar' }) { |line| lines << line }
