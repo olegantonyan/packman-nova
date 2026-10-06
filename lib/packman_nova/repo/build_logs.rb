@@ -21,12 +21,16 @@ module PackmanNova
 
       def publish(layout, record)
         ::PackmanNova::State::BuildRecord.failed_packages(record).each_with_object({}) do |key, names|
-          source = failure_log.path(key, record.dig('packages', key))
-          next unless source && ::File.file?(source)
-
           names[key] = "#{key}.log"
-          ::PackmanNova::Utils::Path.atomic_write(::File.join(layout.logs_dir, names[key]), ::File.binread(source).force_encoding(::Encoding::UTF_8).scrub)
+          ::PackmanNova::Utils::Path.atomic_write(::File.join(layout.logs_dir, names[key]), content(key, record.dig('packages', key)))
         end
+      end
+
+      def content(key, entry)
+        source = failure_log.path(key, entry)
+        return ::File.binread(source).force_encoding(::Encoding::UTF_8).scrub if source && ::File.file?(source)
+
+        "#{key}: #{entry['code']}\n#{(entry['details'] || entry['reason']).to_s.gsub(', nothing ', ",\nnothing ")}\n"
       end
     end
   end

@@ -105,13 +105,17 @@ module PackmanNova
       def failed_entry(name)
         identity(name).merge(
           'version' => nil, 'release' => nil, 'status' => build_packages.dig(name, 'code'), 'last_run' => nil, 'built_at' => nil,
-          'reason' => build_packages.dig(name, 'reason'), 'rpms' => [], 'srpm' => nil
+          'reason' => failure_reason(name), 'rpms' => [], 'srpm' => nil
         )
       end
 
       def status_fields(name, prior)
         code = build_packages.dig(name, 'code')
-        code ? { 'status' => code, 'reason' => build_packages.dig(name, 'reason') } : { 'status' => prior['status'], 'reason' => prior['reason'] }
+        code ? { 'status' => code, 'reason' => failure_reason(name) } : { 'status' => prior['status'], 'reason' => prior['reason'] }
+      end
+
+      def failure_reason(name)
+        build_packages.dig(name, 'details') || build_packages.dig(name, 'reason')
       end
 
       def file_fields(name, files)

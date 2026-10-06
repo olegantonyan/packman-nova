@@ -10,7 +10,8 @@ describe ::PackmanNova::Cli::Sync, :sync do
 
   before do
     stub_common(server)
-    stub_obs_package(server, project: 'openSUSE:Factory', package: 'ffmpeg-8', srcmd5: 'a' * 32, files: { 'ffmpeg-8.spec' => "Name: ffmpeg-8\n" })
+    spec = "Name: ffmpeg-8\nSource0: x\n%prep\n%autosetup -p1\n"
+    stub_obs_package(server, project: 'openSUSE:Factory', package: 'ffmpeg-8', srcmd5: 'a' * 32, files: { 'ffmpeg-8.spec' => spec })
     server.on('/obs/source/openSUSE:Factory/nope?expand=1', status: 404)
   end
 
