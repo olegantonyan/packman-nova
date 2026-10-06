@@ -10,7 +10,7 @@ module PackmanNova
       CONTENT_TYPES = {
         '.rpm' => 'application/x-rpm', '.xml' => 'application/xml', '.gz' => 'application/gzip', '.zst' => 'application/zstd',
         '.xz' => 'application/x-xz', '.bz2' => 'application/x-bzip2', '.sqlite' => 'application/vnd.sqlite3',
-        '.asc' => TEXT, '.key' => TEXT, '.repo' => TEXT, '.json' => 'application/json', '.html' => 'text/html; charset=utf-8'
+        '.asc' => TEXT, '.key' => TEXT, '.repo' => TEXT, '.log' => TEXT, '.json' => 'application/json', '.html' => 'text/html; charset=utf-8'
       }.freeze
 
       attr_reader :name, :prefix

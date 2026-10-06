@@ -91,6 +91,37 @@ describe ::PackmanNova::Publish do
     assert_equal(2, state['files'].count { |_relative, entry| entry['package'] == 'ffmpeg-8' })
   end
 
+  it 'publishes the build log of a failed package until it builds again' do
+    ::File.write(::File.join(results, 'ffmpeg-8', '_log'), "configure\nerror: \xFF boom\n")
+    record = PublishFakes.record({ 'fdk-aac' => ['succeeded', fdk], 'ffmpeg-8' => ['failed', []] }, 2)
+    record['packages']['ffmpeg-8']['log'] = 'project/_build.tumbleweed.x86_64/ffmpeg-8/_log'
+    write_record(record)
+    publisher.call
+    log_file = ::File.join(essentials, 'logs', 'ffmpeg-8.log')
+
+    assert_equal "configure\nerror: � boom\n", ::File.read(log_file)
+    assert_equal(['logs/ffmpeg-8.log', nil], state['packages'].values_at('ffmpeg-8', 'fdk-aac').map { |entry| entry['log'] })
+    assert_includes ::File.read(::File.join(repo, 'index.html')), 'opensuse_tumbleweed/essentials/logs/ffmpeg-8.log">build log</a>'
+
+    write_record(PublishFakes.record({ 'fdk-aac' => ['succeeded', fdk], 'ffmpeg-8' => ['succeeded', ffmpeg] }, 3))
+    publisher.call
+
+    refute_path_exists log_file
+    assert_nil state['packages']['ffmpeg-8']['log']
+  end
+
+  it 'publishes the i586 log when the baselibs pass failed' do
+    i586 = ::File.join(workdir, 'project', '_build.tumbleweed.i586', 'fdk-aac')
+    ::FileUtils.mkdir_p(i586)
+    ::File.write(::File.join(i586, '_log'), "i586 error\n")
+    record = PublishFakes.record('fdk-aac' => ['failed', fdk], 'ffmpeg-8' => ['succeeded', ffmpeg])
+    record['packages']['fdk-aac']['baselibs'] = { 'arch' => 'i586', 'code' => 'failed', 'rpms' => [] }
+    write_record(record)
+    publisher.call(site: false)
+
+    assert_equal "i586 error\n", ::File.read(::File.join(essentials, 'logs', 'fdk-aac.log'))
+  end
+
   it 'replaces rebuilt rpms and removes vanished ones' do
     publisher.call(site: false)
     ::File.write(::File.join(results, 'fdk-aac', fdk.first), 'rebuilt')

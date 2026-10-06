@@ -11,6 +11,7 @@ module PackmanNova
       REPO_FILE = 'packman-nova.repo'
       ROOT_FILES = [INDEX_FILE, PACKAGES_FILE, PUBLIC_KEY_FILE].freeze
       REPODATA = 'repodata'
+      LOGS = 'logs'
 
       class << self
         def from_config(config, root:)
@@ -36,6 +37,7 @@ module PackmanNova
       def state_file = ::File.join(repo_dir, STATE_FILE)
       def repo_file = ::File.join(repo_dir, REPO_FILE)
       def public_key_file = ::File.join(root, PUBLIC_KEY_FILE)
+      def logs_dir = ::File.join(repo_dir, LOGS)
       def file(relative) = ::File.join(repo_dir, relative)
       def repodata_dir(subdir) = ::File.join(repo_dir, subdir, REPODATA)
       def repomd(subdir) = ::File.join(repodata_dir(subdir), 'repomd.xml')

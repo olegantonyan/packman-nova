@@ -149,6 +149,7 @@ td a.name { font-weight: 600; text-decoration: none; }
 td time, td[data-label="Version"] code { white-space: nowrap; }
 .kind { display: block; color: var(--muted); font-size: .8rem; }
 .reason { display: block; color: var(--muted); font-size: .8rem; margin-top: .25rem; }
+.log { display: block; font-size: .8rem; margin-top: .25rem; }
 .status {
   display: inline-block;
   padding: .05rem .5rem;

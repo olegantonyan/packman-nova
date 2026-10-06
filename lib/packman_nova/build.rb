@@ -17,6 +17,7 @@ require 'packman_nova/pbuild/executor'
 require 'packman_nova/pbuild/run_allocator'
 require 'packman_nova/pbuild/table'
 require 'packman_nova/pbuild/summary'
+require 'packman_nova/pbuild/failure_log'
 require 'packman_nova/pbuild/environment'
 
 module PackmanNova
@@ -107,16 +108,9 @@ module PackmanNova
       failed.each do |key|
         entry = record.fetch('packages').fetch(key)
         logger.error("#{key}: #{[entry['code'], entry['details'] || entry['reason']].compact.join(': ')}")
-        log_tail(key, failure_log(key, entry))
+        log_tail(key, ::PackmanNova::Pbuild::FailureLog.new(config:).path(key, entry))
       end
       1
-    end
-
-    def failure_log(key, entry)
-      baselibs = entry['baselibs']
-      return ::File.join(config.results_dir(baselibs['arch']), key, '_log') if baselibs && ::PackmanNova::Pbuild::ResultParser::FAILURE_CODES.include?(baselibs['code'])
-
-      entry['log'] && ::File.join(workdir.root, entry['log'])
     end
 
     def log_tail(key, path)

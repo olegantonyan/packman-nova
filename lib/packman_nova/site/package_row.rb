@@ -17,7 +17,7 @@ module PackmanNova
       end
 
       def to_h
-        ENTRY_KEYS.to_h { |key| [key, entry[key]] }.merge(identity, build)
+        ENTRY_KEYS.to_h { |key| [key, entry[key]] }.merge(identity, build, 'log_url' => log_url)
       end
 
       private
@@ -34,6 +34,10 @@ module PackmanNova
           'built_at' => ::PackmanNova::Site::Format.time(entry['built_at']), 'built_at_iso' => entry['built_at'],
           'files' => file_rows, 'retained' => status != SUCCEEDED && !file_rows.empty?
         }
+      end
+
+      def log_url
+        "#{repo_url}/#{entry['log']}" if entry['log']
       end
 
       def status

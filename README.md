@@ -34,7 +34,8 @@ If nothing changed upstream, the night builds and publishes nothing. Users get u
 `zypper ref && zypper dup`.
 
 When a package fails, the job goes red. The log shows the pbuild result and the last 100 lines of that package's
-build log. The previously published rpms of that package stay in the repo.
+build log; the full build log is published and linked from the package's status on the site. The previously published
+rpms of that package stay in the repo.
 
 To change a package, edit `packages/<name>/` and push to `master`. CI runs the tests, and the next nightly run (or a
 manual dispatch) builds and publishes it.

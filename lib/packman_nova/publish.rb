@@ -21,6 +21,7 @@ require 'packman_nova/repo/createrepo'
 require 'packman_nova/repo/apply'
 require 'packman_nova/repo/repo_file'
 require 'packman_nova/repo/state_builder'
+require 'packman_nova/repo/build_logs'
 require 'packman_nova/repo/s3_bucket'
 require 'packman_nova/repo/cloudflare_purge'
 require 'packman_nova/repo/providers/base'
@@ -139,7 +140,7 @@ module PackmanNova
       ::PackmanNova::Repo::StateBuilder.new(
         previous:, build_record: record, diff:, layout:, manifests:,
         sync_packages: ::PackmanNova::Sync::State.new(workdir:).packages,
-        versions:, key:, now: now.call
+        versions:, logs: ::PackmanNova::Repo::BuildLogs.new(config:).call(layout:, record:), key:, now: now.call
       ).call
     end
 

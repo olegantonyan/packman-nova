@@ -7,15 +7,15 @@ module PackmanNova
     class StateBuilder
       SUCCEEDED = ::PackmanNova::Pbuild::ResultParser::SUCCEEDED
 
-      def initialize(previous:, build_record:, diff:, layout:, manifests:, sync_packages: {}, versions: {}, key: nil, now: ::Time.now)
+      def initialize(previous:, build_record:, diff:, layout:, manifests:, sync_packages: {}, versions: {}, logs: {}, key: nil, now: ::Time.now)
         @previous = previous
         @build_record = build_record
-        @build_packages = build_record.fetch('packages', {})
         @diff = diff
         @layout = layout
         @manifests = manifests.to_h { |manifest| [manifest.name, manifest] }
         @sync_packages = sync_packages
         @versions = versions
+        @logs = logs
         @key = key
         @now = now
       end
@@ -27,7 +27,11 @@ module PackmanNova
 
       private
 
-      attr_reader :previous, :build_record, :build_packages, :diff, :layout, :manifests, :sync_packages, :versions, :key, :now
+      attr_reader :previous, :build_record, :diff, :layout, :manifests, :sync_packages, :versions, :logs, :key, :now
+
+      def build_packages
+        build_record.fetch('packages', {})
+      end
 
       def header
         {
@@ -66,7 +70,7 @@ module PackmanNova
 
       def package_entries(files)
         names = (diff.succeeded_packages | diff.retained_packages | tracked_build_packages).sort
-        names.to_h { |name| [name, package_entry(name, files)] }
+        names.to_h { |name| [name, package_entry(name, files).merge('log' => logs[name])] }
       end
 
       def tracked_build_packages

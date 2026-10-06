@@ -45,10 +45,12 @@ describe ::PackmanNova::Repo::Providers::S3 do
     assert_equal({ 'tw/ess/a.rpm' => { size: 3, etag: ::Digest::MD5.hexdigest('rpm') } }, provider.bucket.list('tw/'))
     provider.bucket.download('tw/ess/a.rpm', ::File.join(root, 'down', 'a.rpm'))
     provider.bucket.upload(::File.join(root, 'local.rpm'), 'tw/ess/x86_64/local.rpm')
+    provider.bucket.upload(::File.join(root, 'local.rpm'), 'tw/ess/logs/vlc.log')
     provider.bucket.delete(%w[tw/ess/a.rpm])
 
     assert_equal 'rpm', ::File.read(::File.join(root, 'down', 'a.rpm'))
-    assert_equal ['packman/tw/ess/x86_64/local.rpm', 'application/x-rpm'], requests(:put_object).map { |params| [params[:key], params[:content_type]] }.first
+    assert_equal([['packman/tw/ess/x86_64/local.rpm', 'application/x-rpm'], ['packman/tw/ess/logs/vlc.log', 'text/plain; charset=utf-8']],
+                 requests(:put_object).map { |params| [params[:key], params[:content_type]] })
     assert_equal [{ key: 'packman/tw/ess/a.rpm' }], requests(:delete_objects).first[:delete][:objects]
     assert provider.bucket.exist?('tw/ess/a.rpm')
     refute provider.bucket.exist?('tw/ess/b.rpm')
