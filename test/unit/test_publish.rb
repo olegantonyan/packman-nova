@@ -12,7 +12,8 @@ describe ::PackmanNova::Publish do
       env: {
         'PACKMAN_NOVA_WORKDIR' => workdir, 'PACKMAN_NOVA_REPO_PATH' => repo, 'PACKMAN_NOVA_PUBLIC_URL' => nil,
         'GPG_PRIVATE_KEY_BASE64' => ::PackmanNova::Gpg.to_base64(PublishFakes::PRIVATE_ARMOR)
-      }
+      },
+      overrides: { repository: { installcheck: { enabled: false } } }
     )
   end
   let(:toolbox) { PublishFakes::Toolbox.new }

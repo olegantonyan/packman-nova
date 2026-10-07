@@ -20,7 +20,7 @@ module PackmanNova
       def call
         diff = publisher.call(provider: options[:provider], arch: options[:arch], **flags)
         logger.info(summary_line(diff)) unless flags[:dry_run]
-        0
+        publisher.uninstallable.empty? ? 0 : 1
       end
 
       private
@@ -30,7 +30,7 @@ module PackmanNova
       end
 
       def publisher
-        ::PackmanNova::Publish.new(config:, logger:, out:)
+        @publisher ||= ::PackmanNova::Publish.new(config:, logger:, out:)
       end
 
       def summary_line(diff)

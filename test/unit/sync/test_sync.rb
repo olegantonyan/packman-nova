@@ -44,7 +44,7 @@ describe ::PackmanNova::Sync, :sync do
     assert_equal %w[demo hello], report.changed.map(&:name).sort
   end
 
-  describe 'link patches' do
+  describe 'link files' do
     let(:spec) { "Name: demo\nSource0: demo-1.0.tar.gz\nPatch1: a.patch\nPatch7: b.patch\n\n%prep\n%autosetup -p1\n%if 0\nPatch9: mini.patch\n%endif\n" }
     let(:link_files) { { 'demo.spec' => spec, 'demo-1.0.tar.gz' => tarball } }
 
@@ -60,6 +60,14 @@ describe ::PackmanNova::Sync, :sync do
       assert_equal %w[demo-1.0.tar.gz demo.spec fix.patch more.patch], children('demo')
       assert_includes patched, "Patch7: b.patch\nPatch10:        fix.patch\nPatch11:        more.patch\n\n%prep\n"
       assert_equal "--- a/x\n", ::File.read(::File.join(workdir.package_dir('demo'), 'fix.patch'))
+    end
+
+    it 'adds extra files without touching the spec' do
+      write_package(packages_dir, { 'name' => 'demo', 'kind' => 'obs-link', 'link' => { 'add' => ['baselibs.conf'] } }, 'baselibs.conf' => "libdemo1\n")
+      sync.call
+
+      assert_equal %w[baselibs.conf demo-1.0.tar.gz demo.spec], children('demo')
+      assert_equal spec, ::File.read(::File.join(workdir.package_dir('demo'), 'demo.spec'))
     end
 
     it 'resyncs when a patch changes and is a no-op otherwise' do
@@ -176,6 +184,13 @@ describe ::PackmanNova::Sync, :sync do
 
     assert report.rebuild_all_required
     assert ::PackmanNova::Sync::State.new(workdir:).load['rebuild_all_required']
+  end
+
+  it 'does not flag rebuild_all_required for onlybuild changes' do
+    sync.call
+    ::File.write(config.prjconf.local, "#{::File.read(config.prjconf.local)}BuildFlags: onlybuild:hello\n")
+
+    refute sync.call.rebuild_all_required
   end
 
   it 'limits the run to the named packages' do

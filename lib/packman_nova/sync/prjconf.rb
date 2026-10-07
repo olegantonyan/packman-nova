@@ -4,8 +4,9 @@ module PackmanNova
   class Sync
     class Prjconf
       RELEASE_LINE = /\A\s*Release\s*:/i
+      ONLYBUILD_LINE = /\A\s*BuildFlags\s*:\s*onlybuild:/i
 
-      Result = ::Data.define(:factory_md5, :local_md5)
+      Result = ::Data.define(:factory_md5, :local_md5, :rebuild_md5)
 
       def initialize(config:, workdir:, downloader:, logger:)
         @config = config
@@ -21,7 +22,7 @@ module PackmanNova
           write_if_changed(factory_path, factory)
           write_if_changed(workdir.config_file, local)
         end
-        Result.new(factory_md5: md5(factory), local_md5: md5(local))
+        Result.new(factory_md5: md5(factory), local_md5: md5(local), rebuild_md5: md5(local.lines.grep_v(ONLYBUILD_LINE).join))
       end
 
       def factory_path

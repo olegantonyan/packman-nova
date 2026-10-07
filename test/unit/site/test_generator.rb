@@ -46,6 +46,15 @@ describe ::PackmanNova::Site::Generator, :site do
     assert_includes page, '<span class="reason">new build</span>'
   end
 
+  it 'flags a package with uninstallable rpms' do
+    ffmpeg = state.dig('packages', 'ffmpeg-8').merge('uninstallable' => ['libavcodec62-32bit: nothing provides liboapv.so.1'])
+    flagged = state.merge('packages' => state.fetch('packages').merge('ffmpeg-8' => ffmpeg))
+    page = ::PackmanNova::Site::Generator.new(config: site_config, state: flagged, logger: null_logger).render_index
+
+    assert_includes page, '<details class="reason problem"><summary>not installable</summary><div>libavcodec62-32bit: nothing provides liboapv.so.1</div></details>'
+    assert_equal 1, page.scan('not installable</summary>').size
+  end
+
   it 'escapes hostile state in text, attributes and urls' do
     payload = %("'><script>alert(1)</script><%= 7 * 7 %>)
     hostile = state.merge('run' => payload, 'generated_at' => payload, 'key' => { 'id' => payload, 'fingerprint' => payload })

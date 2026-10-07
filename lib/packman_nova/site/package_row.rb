@@ -17,7 +17,7 @@ module PackmanNova
       end
 
       def to_h
-        ENTRY_KEYS.to_h { |key| [key, entry[key]] }.merge(identity, build, reason_parts, 'log_url' => log_url)
+        ENTRY_KEYS.to_h { |key| [key, entry[key]] }.merge(identity, build, reason_parts, 'log_url' => log_url, 'uninstallable' => ::Kernel.Array(entry['uninstallable']))
       end
 
       private

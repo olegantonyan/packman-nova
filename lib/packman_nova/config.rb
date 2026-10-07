@@ -30,7 +30,7 @@ module PackmanNova
       signing: { gpg_private_key_base64: ::String, require_signature: BOOLEAN },
       repository: {
         slug: ::String, path: ::String, public_url: ::String, publish_srpms: BOOLEAN, publish_debuginfo: BOOLEAN,
-        provider: ::String,
+        provider: ::String, installcheck: { enabled: BOOLEAN, allow_missing: STRINGS },
         localfs: { path: ::String },
         s3: {
           bucket: ::String, path_in_bucket: ::String, endpoint: ::String, access_key_id: ::String,

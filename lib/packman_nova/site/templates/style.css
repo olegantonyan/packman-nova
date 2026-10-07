@@ -151,6 +151,7 @@ td time, td[data-label="Version"] code { white-space: nowrap; }
 .reason { display: block; color: var(--muted); font-size: .8rem; margin-top: .25rem; }
 details.reason summary { cursor: pointer; width: fit-content; }
 details.reason[open] { overflow-wrap: anywhere; }
+details.problem summary { color: var(--fail-text); font-weight: 600; }
 .log { display: block; font-size: .8rem; margin-top: .25rem; }
 .status {
   display: inline-block;

@@ -30,7 +30,7 @@ module PackmanNova
         record = ::PackmanNova::State::BuildRecord.new(workdir: config.workdir).last || {}
         publish_error, publish_part = publish
         log_summary(record, sync_failed, publish_part)
-        exit_code(publish_error, [*sync_failed, *::PackmanNova::State::BuildRecord.failed_packages(record)])
+        exit_code(publish_error, failed_names(sync_failed, record))
       end
 
       private
@@ -61,7 +61,16 @@ module PackmanNova
       end
 
       def log_summary(record, sync_failed, publish_part)
-        logger.info("run summary: #{[build_part(record), sync_part(sync_failed), publish_part].compact.join('; ')}")
+        logger.info("run summary: #{[build_part(record), sync_part(sync_failed), publish_part, uninstallable_part].compact.join('; ')}")
+      end
+
+      def failed_names(sync_failed, record)
+        [*sync_failed, *::PackmanNova::State::BuildRecord.failed_packages(record), *publisher.uninstallable.keys]
+      end
+
+      def uninstallable_part
+        names = publisher.uninstallable.keys
+        "not installable: #{names.join(', ')}" unless names.empty?
       end
 
       def build_part(record)

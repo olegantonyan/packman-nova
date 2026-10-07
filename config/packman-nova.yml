@@ -48,6 +48,9 @@ repository:
   publish_srpms: true
   publish_debuginfo: false
   provider: localfs
+  installcheck:
+    enabled: true
+    allow_missing: [ffmpeg-mini, libcelt0.so.2, libmad.so.0, libmng.so.2, libmodplug.so.1, libmpcdec.so.5]
   localfs:
     path: ${PACKMAN_NOVA_REPO_PATH}
   s3:

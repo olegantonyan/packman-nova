@@ -1,0 +1,12 @@
+name: openapv
+kind: obs-link
+enabled: true
+tier: 1
+tags: [codec, baselibs]
+origin:
+  project: openSUSE:Factory
+  package: openapv
+  pin: null
+link:
+  add: [baselibs.conf]
+notes: "Factory's openapv with a baselibs.conf: our BUILD_ORIG ffmpeg-8/9 enable the liboapv encoder, so libavcodec6x-32bit needs liboapv1-32bit, which Tumbleweed does not ship. Not in PMBS Essentials."

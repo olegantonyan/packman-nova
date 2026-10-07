@@ -2,7 +2,7 @@
 
 module PackmanNova
   class Sync
-    class LinkPatches
+    class LinkFiles
       PATCH_LINE = /\APatch(\d*):/
       PREAMBLE_LINE = /\A(?:Patch|Source)\d*:/
       APPLIES_PATCHES = /^%(?:autosetup|autopatch)\b/
@@ -12,12 +12,12 @@ module PackmanNova
         @cache = cache
       end
 
-      def any?
+      def patches?
         !manifest.link_patches.empty?
       end
 
       def files
-        manifest.link_patches.map do |name|
+        names.map do |name|
           path = ::File.join(manifest.dir, name)
           ::PackmanNova::Sync::ExpectedFile.new(name:, source: path, md5: ::PackmanNova::Utils::Digest.md5_file(path))
         end
@@ -33,6 +33,10 @@ module PackmanNova
       private
 
       attr_reader :manifest, :cache
+
+      def names
+        manifest.link_patches + manifest.link_add
+      end
 
       def patched(content)
         fail!('does not apply patches with %autosetup or %autopatch') unless content.match?(APPLIES_PATCHES)

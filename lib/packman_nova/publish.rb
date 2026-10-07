@@ -22,6 +22,7 @@ require 'packman_nova/repo/apply'
 require 'packman_nova/repo/repo_file'
 require 'packman_nova/repo/state_builder'
 require 'packman_nova/repo/build_logs'
+require 'packman_nova/repo/install_check'
 require 'packman_nova/repo/s3_bucket'
 require 'packman_nova/repo/cloudflare_purge'
 require 'packman_nova/repo/providers/base'
@@ -44,6 +45,10 @@ module PackmanNova
       @manifests = manifests
       @site_generator = site_generator || ::PackmanNova::Site::Generator
       @now = now
+    end
+
+    def uninstallable
+      @uninstallable || {}
     end
 
     def call(provider: nil, unsigned: false, dry_run: false, site: true, arch: nil)
@@ -72,6 +77,7 @@ module PackmanNova
 
     def commit(provider, diff, layout, state:, record:, arch:, key:, site:)
       versions = ::PackmanNova::Repo::Apply.new(config:, workdir:, toolbox:).call(diff:, layout:, arch:, run: record['run'], key:)
+      @uninstallable = install_problems(diff, layout, arch)
       new_state = build_state(state, record, diff, layout, versions:, key:)
       write_outputs(layout, state, new_state, key, site)
       provider.sync!(layout:)
@@ -140,8 +146,33 @@ module PackmanNova
       ::PackmanNova::Repo::StateBuilder.new(
         previous:, build_record: record, diff:, layout:, manifests:,
         sync_packages: ::PackmanNova::Sync::State.new(workdir:).packages,
-        versions:, logs: ::PackmanNova::Repo::BuildLogs.new(config:).call(layout:, record:), key:, now: now.call
+        versions:, key:, now: now.call,
+        package_fields: { 'log' => ::PackmanNova::Repo::BuildLogs.new(config:).call(layout:, record:), 'uninstallable' => uninstallable }
       ).call
+    end
+
+    def install_problems(diff, layout, arch)
+      return {} unless install_check?
+
+      install_check.by_package(layout:, arch:, repos: config.distro.repos, desired: diff.desired)
+    rescue ::PackmanNova::Error => e
+      logger.warn("installcheck skipped: #{e.message.lines.first&.strip}")
+      {}
+    end
+
+    def install_check?
+      return false unless config.repository.installcheck.enabled?
+      return true unless config.offline?
+
+      logger.warn('installcheck skipped: offline')
+      false
+    end
+
+    def install_check
+      ::PackmanNova::Repo::InstallCheck.new(
+        toolbox:, downloader: ::PackmanNova::Sources::Downloader.from_config(config:, logger:), workdir:, logger:,
+        allow_missing: config.repository.installcheck.allow_missing
+      )
     end
 
     def publish_arch(recorded, requested)

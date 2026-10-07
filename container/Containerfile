@@ -1,5 +1,5 @@
 FROM registry.opensuse.org/opensuse/tumbleweed:latest
-RUN zypper -n install build build-mkbaselibs rpm-build createrepo_c gpg2 hostname \
+RUN zypper -n install build build-mkbaselibs rpm-build createrepo_c libsolv-tools gpg2 hostname \
       perl-libwww-perl perl-LWP-Protocol-https perl-XML-Parser perl-YAML-LibYAML \
       zstd xz gzip bzip2 cpio tar && zypper clean -a
 RUN sed -i 's@^\(\s*\)test -c \$BUILD_ROOT/dev/null || create_devs$@&\n\1for l in fd:/proc/self/fd stdin:fd/0 stdout:fd/1 stderr:fd/2; do test -L "$BUILD_ROOT/dev/${l%%:*}" || ln -s "${l#*:}" "$BUILD_ROOT/dev/${l%%:*}"; done@' \

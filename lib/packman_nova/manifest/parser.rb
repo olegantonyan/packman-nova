@@ -9,7 +9,7 @@ module PackmanNova
       COMMON_KEYS = %i[name kind enabled tier tags notes spec].freeze
       KIND_KEYS = { OBS_LINK => %i[origin link], NATIVE => %i[sources watch] }.freeze
       ORIGIN_KEYS = %i[project package pin].freeze
-      LINK_KEYS = %i[delete patches].freeze
+      LINK_KEYS = %i[delete patches add].freeze
       SOURCE_KEYS = %i[file urls sha256 size path generated].freeze
       DEFAULT_ORIGIN_PROJECT = 'openSUSE:Factory'
 
@@ -65,6 +65,7 @@ module PackmanNova
           origin: parse_origin(name),
           link_delete: string_list(link, :delete, 'link.delete'),
           link_patches: string_list(link, :patches, 'link.patches'),
+          link_add: string_list(link, :add, 'link.add'),
           sources: [],
           watch: nil
         }
@@ -81,7 +82,7 @@ module PackmanNova
       end
 
       def native_parts
-        { origin: nil, link_delete: [], link_patches: [], sources: parse_sources, watch: ::PackmanNova::Manifest::WatchParser.new(data[:watch], label:).call }
+        { origin: nil, link_delete: [], link_patches: [], link_add: [], sources: parse_sources, watch: ::PackmanNova::Manifest::WatchParser.new(data[:watch], label:).call }
       end
 
       def parse_sources

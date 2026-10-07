@@ -24,6 +24,10 @@ module RunFakes
       calls << arguments
       @block ? @block.call : @result
     end
+
+    def uninstallable
+      {}
+    end
   end
 end
 

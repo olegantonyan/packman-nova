@@ -31,18 +31,19 @@ module PackmanNova
       attr_reader :config, :logger, :workdir, :services, :manifests, :options, :report
 
       def finish(previous, prjconf, snapshot)
-        report.rebuild_all_required = rebuild_all_required?(previous, prjconf.local_md5)
+        report.rebuild_all_required = rebuild_all_required?(previous, prjconf.rebuild_md5)
         next_state = {
           'schema' => ::PackmanNova::State::Schemas::VERSION, 'synced_at' => ::Time.now.utc.iso8601,
           'distro_snapshot' => snapshot, 'base_prjconf_md5' => prjconf.factory_md5, 'local_config_md5' => prjconf.local_md5,
+          'local_config_rebuild_md5' => prjconf.rebuild_md5,
           'rebuild_all_required' => report.rebuild_all_required, 'packages' => next_packages(previous)
         }
         [report, next_state]
       end
 
-      def rebuild_all_required?(previous, local_md5)
-        before = previous['local_config_md5']
-        (!before.nil? && before != local_md5) || previous.fetch('rebuild_all_required', false)
+      def rebuild_all_required?(previous, rebuild_md5)
+        before = previous['local_config_rebuild_md5']
+        (!before.nil? && before != rebuild_md5) || previous.fetch('rebuild_all_required', false)
       end
 
       def next_packages(previous)

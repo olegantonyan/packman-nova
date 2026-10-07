@@ -42,26 +42,27 @@ module PackmanNova
 
       def expected_files(listing)
         files = listing.entries.reject { |entry| manifest.link_delete.include?(entry.name) }.map { |entry| listed_file(entry) }
-        link_patches.any? ? patched_files(files, listing) : files
+        files = patched_spec(files, listing) if link_files.patches?
+        files + link_files.files
       end
 
       def listed_file(entry)
         ::PackmanNova::Sync::ExpectedFile.new(name: entry.name, source: services.cache.md5_path(entry.md5), md5: entry.md5, blob: true)
       end
 
-      def patched_files(files, listing)
+      def patched_spec(files, listing)
         spec = spec_file(files)
         ensure_blob(spec, listing)
-        patched = link_patches.spec(spec)
-        files.map { |file| file.equal?(spec) ? patched : file } + link_patches.files
+        patched = link_files.spec(spec)
+        files.map { |file| file.equal?(spec) ? patched : file }
       end
 
       def spec_file(files)
         files.find { |file| file.name == manifest.spec_name } || raise(::PackmanNova::SyncError, "#{manifest.name}: #{manifest.spec_name} not in #{origin}")
       end
 
-      def link_patches
-        @link_patches ||= ::PackmanNova::Sync::LinkPatches.new(manifest:, cache: services.cache)
+      def link_files
+        @link_files ||= ::PackmanNova::Sync::LinkFiles.new(manifest:, cache: services.cache)
       end
 
       def change_detail(previous, listing, files)
