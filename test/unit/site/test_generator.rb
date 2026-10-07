@@ -37,6 +37,15 @@ describe ::PackmanNova::Site::Generator, :site do
     refute_includes html, '<8.1.3>'
   end
 
+  it 'collapses the rebuild details of a succeeded package and keeps a failure reason visible' do
+    collapsed = state.merge('packages' => state.fetch('packages').merge('ffmpeg-8' => state.dig('packages', 'ffmpeg-8').merge('reason' => 'meta change: libdw1 (md5sum)')))
+    page = ::PackmanNova::Site::Generator.new(config: site_config, state: collapsed, logger: null_logger).render_index
+
+    assert_includes page, '<details class="reason"><summary>meta change</summary>libdw1 (md5sum)</details>'
+    assert_includes page, '<span class="reason">meta change: ffmpeg-8-libavcodec-devel &lt;8.1.3&gt;</span>'
+    assert_includes page, '<span class="reason">new build</span>'
+  end
+
   it 'escapes hostile state in text, attributes and urls' do
     payload = %("'><script>alert(1)</script><%= 7 * 7 %>)
     hostile = state.merge('run' => payload, 'generated_at' => payload, 'key' => { 'id' => payload, 'fingerprint' => payload })

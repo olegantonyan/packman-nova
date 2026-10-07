@@ -17,7 +17,7 @@ module PackmanNova
       end
 
       def to_h
-        ENTRY_KEYS.to_h { |key| [key, entry[key]] }.merge(identity, build, 'log_url' => log_url)
+        ENTRY_KEYS.to_h { |key| [key, entry[key]] }.merge(identity, build, reason_parts, 'log_url' => log_url)
       end
 
       private
@@ -34,6 +34,11 @@ module PackmanNova
           'built_at' => ::PackmanNova::Site::Format.time(entry['built_at']), 'built_at_iso' => entry['built_at'],
           'files' => file_rows, 'retained' => status != SUCCEEDED && !file_rows.empty?
         }
+      end
+
+      def reason_parts
+        label, detail = entry['reason'].to_s.split(': ', 2)
+        status == SUCCEEDED && detail ? { 'reason_label' => label, 'reason_detail' => detail } : { 'reason_label' => nil, 'reason_detail' => nil }
       end
 
       def log_url
