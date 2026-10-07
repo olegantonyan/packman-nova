@@ -18,6 +18,7 @@ require 'packman_nova/pbuild/run_allocator'
 require 'packman_nova/pbuild/table'
 require 'packman_nova/pbuild/summary'
 require 'packman_nova/pbuild/failure_log'
+require 'packman_nova/pbuild/stale_binaries'
 require 'packman_nova/pbuild/environment'
 
 module PackmanNova
@@ -91,7 +92,21 @@ module PackmanNova
 
     def run_pass(command)
       logger.info("pbuild --arch #{command.arch}#{' --baselibs' if command.baselibs?}")
-      ::PackmanNova::Pbuild::RecordWriter::Pass.new(command:, status: executor.run(command.argv, timeout_sec: config.pbuild.timeout_sec))
+      status = execute(command)
+      status = execute(command) if stale_binaries_removed?(command)
+      ::PackmanNova::Pbuild::RecordWriter::Pass.new(command:, status:)
+    end
+
+    def execute(command)
+      executor.run(command.argv, timeout_sec: config.pbuild.timeout_sec)
+    end
+
+    def stale_binaries_removed?(command)
+      parser = ::PackmanNova::Pbuild::ResultParser.parse(executor.capture(command.result_argv))
+      ::PackmanNova::Pbuild::StaleBinaries.new(results_dir: config.results_dir(command.arch), logger:).remove!(parser)
+    rescue ::PackmanNova::SubprocessError => e
+      logger.warn("pbuild result query failed, not checking for stale binaries: #{e.message.lines.first&.strip}")
+      false
     end
 
     def report(record, passes)

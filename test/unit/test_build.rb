@@ -113,13 +113,32 @@ describe ::PackmanNova::Build do
     refute_includes baselibs.each_cons(2).to_a, ['--repo', 'https://download.opensuse.org/tumbleweed/repo/oss/']
     assert_includes baselibs, '--baselibs'
     refute_includes main, '--baselibs'
-    assert_equal(%w[x86_64 i586], fake.captured.map { |argv| arch_of(argv) })
+    assert_equal(%w[x86_64 i586 x86_64 i586], fake.captured.map { |argv| arch_of(argv) })
     record = state('last-build.json')
     expected = { 'arch' => 'i586', 'code' => 'succeeded', 'rpms' => ['libfdk-aac2-32bit-1.0-1699.1.nova.1.x86_64.rpm'], 'details' => nil }
 
     assert_equal expected, record.dig('packages', 'fdk-aac', 'baselibs')
     assert_equal 'x86_64', record['arch']
     assert_match(/^fdk-aac +succeeded +2/, out.string)
+  end
+
+  it 'drops binaries that keep their own package unresolvable and retries the pass once' do
+    materialize('ffmpeg-8', 'vlc')
+    write_result('ffmpeg-8', release: '1699.0.nova.1', rpms: %w[libavcodec62-8.1-1699.0.nova.1.x86_64.rpm libavcodec62-32bit-8.1-1699.0.nova.1.x86_64.rpm])
+    write_result('vlc', release: '1699.0.nova.1', rpms: %w[vlc-3.0-1699.0.nova.1.x86_64.rpm])
+    blocked = "unresolvable: 2\n    ffmpeg-8 (nothing provides libavcodec.so.62(LIBAVCODEC_62) needed by pipewire-spa-plugins-0_2)\n    " \
+              "vlc (nothing provides libavcodec.so.62(LIBAVCODEC_62) needed by pipewire-spa-plugins-0_2)\n"
+    runs = []
+    fake = subprocess(result_text: ->(argv) { arch_of(argv) == 'x86_64' && runs.count('x86_64') < 2 ? blocked : "succeeded: 2\n    ffmpeg-8\n    vlc\n" }) do |argv|
+      runs << arch_of(argv[argv.index('pbuild')..])
+      write_result('ffmpeg-8', release: '1699.1.nova.1') if runs.count('x86_64') == 2 && runs.last == 'x86_64'
+    end
+    build(fake).call(sync: false)
+
+    assert_equal %w[x86_64 x86_64 i586], runs
+    refute_path_exists ::File.join(results, 'ffmpeg-8', 'libavcodec62-8.1-1699.0.nova.1.x86_64.rpm')
+    assert_path_exists ::File.join(results, 'ffmpeg-8', 'libffmpeg-82-1.0-1699.1.nova.1.x86_64.rpm')
+    assert_path_exists ::File.join(results, 'vlc', 'vlc-3.0-1699.0.nova.1.x86_64.rpm')
   end
 
   it 'fails a package whose baselibs build failed and skips excluded ones' do
