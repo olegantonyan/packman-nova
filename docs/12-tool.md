@@ -167,7 +167,7 @@ Source endpoints verified 2026-09-29: OBS serves link packages' files with `?rev
 ## GitHub Actions
 
 - `.github/workflows/ci.yml`: on push and pull request, Ruby from `.ruby-version`, `bundle exec rake`.
-- `.github/workflows/build-publish.yml`: nightly at 01:17 UTC plus manual `workflow_dispatch`, ubuntu-26.04. Installs podman and zstd, writes `.env` from secret `PACKMAN_NOVA_DOTENV` (the full local `.env`; the job sets `PACKMAN_NOVA_WORKDIR`, which wins over `.env`), then `image build`, `state pull --allow-missing`, `run --provider s3`, `state push` (also after a failed run). Logs are in the job console. pbuild uses the config defaults (2 builders x 8 jobs). Concurrency group without cancel; timeout 350 min.
+- `.github/workflows/build-publish.yml`: nightly at 19:17 UTC (GitHub starts it ~6 h late, ~01:20 UTC) plus manual `workflow_dispatch`, ubuntu-26.04. Installs podman and zstd, writes `.env` from secret `PACKMAN_NOVA_DOTENV` (the full local `.env`; the job sets `PACKMAN_NOVA_WORKDIR`, which wins over `.env`), then `image build`, `state pull --allow-missing`, `run --provider s3`, `state push` (also after a failed run). Logs are in the job console. pbuild uses the config defaults (2 builders x 8 jobs). Concurrency group without cancel; timeout 350 min.
 - Before the first dispatch: set the secret, seed `_state/` with `state push` from a local full build (a cold full build does not fit 350 min on a 4-core runner), verify `state pull` + `run` on a dispatch.
 
 ## Code map

@@ -14,8 +14,8 @@ sudo zypper dup --from packman-nova-essentials --allow-vendor-change
 
 ## How it works
 
-A GitHub Actions job (`.github/workflows/build-publish.yml`) runs every night at 01:17 UTC and normally needs no
-attention:
+A GitHub Actions job (`.github/workflows/build-publish.yml`) runs every night (cron 19:17 UTC; GitHub starts it ~6 h late)
+and normally needs no attention:
 
 1. **Restore.** `state pull` downloads yesterday's pbuild results and `state/` from the R2 bucket, so pbuild knows
    what is already built.
