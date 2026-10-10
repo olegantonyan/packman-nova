@@ -9,5 +9,4 @@ origin:
   pin: null
 link:
   delete: [_multibuild, ffmpeg-8.changes]
-  patches: [ffmpeg-liboapvenc-openapv-1.1.patch]
-notes: "Link deletes Factory's mini flavor (PMBS parity); ffmpeg-mini stub covers the solver. Patch: upstream c54710db21 (openapv >= 1.1 API); Factory skips liboapvenc without BUILD_ORIG, drop once Factory ships the fix."
+notes: "Link deletes Factory's mini flavor (PMBS parity); ffmpeg-mini stub covers the solver."

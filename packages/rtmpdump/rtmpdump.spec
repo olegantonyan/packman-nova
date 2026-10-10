@@ -26,6 +26,7 @@ Url:            https://rtmpdump.mplayerhq.hu/
 Source:         %name-%version.tar.xz
 Source1:        baselibs.conf
 Patch1:         rtmpdump-fix_u32.patch
+Patch2:         rtmpdump-nettle4.patch
 BuildRequires:  pkgconfig
 BuildRequires:  pkgconfig(gnutls)
 BuildRequires:  pkgconfig(zlib)
