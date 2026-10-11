@@ -29,7 +29,7 @@ Index: gst-plugins-bad-1.28.7/ext/meson.build
 ===================================================================
 --- gst-plugins-bad-1.28.7.orig/ext/meson.build
 +++ gst-plugins-bad-1.28.7/ext/meson.build
-@@ -1,87 +1,4 @@
+@@ -1,87 +1,3 @@
 -subdir('aes')
 -subdir('analyticsoverlay')
 -subdir('assrender')
@@ -76,7 +76,7 @@ Index: gst-plugins-bad-1.28.7/ext/meson.build
 -subdir('nvdswrapper')
 -subdir('onnx')
 -subdir('openal')
- subdir('openaptx')
+-subdir('openaptx')
 -subdir('opencv')
 -subdir('openexr')
 -subdir('openh264')

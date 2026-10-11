@@ -34,7 +34,6 @@ BuildRequires:  pkgconfig(gstreamer-plugins-base-1.0) >= %{_version}
 BuildRequires:  pkgconfig(gstreamer-video-1.0) >= %{_version}
 BuildRequires:  pkgconfig(gstreamer-codecparsers-1.0) >= %{_version}
 BuildRequires:  pkgconfig(libde265) >= 0.9
-BuildRequires:  pkgconfig(libopenaptx)
 BuildRequires:  pkgconfig(x265)
 
 Provides:       gstreamer-plugins-bad-orig-addon = %{version}
@@ -63,7 +62,6 @@ plug-ins.
 	-Dorc=enabled \
 	-Dfaac=enabled \
 	-Dx265=enabled \
-	-Dopenaptx=enabled \
 	%{nil}
 %meson_build
 
@@ -77,7 +75,6 @@ rm -rv %{buildroot}%{_libdir}/pkgconfig/
 %license COPYING
 %{_libdir}/gstreamer-%{gst_branch}/libgstde265.so
 %{_libdir}/gstreamer-%{gst_branch}/libgstfaac.so
-%{_libdir}/gstreamer-%{gst_branch}/libgstopenaptx.so
 %{_libdir}/gstreamer-%{gst_branch}/libgstx265.so
 
 %changelog

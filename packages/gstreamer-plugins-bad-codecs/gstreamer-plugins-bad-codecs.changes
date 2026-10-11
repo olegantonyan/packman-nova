@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Sun Oct 11 12:00:00 UTC 2026 - Oleg Antonyan <oleg@aytm.com>
+
+- Stop building openaptx: Factory gstreamer-plugins-bad ships
+  libgstopenaptx.so (libfreeaptx) since 1.28.7-2.1, causing a
+  file conflict. Drop pkgconfig(libopenaptx) BuildRequires.
+
+-------------------------------------------------------------------
 Thu Sep 10 21:13:15 UTC 2026 - Bjørn Lie <zaitor@opensuse.org>
 
 - Update to versiom 1.28.7
