@@ -1,6 +1,6 @@
 name: pipewire-aptx
 kind: native
-enabled: true
+enabled: false
 tier: 1
 tags: [codec, bluetooth]
 sources:
@@ -12,4 +12,4 @@ sources:
 watch:
   url: https://api.opensuse.org/public/source/openSUSE:Factory/pipewire/pipewire.spec
   pattern: '^Version:\s*(\S+)'
-notes: "Tracks Factory's pipewire version; bump together."
+notes: "Disabled 2026-10-12: Factory pipewire (since 2026-10-02) builds aptx on Tumbleweed via libfreeaptx; pipewire-spa-plugins-0_2 Provides pipewire-aptx and Obsoletes pipewire-aptx <= 1.6.9, so this rpm was uninstallable."
