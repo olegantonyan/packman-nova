@@ -1,6 +1,6 @@
 # packman-nova
 
-Independent rebuild of Packman `Essentials` for openSUSE Tumbleweed: same packages, same sources, our build
+Independent rebuild of Packman `Essentials` (http://packman.links2linux.org) for openSUSE Tumbleweed: same packages, same sources, our build
 infrastructure and signing key. Packman shuts down on 2026-12-31 unless a successor appears.
 Published at https://packman.omnipackage.org.
 
