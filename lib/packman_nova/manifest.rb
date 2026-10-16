@@ -26,7 +26,7 @@ module PackmanNova
       end
     end
 
-    attr_reader :name, :kind, :tier, :tags, :notes, :origin, :link_delete, :link_patches, :link_add, :sources, :watch, :spec_name, :dir
+    attr_reader :name, :kind, :distros, :tier, :tags, :notes, :origin, :link_delete, :link_patches, :link_add, :sources, :watch, :spec_name, :dir
 
     def initialize(data, dir:, require_checksums: true)
       @dir = ::File.expand_path(dir)
@@ -39,6 +39,10 @@ module PackmanNova
 
     def enabled?
       @enabled
+    end
+
+    def for_distro?(id)
+      distros.empty? || distros.include?(id)
     end
 
     def obs_link?

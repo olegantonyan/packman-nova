@@ -1,0 +1,17 @@
+name: gstreamer-plugins-bad-codecs-leap-16.0
+kind: native
+enabled: true
+distros: [opensuse_leap_16.0]
+tier: 3
+tags: [codec]
+spec: gstreamer-plugins-bad-codecs.spec
+sources:
+  - file: gst-plugins-bad-1.26.10.tar.xz
+    urls:
+      - https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-1.26.10.tar.xz
+    sha256: fec973dff512b507d9dcb5a828e04e061e52188f4d5989e953aed6a41beda437
+    size: 7790752
+watch:
+  url: https://gstreamer.freedesktop.org/src/gst-plugins-bad/
+  pattern: 'gst-plugins-bad-(1\.26\.\d+)\.tar\.xz'
+notes: "Leap 16.0 ships gstreamer 1.26, the TW package needs 1.28. Spec and patch from Packman's openSUSE_Leap_16.0 src.rpm (1.26.10); ext/{faac,de265,x265,openaptx,rtmp}: Leap 16.0 gst-plugins-bad lacks openaptx and rtmp, unlike Factory."

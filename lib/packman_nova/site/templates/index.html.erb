@@ -26,14 +26,23 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
 <%- if pipeline_api_url -%>
   <p id="pipeline" class="pipeline" data-api="<%= h pipeline_api_url %>" hidden></p>
 <%- end -%>
-  <nav><a href="#install">Install</a><a href="#signing-key">Key</a><a href="#repository">Repo</a><a href="#packages">Packages</a><% if source_url %><a href="<%= h source_url %>">GitHub</a><% end %></nav>
+  <nav><a href="#signing-key">Key</a><% if source_url %><a href="<%= h source_url %>">GitHub</a><% end %></nav>
 </header>
 
+<div class="distro-tabs" id="distro-tabs" role="tablist" aria-label="Distribution" hidden>
+<%- distros.each do |distro| -%>
+  <button type="button" role="tab" data-distro="<%= h distro.id %>" aria-controls="<%= h distro.id %>"><%= h distro.name %></button>
+<%- end -%>
+</div>
+
 <main>
-<section id="install">
-  <h2>Install</h2>
+<%- distros.each do |distro| -%>
+<div class="distro" id="<%= h distro.id %>" role="tabpanel">
+<h2 class="distro-name"><%= h distro.name %></h2>
+<section id="<%= h distro.id %>-install">
+  <h3>Install</h3>
   <ol class="steps">
-<%- commands.each do |command| -%>
+<%- distro.commands.each do |command| -%>
     <li>
       <p class="step-label"><%= h command.label %></p>
       <div class="code-block">
@@ -46,43 +55,35 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
   <p class="note">Step 3 replaces openSUSE and Packman builds with these.</p>
 </section>
 
-<section id="signing-key">
-  <h2>Key</h2>
-<%- if key -%>
+<section id="<%= h distro.id %>-repository">
+  <h3>Repo</h3>
+<%- if distro.published -%>
   <dl class="facts">
-    <dt>Key ID</dt><dd><code><%= h key.id %></code></dd>
-    <dt>Fingerprint</dt><dd><code><%= h key.fingerprint %></code></dd>
-    <dt>File</dt><dd><a href="<%= h key_url %>"><%= h key_url %></a></dd>
-  </dl>
-<%- else -%>
-  <p>No signing key recorded. <a href="<%= h key_url %>"><%= h key_url %></a></p>
-<%- end -%>
-</section>
-
-<section id="repository">
-  <h2>Repo</h2>
-  <dl class="facts">
-    <dt>Repo file</dt><dd><a href="<%= h repo_file_url %>"><%= h repo_file_url %></a></dd>
-<%- baseurls.each do |baseurl| -%>
+    <dt>Repo file</dt><dd><a href="<%= h distro.repo_file_url %>"><%= h distro.repo_file_url %></a></dd>
+<%- distro.baseurls.each do |baseurl| -%>
     <dt><%= h baseurl.arch %></dt><dd><code><%= h baseurl.url %></code></dd>
 <%- end -%>
-    <dt><%= h distro_name %></dt><dd><% if distro_snapshot %><%= h distro_snapshot %><% else %>unknown<% end %></dd>
-    <dt>Updated</dt><dd><% if generated_at %><time datetime="<%= h generated_at_iso %>"><%= h generated_at %></time><% else %>unknown<% end %></dd>
-    <dt>Run</dt><dd><%= h run %><% if release %> <code><%= h release %></code><% end %></dd>
-    <dt>Packages</dt><dd><%= h totals.succeeded %> of <%= h totals.packages %> built</dd>
-    <dt>Files</dt><dd><%= h totals.binary_rpms %> rpms, <%= h totals.source_rpms %> src, <%= h totals.size %></dd>
-    <dt>JSON</dt><dd><a href="packages.json">packages.json</a></dd>
+    <dt><%= h distro.name %></dt><dd><% if distro.distro_snapshot %><%= h distro.distro_snapshot %><% else %>unknown<% end %></dd>
+    <dt>Updated</dt><dd><% if distro.generated_at %><time datetime="<%= h distro.generated_at_iso %>"><%= h distro.generated_at %></time><% else %>unknown<% end %></dd>
+    <dt>Run</dt><dd><%= h distro.run %><% if distro.release %> <code><%= h distro.release %></code><% end %></dd>
+    <dt>Packages</dt><dd><%= h distro.totals.succeeded %> of <%= h distro.totals.packages %> built</dd>
+    <dt>Files</dt><dd><%= h distro.totals.binary_rpms %> rpms, <%= h distro.totals.source_rpms %> src, <%= h distro.totals.size %></dd>
+    <dt>JSON</dt><dd><a href="<%= h distro.packages_url %>">packages.json</a></dd>
   </dl>
+<%- else -%>
+  <p>Not published yet.</p>
+<%- end -%>
 </section>
 
-<section id="packages">
-  <h2>Packages</h2>
+<%- if distro.published -%>
+<section id="<%= h distro.id %>-packages">
+  <h3>Packages</h3>
   <table>
     <thead>
       <tr><th>Package</th><th>Version</th><th>Origin</th><th>Status</th><th>Built</th><th>Files</th></tr>
     </thead>
     <tbody>
-<%- packages.each do |package| -%>
+<%- distro.packages.each do |package| -%>
       <tr id="<%= h package.anchor %>">
         <td data-label="Package"><a class="name" href="#<%= h package.anchor %>"><%= h package.name %></a></td>
         <td data-label="Version"><% if package.evr %><code><%= h package.evr %></code><% else %><span class="muted">unknown</span><% end %></td>
@@ -100,6 +101,22 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
     </tbody>
   </table>
 </section>
+<%- end -%>
+</div>
+<%- end -%>
+
+<section id="signing-key">
+  <h2>Key</h2>
+<%- if key -%>
+  <dl class="facts">
+    <dt>Key ID</dt><dd><code><%= h key.id %></code></dd>
+    <dt>Fingerprint</dt><dd><code><%= h key.fingerprint %></code></dd>
+    <dt>File</dt><dd><a href="<%= h key_url %>"><%= h key_url %></a></dd>
+  </dl>
+<%- else -%>
+  <p>No signing key recorded. <a href="<%= h key_url %>"><%= h key_url %></a></p>
+<%- end -%>
+</section>
 </main>
 
 <footer>
@@ -108,7 +125,9 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
   <p>Source: <a href="<%= h source_url %>"><%= h source_url %></a></p>
 <%- end -%>
   <p>Inspired by <a href="https://omnipackage.org">omnipackage.org</a>.</p>
-  <p>Run <%= h run %><% if generated_at %>, <%= h generated_at %><% end %>.</p>
+<%- if generated_at -%>
+  <p>Updated <%= h generated_at %>.</p>
+<%- end -%>
 </footer>
 </div>
 <script>
@@ -143,6 +162,41 @@ document.querySelectorAll('.files-toggle').forEach(function (button) {
     button.closest('tr').classList.toggle('expanded', open);
   });
 });
+var distroTabs = document.getElementById('distro-tabs');
+var distroPanels = Array.prototype.slice.call(document.querySelectorAll('.distro'));
+var selectDistro = function (id) {
+  distroPanels.forEach(function (panel) { panel.hidden = panel.id !== id; });
+  distroTabs.querySelectorAll('button').forEach(function (button) {
+    button.setAttribute('aria-selected', String(button.dataset.distro === id));
+  });
+};
+var distroOf = function (id) {
+  var target = id && document.getElementById(id);
+  var panel = target && target.closest('.distro');
+  return panel ? panel.id : null;
+};
+var hashTarget = function () {
+  try { return decodeURIComponent(location.hash.slice(1)); } catch (e) { return ''; }
+};
+var storedDistro = null;
+try { storedDistro = localStorage.getItem('distro'); } catch (e) {}
+if (distroPanels.length) {
+  var initialTarget = hashTarget();
+  selectDistro(distroOf(initialTarget) || distroOf(storedDistro) || distroPanels[0].id);
+  if (initialTarget && distroOf(initialTarget)) document.getElementById(initialTarget).scrollIntoView();
+  distroTabs.hidden = false;
+  distroTabs.addEventListener('click', function (event) {
+    var button = event.target.closest('button');
+    if (!button) return;
+    selectDistro(button.dataset.distro);
+    history.replaceState(null, '', '#' + button.dataset.distro);
+    try { localStorage.setItem('distro', button.dataset.distro); } catch (e) {}
+  });
+  window.addEventListener('hashchange', function () {
+    var id = distroOf(hashTarget());
+    if (id) selectDistro(id);
+  });
+}
 var themeToggle = document.getElementById('theme-toggle');
 var applyTheme = function (mode) {
   document.documentElement.dataset.theme = mode;

@@ -1,0 +1,17 @@
+name: gstreamer-plugins-ugly-codecs-leap-16.0
+kind: native
+enabled: true
+distros: [opensuse_leap_16.0]
+tier: 3
+tags: [codec]
+spec: gstreamer-plugins-ugly-codecs.spec
+sources:
+  - file: gst-plugins-ugly-1.26.10.tar.xz
+    urls:
+      - https://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.26.10.tar.xz
+    sha256: b2c648ef62cbf03cdc215f55dca01e2e8372983d8c88de3fa03671ddf08d7d14
+    size: 236668
+watch:
+  url: https://gstreamer.freedesktop.org/src/gst-plugins-ugly/
+  pattern: 'gst-plugins-ugly-(1\.26\.\d+)\.tar\.xz'
+notes: "Leap 16.0 ships gstreamer 1.26, the TW package needs 1.28. Spec and patch from Packman's openSUSE_Leap_16.0 src.rpm (1.26.10); x264 plugin only."

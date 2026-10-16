@@ -1,0 +1,25 @@
+distro:
+  id: opensuse_tumbleweed
+  name: openSUSE Tumbleweed
+  suse_version: 1699
+  arches: [x86_64]
+  repos:
+    - https://download.opensuse.org/tumbleweed/repo/oss/
+  snapshot_url: https://download.opensuse.org/tumbleweed/repo/oss/media.1/media
+  baselibs:
+    arch: i586
+    repos:
+      - https://download.opensuse.org/ports/i586/tumbleweed/repo/oss/
+release:
+  template: "%{suse_version}.%{run}.nova.1"
+prjconf:
+  base_url: https://api.opensuse.org/public/source/openSUSE:Factory/_config
+  base_fallback: prjconf/factory-base.conf
+  base_prepend: []
+  local: [prjconf/packman-nova-macros.conf]
+pbuild:
+  reponame: tumbleweed
+repository:
+  path: opensuse_tumbleweed/essentials
+  installcheck:
+    allow_missing: [ffmpeg-mini, libcelt0.so.2, libmad.so.0, libmng.so.2, libmodplug.so.1, libmpcdec.so.5]

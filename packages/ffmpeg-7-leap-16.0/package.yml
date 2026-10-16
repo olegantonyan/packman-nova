@@ -1,0 +1,13 @@
+name: ffmpeg-7-leap-16.0
+kind: obs-link
+enabled: true
+distros: [opensuse_leap_16.0]
+tier: 2
+tags: [codec]
+origin:
+  project: SUSE:SLFO:1.2
+  package: ffmpeg-7
+  pin: null
+link:
+  delete: [_multibuild, ffmpeg-7.changes]
+notes: "PMBS A_16.0-ffmpeg-7 (Leap 16.0 ffmpeg_pref). Link deletes the mini flavor; ffmpeg-mini stub covers the solver."

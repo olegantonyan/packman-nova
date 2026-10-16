@@ -5,8 +5,8 @@ require 'test_helper'
 describe ::PackmanNova::Cli::State do
   it 'pushes and pulls through the provider under the workdir lock' do
     with_tmpdir do |dir|
-      ::FileUtils.mkdir_p(::File.join(dir, 'state'))
-      ::File.write(::File.join(dir, 'state', 'run-counter.json'), '{"run":3}')
+      ::FileUtils.mkdir_p(::File.join(dir, 'opensuse_tumbleweed', 'state'))
+      ::File.write(::File.join(dir, 'opensuse_tumbleweed', 'state', 'run-counter.json'), '{"run":3}')
       store = {}
       provider = ::Object.new
       provider.define_singleton_method(:upload) { |path, key, content_type:| store[key] = [::File.binread(path), content_type] }
@@ -16,10 +16,10 @@ describe ::PackmanNova::Cli::State do
       command = ->(name) { ::PackmanNova::Cli::State.new(config:, logger: null_logger, args: [name], bucket: provider) }
 
       assert_equal 0, command.call('push').call
-      ::FileUtils.rm_rf(::File.join(dir, 'state'))
+      ::FileUtils.rm_rf(::File.join(dir, 'opensuse_tumbleweed', 'state'))
 
       assert_equal 0, command.call('pull').call
-      assert_equal '{"run":3}', ::File.read(::File.join(dir, 'state', 'run-counter.json'))
+      assert_equal '{"run":3}', ::File.read(::File.join(dir, 'opensuse_tumbleweed', 'state', 'run-counter.json'))
       assert_raises(::OptionParser::InvalidArgument) { command.call('sync').call }
     end
   end

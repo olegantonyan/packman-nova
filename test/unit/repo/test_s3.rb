@@ -82,15 +82,33 @@ describe ::PackmanNova::Repo::Providers::S3 do
     {
       'tw/ess/x86_64/same.rpm' => 'same', 'tw/ess/x86_64/new.rpm' => 'new', 'tw/ess/x86_64/repodata/repomd.xml' => 'md',
       'tw/ess/x86_64/repodata/repomd.xml.asc' => 'asc', 'tw/ess/x86_64/repodata/repomd.xml.key' => 'key', 'tw/ess/x86_64/repodata/p-primary.xml.zst' => 'p',
-      'tw/ess/packman-nova.repo' => 'repo', 'tw/ess/state.json' => '{}', 'index.html' => 'i', 'packages.json' => '{}', 'packman-nova.key' => 'k'
+      'tw/ess/packman-nova.repo' => 'repo', 'tw/ess/state.json' => '{}', 'tw/ess/packages.json' => '{}', 'index.html' => 'i', 'packman-nova.key' => 'k'
     }.each { |key, content| write(key, content) }
     provider.sync!(layout:)
 
     assert_equal(%w[
       tw/ess/x86_64/new.rpm tw/ess/x86_64/repodata/p-primary.xml.zst tw/ess/x86_64/repodata/repomd.xml tw/ess/x86_64/repodata/repomd.xml.asc
-      tw/ess/x86_64/repodata/repomd.xml.key tw/ess/packman-nova.repo tw/ess/state.json index.html packages.json packman-nova.key
+      tw/ess/x86_64/repodata/repomd.xml.key tw/ess/packman-nova.repo tw/ess/state.json tw/ess/packages.json index.html packman-nova.key
     ].map { |key| "packman/#{key}" }, requests(:put_object).map { |params| params[:key] })
     assert_equal [{ key: 'packman/tw/ess/x86_64/old.rpm' }], requests(:delete_objects).first[:delete][:objects]
+    assert_equal ['cdn.example.org/packman'], purged
+  end
+
+  it 'fetches a single key into the mirror and forgets a missing one' do
+    remote['packman/leap/ess/state.json'] = '{"run":2}'
+    write('gone/ess/state.json', 'stale')
+
+    assert_equal ::File.join(root, 'leap/ess/state.json'), provider.fetch('leap/ess/state.json')
+    assert_equal '{"run":2}', ::File.read(::File.join(root, 'leap/ess/state.json'))
+    assert_nil provider.fetch('gone/ess/state.json')
+    refute_path_exists ::File.join(root, 'gone/ess/state.json')
+  end
+
+  it 'uploads root files and purges the CDN' do
+    write('index.html', 'i')
+    provider.publish_root_files!(['index.html'])
+
+    assert_equal(['packman/index.html'], requests(:put_object).map { |params| params[:key] })
     assert_equal ['cdn.example.org/packman'], purged
   end
 
@@ -137,7 +155,7 @@ describe ::PackmanNova::Repo::Providers::S3 do
       built = ::PackmanNova::Repo::Providers::S3.build(config: load_config(env:), logger: null_logger)
       client_config = built.bucket.send(:client).config
 
-      assert_equal ::File.join(dir, 'repo-mirror'), built.root
+      assert_equal ::File.join(dir, 'opensuse_tumbleweed', 'repo-mirror'), built.root
       assert_equal 'auto', client_config.region
       assert client_config.force_path_style
       assert_equal 'adaptive', client_config.retry_mode

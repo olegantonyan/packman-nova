@@ -20,28 +20,28 @@ describe ::PackmanNova::Repo::StateArchive do
 
   it 'archives the results dir with the pbuild cache and state, then restores them' do
     with_tmpdir do |dir|
-      base = ::File.join(dir, 'project', '_build.tumbleweed.x86_64', '.pbuild', '_base', 'repo1')
+      base = ::File.join(dir, 'opensuse_tumbleweed', 'project', '_build.tumbleweed.x86_64', '.pbuild', '_base', 'repo1')
       ::FileUtils.mkdir_p(base)
       ::File.write(::File.join(base, 'a.rpm'), 'cached')
-      ::FileUtils.mkdir_p(::File.join(dir, 'project', '_build.tumbleweed.i586'))
-      ::FileUtils.mkdir_p(::File.join(dir, 'state'))
-      ::File.write(::File.join(dir, 'state', 'last-build.json'), '{}')
+      ::FileUtils.mkdir_p(::File.join(dir, 'opensuse_tumbleweed', 'project', '_build.tumbleweed.i586'))
+      ::FileUtils.mkdir_p(::File.join(dir, 'opensuse_tumbleweed', 'state'))
+      ::File.write(::File.join(dir, 'opensuse_tumbleweed', 'state', 'last-build.json'), '{}')
 
       assert_equal ['project/_build.tumbleweed.x86_64', 'project/_build.tumbleweed.i586', 'state'], archive(dir).push
-      assert_equal 'application/zstd', store.fetch('_state/state.tar.zst').last
+      assert_equal 'application/zstd', store.fetch('_state/opensuse_tumbleweed.tar.zst').last
 
-      ::FileUtils.rm_rf(::File.join(dir, 'project'))
-      ::FileUtils.rm_rf(::File.join(dir, 'state'))
+      ::FileUtils.rm_rf(::File.join(dir, 'opensuse_tumbleweed', 'project'))
+      ::FileUtils.rm_rf(::File.join(dir, 'opensuse_tumbleweed', 'state'))
       archive(dir).pull
 
       assert_equal 'cached', ::File.read(::File.join(base, 'a.rpm'))
-      assert_equal '{}', ::File.read(::File.join(dir, 'state', 'last-build.json'))
+      assert_equal '{}', ::File.read(::File.join(dir, 'opensuse_tumbleweed', 'state', 'last-build.json'))
     end
   end
 
   it 'runs tar with zstd against the workdir' do
     with_tmpdir do |dir|
-      ::FileUtils.mkdir_p(::File.join(dir, 'state'))
+      ::FileUtils.mkdir_p(::File.join(dir, 'opensuse_tumbleweed', 'state'))
       argvs = []
       subprocess = ::Object.new
       subprocess.define_singleton_method(:execute) do |argv|
@@ -52,7 +52,7 @@ describe ::PackmanNova::Repo::StateArchive do
       archive(dir, subprocess:).push
 
       assert_equal ['tar', '--zstd', '-cf'], argvs.first.first(3)
-      assert_equal ['-C', dir, 'state'], argvs.first.last(3)
+      assert_equal ['-C', ::File.join(dir, 'opensuse_tumbleweed'), 'state'], argvs.first.last(3)
     end
   end
 
@@ -61,6 +61,13 @@ describe ::PackmanNova::Repo::StateArchive do
       assert_raises(::PackmanNova::PublishError) { archive(dir).push }
       assert_raises(::PackmanNova::PublishError) { archive(dir).pull }
     end
+  end
+
+  it 'keys the archive by distro' do
+    config = load_config(env: { 'PACKMAN_NOVA_WORKDIR' => '/w' }, distro: 'opensuse_leap_16.1')
+    archive = ::PackmanNova::Repo::StateArchive.new(config:, workdir: config.workdir, bucket: provider, subprocess: nil, logger: null_logger)
+
+    assert_equal '_state/opensuse_leap_16.1.tar.zst', archive.key
   end
 
   it 'tolerates a missing archive on request' do

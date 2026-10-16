@@ -1,6 +1,7 @@
 name: SVT-AV1
 kind: native
 enabled: false
+distros: [opensuse_tumbleweed]
 tier: 0
 tags: [codec]
 sources:

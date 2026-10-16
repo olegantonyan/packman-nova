@@ -4,7 +4,11 @@ require 'test_helper'
 
 describe ::PackmanNova::Site::Generator, :site do
   let(:state) { site_state }
-  let(:generator) { ::PackmanNova::Site::Generator.new(config: site_config, state:, logger: null_logger) }
+  let(:generator) { ::PackmanNova::Site::Generator.new(config: site_config, states: { 'opensuse_tumbleweed' => state }, logger: null_logger) }
+
+  def render(page_state)
+    ::PackmanNova::Site::Generator.new(config: site_config, states: { 'opensuse_tumbleweed' => page_state }, logger: null_logger).render_index
+  end
   let(:html) { generator.render_index }
 
   it 'renders the install commands' do
@@ -18,7 +22,7 @@ describe ::PackmanNova::Site::Generator, :site do
     assert_includes html, 'C6D7 E8F9 3F1C 2A9B'
     assert_includes html, 'https://packman.example.org/packman-nova.key'
     assert_includes html, '20260927'
-    assert_includes html, '<title>packman-nova Essentials for openSUSE Tumbleweed</title>'
+    assert_includes html, '<title>packman-nova Essentials for openSUSE</title>'
     assert_includes html, '<a href="https://github.com/olegantonyan/packman-nova">GitHub</a>'
     assert_includes html, 'data-api="https://api.github.com/repos/olegantonyan/packman-nova/actions/workflows/build-publish.yml/runs?per_page=1"'
     assert_includes html, 'Inspired by <a href="https://omnipackage.org">omnipackage.org</a>.'
@@ -39,7 +43,7 @@ describe ::PackmanNova::Site::Generator, :site do
 
   it 'collapses the rebuild details of a succeeded package and keeps a failure reason visible' do
     collapsed = state.merge('packages' => state.fetch('packages').merge('ffmpeg-8' => state.dig('packages', 'ffmpeg-8').merge('reason' => 'meta change: libdw1 (md5sum)')))
-    page = ::PackmanNova::Site::Generator.new(config: site_config, state: collapsed, logger: null_logger).render_index
+    page = render(collapsed)
 
     assert_includes page, '<details class="reason"><summary>meta change</summary>libdw1 (md5sum)</details>'
     assert_includes page, '<span class="reason">meta change: ffmpeg-8-libavcodec-devel &lt;8.1.3&gt;</span>'
@@ -49,7 +53,7 @@ describe ::PackmanNova::Site::Generator, :site do
   it 'flags a package with uninstallable rpms' do
     ffmpeg = state.dig('packages', 'ffmpeg-8').merge('uninstallable' => ['libavcodec62-32bit: nothing provides liboapv.so.1'])
     flagged = state.merge('packages' => state.fetch('packages').merge('ffmpeg-8' => ffmpeg))
-    page = ::PackmanNova::Site::Generator.new(config: site_config, state: flagged, logger: null_logger).render_index
+    page = render(flagged)
 
     assert_includes page, '<details class="reason problem"><summary>not installable</summary><div>libavcodec62-32bit: nothing provides liboapv.so.1</div></details>'
     assert_equal 1, page.scan('not installable</summary>').size
@@ -60,7 +64,7 @@ describe ::PackmanNova::Site::Generator, :site do
     hostile = state.merge('run' => payload, 'generated_at' => payload, 'key' => { 'id' => payload, 'fingerprint' => payload })
     hostile['packages'] = state.fetch('packages').merge(payload => { 'status' => payload, 'reason' => payload, 'version' => payload, 'built_at' => payload })
     hostile['files'] = state.fetch('files').merge("x86_64/#{payload}.rpm" => { 'package' => payload, 'size' => payload })
-    html = ::PackmanNova::Site::Generator.new(config: site_config, state: hostile, logger: null_logger).render_index
+    html = render(hostile)
 
     refute_includes html, '<script>alert'
     refute_includes html, %("'>)
@@ -75,18 +79,34 @@ describe ::PackmanNova::Site::Generator, :site do
   end
 
   it 'renders without a key' do
-    html = ::PackmanNova::Site::Generator.new(config: site_config, state: state.except('key'), logger: null_logger).render_index
+    html = render(state.except('key'))
 
     assert_includes html, 'No signing key recorded'
   end
 
-  it 'writes index.html and packages.json' do
-    with_tmpdir do |dir|
-      paths = generator.write(dir)
+  it 'renders a switchable panel per distro' do
+    assert_includes html, '<button type="button" role="tab" data-distro="opensuse_leap_16.0" aria-controls="opensuse_leap_16.0">openSUSE Leap 16.0</button>'
+    assert_includes html, '<div class="distro" id="opensuse_tumbleweed" role="tabpanel">'
+    assert_includes html, '<div class="distro" id="opensuse_leap_16.1" role="tabpanel">'
+    assert_equal 2, html.scan('Not published yet.').size
+    assert_includes html, 'id="opensuse_tumbleweed-pkg-ffmpeg-8"'
+    assert_includes html, 'href="https://packman.example.org/opensuse_tumbleweed/essentials/packages.json"'
+  end
 
-      assert_equal [::File.join(dir, 'index.html'), ::File.join(dir, 'packages.json')], paths
-      assert_equal html, ::File.read(paths.first)
-      assert_equal({ 'generated_at' => state.fetch('generated_at'), 'packages' => state.fetch('packages') }, ::JSON.parse(::File.read(paths.last)))
+  it 'writes index.html' do
+    with_tmpdir do |dir|
+      path = generator.write_index(dir)
+
+      assert_equal ::File.join(dir, 'index.html'), path
+      assert_equal html, ::File.read(path)
+    end
+  end
+
+  it 'writes the packages document of one distro' do
+    with_tmpdir do |dir|
+      path = ::PackmanNova::Site::Generator.write_packages(::File.join(dir, 'packages.json'), state)
+
+      assert_equal({ 'generated_at' => state.fetch('generated_at'), 'packages' => state.fetch('packages') }, ::JSON.parse(::File.read(path)))
     end
   end
 end

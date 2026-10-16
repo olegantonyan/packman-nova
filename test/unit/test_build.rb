@@ -6,7 +6,7 @@ require 'support/build_fakes'
 describe ::PackmanNova::Build do
   let(:root) { ::Dir.mktmpdir('packman-nova-build-test-') }
   let(:config) { load_config(env: { 'PACKMAN_NOVA_WORKDIR' => root, 'PACKMAN_NOVA_REPO_PATH' => nil }) }
-  let(:project) { ::File.join(root, 'project') }
+  let(:project) { ::File.join(root, 'opensuse_tumbleweed', 'project') }
   let(:results) { ::File.join(project, '_build.tumbleweed.x86_64') }
   let(:out) { ::StringIO.new }
   let(:started) { ::Time.at(::Time.now.to_i - 60).utc }
@@ -61,7 +61,7 @@ describe ::PackmanNova::Build do
   end
 
   def state(name)
-    ::JSON.parse(::File.read(::File.join(root, 'state', name)))
+    ::JSON.parse(::File.read(::File.join(root, 'opensuse_tumbleweed', 'state', name)))
   end
 
   it 'refuses to build without the pbuild config files' do
@@ -78,7 +78,8 @@ describe ::PackmanNova::Build do
 
     assert_equal [:sync], sync_calls
     assert_equal %w[podman run --rm --privileged --name], fake.executed.first.first(5)
-    assert_includes fake.executed.first.join(' '), "source=#{root}/build-root,target=/build-root -e LANG=C.UTF-8 -e HOME=/root localhost/packman-nova-builder:latest pbuild"
+    assert_includes fake.executed.first.join(' '),
+                    "source=#{root}/opensuse_tumbleweed/build-root,target=/build-root -e LANG=C.UTF-8 -e HOME=/root localhost/packman-nova-builder:latest pbuild"
     assert_equal %w[--release 1699.1.nova.1 /project], pbuild_argv(fake).last(3)
     assert_equal %w[pbuild --reponame tumbleweed --arch x86_64 --result-code all /project], fake.captured.first.last(8)
 
@@ -198,7 +199,7 @@ describe ::PackmanNova::Build do
     materialize('fdk-aac')
 
     assert_raises(::PackmanNova::BuildError) { build(subprocess(status: 2, result_text: '')).call(sync: false) }
-    assert_path_exists ::File.join(root, 'state', 'last-build.json')
+    assert_path_exists ::File.join(root, 'opensuse_tumbleweed', 'state', 'last-build.json')
   end
 
   it 'falls back to the result files when the result query fails' do
@@ -249,13 +250,13 @@ describe ::PackmanNova::Build do
 
     assert_equal %w[--release 1699.42.nova.3 --rebuild-pkg fdk-aac /project], pbuild_argv(fake).last(5)
     assert_equal 42, state('last-build.json')['run']
-    refute_path_exists ::File.join(root, 'state', 'run-counter.json')
+    refute_path_exists ::File.join(root, 'opensuse_tumbleweed', 'state', 'run-counter.json')
   end
 
   it 'rebuilds everything when sync asks for it and clears the flag afterwards' do
     materialize('fdk-aac')
-    ::FileUtils.mkdir_p(::File.join(root, 'state'))
-    ::File.write(::File.join(root, 'state', 'sync.json'), '{"schema":1,"packages":{},"rebuild_all_required":true,"distro_snapshot":"20260924"}')
+    ::FileUtils.mkdir_p(::File.join(root, 'opensuse_tumbleweed', 'state'))
+    ::File.write(::File.join(root, 'opensuse_tumbleweed', 'state', 'sync.json'), '{"schema":1,"packages":{},"rebuild_all_required":true,"distro_snapshot":"20260924"}')
     fake = subprocess
 
     build(fake).call(sync: false)
@@ -267,8 +268,8 @@ describe ::PackmanNova::Build do
 
   it 'keeps the rebuild flag for an explicit single build' do
     materialize('fdk-aac')
-    ::FileUtils.mkdir_p(::File.join(root, 'state'))
-    ::File.write(::File.join(root, 'state', 'sync.json'), '{"schema":1,"packages":{},"rebuild_all_required":true}')
+    ::FileUtils.mkdir_p(::File.join(root, 'opensuse_tumbleweed', 'state'))
+    ::File.write(::File.join(root, 'opensuse_tumbleweed', 'state', 'sync.json'), '{"schema":1,"packages":{},"rebuild_all_required":true}')
     fake = subprocess
 
     build(fake).call(sync: false, single: 'fdk-aac')
@@ -298,6 +299,6 @@ describe ::PackmanNova::Build do
 
     assert_match(%r{pbuild --dist /project/_configs/tumbleweed.conf .* --arch x86_64 .* --jobs 3 --release 1699.1.nova.1 --no-checks --no-repo-refresh /project$}, first)
     assert_match(/--arch i586 .* --release 1699.1.nova.1 --no-checks --baselibs --no-repo-refresh /, second)
-    refute_path_exists ::File.join(root, 'state', 'run-counter.json')
+    refute_path_exists ::File.join(root, 'opensuse_tumbleweed', 'state', 'run-counter.json')
   end
 end

@@ -1,4 +1,4 @@
-# Replacement plan (2026-09-28, updated 2026-10-05)
+# Replacement plan (2026-09-28, updated 2026-10-16)
 
 ## Goal
 Tumbleweed `Essentials` equivalent: same packages, same sources, same macro set, our infra, our key. Later: Leap 16.x, Slowroll, selected Multimedia apps.
@@ -23,4 +23,5 @@ As built: `packman-nova` CLI (`docs/12-tool.md`) runs sync, pbuild in the builde
 3. DONE 2026-09-28. vlc (`vlc-codecs` with x264/x265 plugins), libheif (`libheif-HEIF` with x265/libde265 plugins), both gstreamer codec packages, x264 CLI. Subpackage sets equal Packman's.
 4. DONE 2026-09-29. `packman-nova` CLI (`docs/12-tool.md`): sync from Factory/PMBS/upstream into a pbuild project, pbuild in the builder container (local results shadow Tumbleweed, so no staging repos per tier are needed), signed localfs repo with `packman-nova.repo`, keyring package and static index page. Full run: 39/39 packages in 72 min on 16 cores.
 5. DONE 2026-10-05. GitHub Actions + R2: `.github/workflows/build-publish.yml` runs nightly (`state pull`, `run --provider s3`, `state push`); x86_64 ships `-32bit` from the i586 baselibs pass.
-6. Next: aarch64; then Leap 16.x, Slowroll.
+6. 2026-10-16. Leap 16.0 and 16.1 (16.1 GA due 2026-11) next to TW, x86_64, no -32bit (Leap 16 has none): `config/distros/<id>.yml`, per-distro packages like PMBS (`docs/04`), one CI job per distro, one site with a tab per distro.
+7. Next: aarch64 (PMBS builds it for TW and both Leaps); Slowroll. PMBS now also sets `_with_kvazaar`/`_with_vvenc` and ships vvenc (+ `libheif-vvenc`); not mirrored yet on any distro.

@@ -45,7 +45,7 @@ describe ::PackmanNova::Cli do
     with_tmpdir do |dir|
       run_cli('-w', dir, 'status')
 
-      assert_match(/\A\d{8}-\d{6}-status\.log\z/, ::Dir.children(::File.join(dir, 'logs')).first)
+      assert_match(/\A\d{8}-\d{6}-status\.log\z/, ::Dir.children(::File.join(dir, 'opensuse_tumbleweed', 'logs')).first)
     end
   end
 

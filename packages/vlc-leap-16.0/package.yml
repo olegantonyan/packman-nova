@@ -1,0 +1,11 @@
+name: vlc-leap-16.0
+kind: obs-link
+enabled: true
+distros: [opensuse_leap_16.0]
+tier: 3
+tags: [player, codec]
+origin:
+  project: openSUSE:Leap:16.0
+  package: vlc
+  pin: null
+notes: "PMBS A_16.0-vlc. Yields vlc-codecs (x264/x265 plugins). Leap:16.0 resolves it through openSUSE:Backports:SLE-16.0."

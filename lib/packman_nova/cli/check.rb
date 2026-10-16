@@ -76,14 +76,23 @@ module PackmanNova
       end
 
       def check_manifests
-        loader = ::PackmanNova::Manifest::Loader.new(packages_dir: config.packages_dir)
+        loader = ::PackmanNova::Manifest::Loader.new(packages_dir: config.packages_dir, distro: config.distro.id)
         loader.errors.each { |error| report(:fail, 'manifest', error.message) }
-        report(:warn, 'manifests', "no package.yml in: #{loader.skipped.join(', ')}") unless loader.skipped.empty?
+        report_unknown_distros(loader)
+        report_skipped(loader.skipped)
         report_manifest_count(loader.manifests)
       end
 
+      def report_skipped(skipped)
+        report(:warn, 'manifests', "no package.yml in: #{skipped.join(', ')}") unless skipped.empty?
+      end
+
+      def report_unknown_distros(loader)
+        loader.unknown_distros(config.distros).each { |name, ids| report(:fail, 'manifest', "package #{name}: distros: unknown #{ids.join(', ')}") }
+      end
+
       def report_manifest_count(manifests)
-        report(manifests.empty? ? :warn : :ok, 'manifests', "#{manifests.size} valid (#{manifests.count(&:enabled?)} enabled)")
+        report(manifests.empty? ? :warn : :ok, 'manifests', "#{manifests.size} valid for #{config.distro.id} (#{manifests.count(&:enabled?)} enabled)")
       end
 
       def check_signing
@@ -107,7 +116,7 @@ module PackmanNova
         return report(:skip, 'network', 'offline') if config.offline?
 
         http = ::PackmanNova::Utils::Http.new(logger:, timeout_sec: PROBE_TIMEOUT_SEC, retries: 0)
-        [['obs api', config.prjconf.base_url], ['tw repo', config.distro.snapshot_url]].each { |name, url| probe(http, name, url) }
+        [['prjconf', config.prjconf.base_url], ['snapshot', config.distro.snapshot_url]].each { |name, url| probe(http, name, url) }
       end
 
       def probe(http, name, url)

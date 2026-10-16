@@ -1,0 +1,24 @@
+distro:
+  id: opensuse_leap_16.0
+  name: openSUSE Leap 16.0
+  suse_version: 1600
+  arches: [x86_64]
+  repos:
+    - https://download.opensuse.org/distribution/leap/16.0/repo/oss/
+  snapshot_url: https://download.opensuse.org/distribution/leap/16.0/repo/oss/media.1/media
+  baselibs:
+    arch: ""
+    repos: []
+release:
+  template: "160000.%{run}.nova.1"
+prjconf:
+  base_url: https://raw.githubusercontent.com/openSUSE/obs-build/master/configs/leap-16.0.conf
+  base_fallback: prjconf/leap-16.0-base.conf
+  base_prepend: [prjconf/leap-base-fixup.conf]
+  local: [prjconf/packman-nova-macros-leap.conf]
+pbuild:
+  reponame: leap-16.0
+repository:
+  path: opensuse_leap_16.0/essentials
+  installcheck:
+    allow_missing: [ffmpeg-mini]

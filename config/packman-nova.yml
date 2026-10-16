@@ -2,24 +2,7 @@ workdir: ${PACKMAN_NOVA_WORKDIR}
 project_name: packman-nova
 packager: "Oleg Antonyan <oleg.b.antonyan@gmail.com>"
 offline: false
-distro:
-  id: opensuse_tumbleweed
-  name: openSUSE Tumbleweed
-  suse_version: 1699
-  arches: [x86_64]
-  repos:
-    - https://download.opensuse.org/tumbleweed/repo/oss/
-  snapshot_url: https://download.opensuse.org/tumbleweed/repo/oss/media.1/media
-  baselibs:
-    arch: i586
-    repos:
-      - https://download.opensuse.org/ports/i586/tumbleweed/repo/oss/
-release:
-  template: "%{suse_version}.%{run}.nova.1"
-prjconf:
-  base_url: https://api.opensuse.org/public/source/openSUSE:Factory/_config
-  base_fallback: prjconf/factory-base.conf
-  local: prjconf/packman-nova-macros.conf
+distros: [opensuse_tumbleweed, opensuse_leap_16.0, opensuse_leap_16.1]
 sources:
   obs_api: https://api.opensuse.org/public
   http: { timeout_sec: 600, retries: 5 }
@@ -30,7 +13,6 @@ container:
   privileged: true
   extra_args: []
 pbuild:
-  reponame: tumbleweed
   buildjobs: 2
   jobs: 8
   checks: true
@@ -43,14 +25,12 @@ signing:
   require_signature: true
 repository:
   slug: packman-nova-essentials
-  path: opensuse_tumbleweed/essentials
   public_url: ${PACKMAN_NOVA_PUBLIC_URL}
   publish_srpms: true
   publish_debuginfo: false
   provider: localfs
   installcheck:
     enabled: true
-    allow_missing: [ffmpeg-mini, libcelt0.so.2, libmad.so.0, libmng.so.2, libmodplug.so.1, libmpcdec.so.5]
   localfs:
     path: ${PACKMAN_NOVA_REPO_PATH}
   s3:
@@ -64,6 +44,6 @@ repository:
     cloudflare_zone_id: ${CLOUDFLARE_ZONE_ID}
     cloudflare_api_token: ${CLOUDFLARE_API_TOKEN}
 site:
-  title: packman-nova Essentials for openSUSE Tumbleweed
+  title: packman-nova Essentials for openSUSE
   description: Packman Essentials, rebuilt from public sources.
   source_url: https://github.com/olegantonyan/packman-nova

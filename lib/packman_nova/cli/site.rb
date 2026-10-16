@@ -5,11 +5,12 @@ module PackmanNova
     class Site < ::PackmanNova::Cli::Command
       class << self
         def summary
-          'regenerate index.html and packages.json from the repo state'
+          'regenerate index.html from the repo state of every distro'
         end
 
         def options(parser, options)
-          parser.on('--output DIR', 'write into DIR instead of the repo root') { |dir| options[:output] = dir }
+          parser.on('--provider NAME', %w[localfs s3], 'read states from and upload index.html to localfs or s3') { |value| options[:provider] = value }
+          parser.on('--output DIR', 'write into DIR instead of the repo root (never uploads)') { |dir| options[:output] = dir }
         end
 
         def log_file?
@@ -18,28 +19,35 @@ module PackmanNova
       end
 
       def call
-        generator = ::PackmanNova::Site::Generator.new(config:, state: load_state, logger:)
-        generator.write(::PackmanNova::Utils::Path.mkpath(output_dir)).each { |path| out.puts(path) }
+        out.puts(::PackmanNova::Site::Generator.new(config:, states:, logger:).write_index(::PackmanNova::Utils::Path.mkpath(output_dir)))
+        provider.publish_root_files!([::PackmanNova::Repo::Layout::INDEX_FILE]) if upload?
         0
       end
 
       private
 
-      def load_state
-        state_file = ::PackmanNova::Repo::Layout.from_config(config, root: repo_dir).state_file
-        raise ::PackmanNova::Error, "repo state not found: #{state_file} (run publish first or check repository.localfs.path)" unless ::File.file?(state_file)
+      def states
+        states = ::PackmanNova::Site::States.new(config:, provider:).call
+        raise ::PackmanNova::Error, "no published repo state for any of #{config.distros.join(', ')} under #{provider.root}" if states.values.none?
 
-        ::PackmanNova::Repo::State.load(state_file).to_h
+        states
+      end
+
+      def provider
+        @provider ||= options[:provider] ? ::PackmanNova::Repo::Providers.build(options[:provider], config:, logger:) : local_provider
+      end
+
+      def local_provider
+        root = config.repository.provider == 's3' ? config.workdir.repo_mirror_dir : ::PackmanNova::Repo::Layout.localfs_root(config)
+        ::PackmanNova::Repo::Providers::Localfs.new(root:, logger:)
+      end
+
+      def upload?
+        options[:provider] && !options[:output]
       end
 
       def output_dir
-        options[:output] ? ::File.expand_path(options[:output]) : repo_dir
-      end
-
-      def repo_dir
-        return config.workdir.repo_mirror_dir if config.repository.provider == 's3'
-
-        ::PackmanNova::Repo::Layout.localfs_root(config)
+        options[:output] ? ::File.expand_path(options[:output]) : provider.root
       end
     end
   end

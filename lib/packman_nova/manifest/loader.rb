@@ -5,8 +5,9 @@ module PackmanNova
     class Loader
       attr_reader :packages_dir
 
-      def initialize(packages_dir:, require_checksums: true)
+      def initialize(packages_dir:, distro: nil, require_checksums: true)
         @packages_dir = ::File.expand_path(packages_dir)
+        @distro = distro
         @require_checksums = require_checksums
       end
 
@@ -17,7 +18,7 @@ module PackmanNova
       end
 
       def find(name)
-        all.find { |manifest| manifest.name == name } || raise(::PackmanNova::ManifestError, "unknown package: #{name}")
+        all.find { |manifest| manifest.name == name } || raise(::PackmanNova::ManifestError, unknown_message(name))
       end
 
       def skipped
@@ -29,12 +30,21 @@ module PackmanNova
       end
 
       def manifests
-        results.fetch(:manifests)
+        results.fetch(:manifests).select { |manifest| distro.nil? || manifest.for_distro?(distro) }
+      end
+
+      def unknown_distros(known)
+        results.fetch(:manifests).to_h { |manifest| [manifest.name, manifest.distros - known] }.reject { |_name, ids| ids.empty? }
       end
 
       private
 
-      attr_reader :require_checksums
+      attr_reader :distro, :require_checksums
+
+      def unknown_message(name)
+        other = results.fetch(:manifests).find { |manifest| manifest.name == name }
+        other ? "package #{name} is not built for #{distro} (distros: #{other.distros.join(', ')})" : "unknown package: #{name}"
+      end
 
       def results
         @results ||= package_dirs.each_with_object({ manifests: [], errors: [], skipped: [] }) do |dir, acc|

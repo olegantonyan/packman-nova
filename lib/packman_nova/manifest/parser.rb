@@ -6,7 +6,7 @@ module PackmanNova
       OBS_LINK = ::PackmanNova::Manifest::OBS_LINK
       NATIVE = ::PackmanNova::Manifest::NATIVE
       KINDS = [OBS_LINK, NATIVE].freeze
-      COMMON_KEYS = %i[name kind enabled tier tags notes spec].freeze
+      COMMON_KEYS = %i[name kind enabled distros tier tags notes spec].freeze
       KIND_KEYS = { OBS_LINK => %i[origin link], NATIVE => %i[sources watch] }.freeze
       ORIGIN_KEYS = %i[project package pin].freeze
       LINK_KEYS = %i[delete patches add].freeze
@@ -25,10 +25,15 @@ module PackmanNova
         kind = parse_kind
         reject_unknown(data, COMMON_KEYS + KIND_KEYS.fetch(kind), 'manifest')
         name = parse_name
-        metadata(name, kind).merge(kind == OBS_LINK ? obs_link_parts(name) : native_parts)
+        parts = kind_parts(kind, name)
+        metadata(name, kind, parts[:origin]&.package || name).merge(parts)
       end
 
       private
+
+      def kind_parts(kind, name)
+        kind == OBS_LINK ? obs_link_parts(name) : native_parts
+      end
 
       attr_reader :data, :label, :require_checksums
 
@@ -46,15 +51,16 @@ module PackmanNova
         name
       end
 
-      def metadata(name, kind)
+      def metadata(name, kind, spec_base)
         {
           name:,
           kind:,
           enabled: boolean(data, :enabled, 'enabled', default: true),
+          distros: string_list(data, :distros, 'distros'),
           tier: typed(data, :tier, 'tier', ::Integer),
           tags: string_list(data, :tags, 'tags'),
           notes: string(data, :notes, 'notes'),
-          spec_name: string(data, :spec, 'spec') || "#{name}.spec"
+          spec_name: string(data, :spec, 'spec') || "#{spec_base}.spec"
         }
       end
 

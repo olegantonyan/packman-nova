@@ -12,6 +12,7 @@ module PackmanNova
 
         def options(parser, options)
           parser.on('--[no-]publish', 'publish after the build (default: yes)') { |value| options[:publish] = value }
+          parser.on('--[no-]site', 'regenerate index.html on publish (default: yes)') { |value| options[:site] = value }
           parser.on('--[no-]fail-on-failed-packages', 'exit 1 when any package failed to sync or build (default: yes)') { |value| options[:fail_on_failed_packages] = value }
           parser.on('--provider NAME', %w[localfs s3], 'localfs or s3 (default: repository.provider)') { |value| options[:provider] = value }
         end
@@ -50,7 +51,7 @@ module PackmanNova
       def publish
         return [nil, 'publish skipped'] unless options.fetch(:publish, true)
 
-        [nil, published_part(publisher.call(provider: options[:provider]))]
+        [nil, published_part(publisher.call(provider: options[:provider], site: options.fetch(:site, true)))]
       rescue ::StandardError => e
         logger.error("publish failed: #{e.class}: #{e.message}")
         [e, "publish failed: #{e.message}"]

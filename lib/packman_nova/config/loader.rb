@@ -7,6 +7,7 @@ module PackmanNova
     class Loader
       USER_FILE_NAME = 'packman-nova.yml'
       DOTENV_FILE_NAME = '.env'
+      DISTRO_ENV = 'PACKMAN_NOVA_DISTRO'
       ENV_PATTERN = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/
       ENV_OVERRIDES = {
         'PACKMAN_NOVA_WORKDIR' => %i[workdir],
@@ -15,27 +16,61 @@ module PackmanNova
         'PACKMAN_NOVA_REPO_PATH' => %i[repository localfs path]
       }.freeze
 
-      def initialize(path:, overrides:, cwd:, env: ::ENV)
+      def initialize(path:, overrides:, cwd:, distro: nil, env: ::ENV)
         @path = path
         @overrides = overrides
         @cwd = cwd
+        @distro = distro
         @env = env
         @used = []
       end
 
       def call
         load_dotenv
-        merged = [*files.map { |file| expand(read_file(file)) }, env_overrides, overrides.compact].reduce { |acc, layer| merge(acc, layer) }
-        ::PackmanNova::Config.new(merged, files:, env_vars_used: used.uniq.sort, env_vars_missing: missing_names)
+        defaults, *user = [::PackmanNova::Config::DEFAULT_PATH, user_file].compact.map { |file| load_layer(file) }
+        id = distro_id(merge(defaults, user.first || {}))
+        build(merge_all([defaults, load_layer(distro_file(id)), *user, env_overrides, overrides.compact]), id)
       end
 
-      def files
-        [::PackmanNova::Config::DEFAULT_PATH, user_file].compact
+      def files(id)
+        [::PackmanNova::Config::DEFAULT_PATH, ::PackmanNova::Config.distro_file(id), user_file].compact
       end
 
       private
 
-      attr_reader :path, :overrides, :cwd, :env, :used
+      attr_reader :path, :overrides, :cwd, :distro, :env, :used
+
+      def build(merged, id)
+        check_distro_id!(merged, id)
+        ::PackmanNova::Config.new(merged, files: files(id), env_vars_used: used.uniq.sort, env_vars_missing: missing_names, distro_loader:)
+      end
+
+      def distro_loader
+        snapshot = env.to_h.freeze
+        ->(id) { self.class.new(path:, overrides:, cwd:, distro: id, env: snapshot).call }
+      end
+
+      def distro_id(base)
+        known = base[:distros]
+        raise ::PackmanNova::ConfigError, 'distros: expected a non-empty list of distro ids' unless known.is_a?(::Array) && !known.empty?
+
+        id = distro || env.fetch(DISTRO_ENV, '').then { |value| value.empty? ? nil : value } || known.first
+        raise ::PackmanNova::ConfigError, "unknown distro #{id.inspect} (known: #{known.join(', ')})" unless known.include?(id)
+
+        id
+      end
+
+      def distro_file(id)
+        file = ::PackmanNova::Config.distro_file(id)
+        raise ::PackmanNova::ConfigError, "distro config not found: #{file}" unless ::File.file?(file)
+
+        file
+      end
+
+      def check_distro_id!(merged, id)
+        actual = merged.dig(:distro, :id)
+        raise ::PackmanNova::ConfigError, "#{::PackmanNova::Config.distro_file(id)}: distro.id must be #{id}, got #{actual.inspect}" unless actual == id
+      end
 
       def missing_names
         used.uniq.sort.select { |name| env.fetch(name, '').empty? }
@@ -77,6 +112,14 @@ module PackmanNova
           value = env.fetch(name, '')
           value.empty? ? acc : merge(acc, key_path.reverse.reduce(value) { |nested, key| { key => nested } })
         end
+      end
+
+      def load_layer(file)
+        expand(read_file(file))
+      end
+
+      def merge_all(layers)
+        layers.reduce { |acc, layer| merge(acc, layer) }
       end
 
       def merge(base, override)

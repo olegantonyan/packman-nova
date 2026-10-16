@@ -5,7 +5,6 @@ require 'fileutils'
 module PackmanNova
   module Repo
     class StateArchive
-      KEY = "#{::PackmanNova::Repo::Providers::S3::STATE_PREFIX}state.tar.zst".freeze
       FILE_NAME = 'state.tar.zst'
       CONTENT_TYPE = 'application/zstd'
 
@@ -15,6 +14,10 @@ module PackmanNova
         @bucket = bucket
         @subprocess = subprocess
         @logger = logger
+      end
+
+      def key
+        "#{::PackmanNova::Repo::Providers::S3::STATE_PREFIX}#{config.distro.id}.tar.zst"
       end
 
       def entries
@@ -28,31 +31,39 @@ module PackmanNova
 
         with_archive do |archive|
           run!(['tar', '--zstd', '-cf', archive, '-C', workdir.root, *paths])
-          logger.info("state: uploading #{paths.join(', ')} (#{::File.size(archive)} bytes) to #{KEY}")
-          bucket.upload(archive, KEY, content_type: CONTENT_TYPE)
+          upload(archive, paths)
         end
         paths
       end
 
       def pull(allow_missing: false)
-        return missing(allow_missing) unless bucket.exist?(KEY)
+        return missing(allow_missing) unless bucket.exist?(key)
 
         with_archive do |archive|
-          bucket.download(KEY, archive)
-          logger.info("state: extracting #{KEY} (#{::File.size(archive)} bytes) into #{workdir.root}")
+          download(archive)
           run!(['tar', '--zstd', '-xf', archive, '-C', workdir.root])
         end
-        KEY
+        key
       end
 
       private
 
       attr_reader :config, :workdir, :bucket, :subprocess, :logger
 
-      def missing(allowed)
-        raise ::PackmanNova::PublishError, "no state archive at #{KEY}" unless allowed
+      def upload(archive, paths)
+        logger.info("state: uploading #{paths.join(', ')} (#{::File.size(archive)} bytes) to #{key}")
+        bucket.upload(archive, key, content_type: CONTENT_TYPE)
+      end
 
-        logger.warn("state: no archive at #{KEY}, starting from an empty workdir")
+      def download(archive)
+        bucket.download(key, archive)
+        logger.info("state: extracting #{key} (#{::File.size(archive)} bytes) into #{workdir.root}")
+      end
+
+      def missing(allowed)
+        raise ::PackmanNova::PublishError, "no state archive at #{key}" unless allowed
+
+        logger.warn("state: no archive at #{key}, starting from an empty workdir")
         nil
       end
 

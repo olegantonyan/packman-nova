@@ -9,11 +9,12 @@ module PackmanNova
       STATUS_CLASSES = { SUCCEEDED => 'ok', 'failed' => 'fail', 'unresolvable' => 'fail', 'broken' => 'fail' }.freeze
       SOURCE_PREFIX = 'src/'
 
-      def initialize(name:, entry:, files:, repo_url:)
+      def initialize(name:, entry:, files:, repo_url:, anchor_prefix:)
         @name = name
         @entry = entry
         @files = files
         @repo_url = repo_url
+        @anchor_prefix = anchor_prefix
       end
 
       def to_h
@@ -22,10 +23,10 @@ module PackmanNova
 
       private
 
-      attr_reader :name, :entry, :files, :repo_url
+      attr_reader :name, :entry, :files, :repo_url, :anchor_prefix
 
       def identity
-        { 'name' => name, 'anchor' => ::PackmanNova::Site::Format.anchor(name), 'evr' => evr, 'origin_label' => entry['origin'] || 'src.rpm', 'origin_url' => origin_url }
+        { 'name' => name, 'anchor' => "#{anchor_prefix}-#{::PackmanNova::Site::Format.anchor(name)}", 'evr' => evr, 'origin_label' => entry['origin'] || 'src.rpm', 'origin_url' => origin_url }
       end
 
       def build

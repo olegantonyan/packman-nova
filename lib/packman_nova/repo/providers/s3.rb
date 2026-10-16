@@ -10,7 +10,7 @@ module PackmanNova
         STATE_PREFIX = '_state/'
         REQUIRED_SETTINGS = %i[bucket endpoint access_key_id secret_access_key].freeze
         REPOMD_RANKS = { 'repomd.xml' => 2, 'repomd.xml.asc' => 3, 'repomd.xml.key' => 4 }.freeze
-        ROOT_RANKS = { 'index.html' => 8, 'packages.json' => 9, 'packman-nova.key' => 10 }.freeze
+        ROOT_RANKS = { 'index.html' => 8, 'packman-nova.key' => 9 }.freeze
         OTHER_RANK = 7
 
         class << self
@@ -81,6 +81,20 @@ module PackmanNova
 
         def archive_sources!(archive)
           archive.call(bucket)
+        end
+
+        def fetch(key)
+          return bucket.download(key, local(key)) if bucket.exist?(key)
+
+          ::FileUtils.rm_f(local(key))
+          nil
+        end
+
+        def publish_root_files!(keys)
+          logger.info("s3: uploading #{keys.join(', ')} to #{bucket.url}")
+          keys.each { |key| bucket.upload(local(key), key) }
+          purge
+          keys
         end
 
         private

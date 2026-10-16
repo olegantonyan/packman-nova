@@ -75,7 +75,35 @@ section {
   border: 1px solid var(--border);
   border-radius: 8px;
 }
-section h2 { font-size: 1.25rem; margin: 0 0 1rem; }
+section h2, section h3 { font-size: 1.25rem; margin: 0 0 1rem; }
+
+.distro-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  width: max-content;
+  max-width: 100%;
+  margin: 1.5rem 0 0;
+  padding: 3px;
+  background: var(--other-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.distro-tabs[hidden] { display: none; }
+.distro-tabs button {
+  font: inherit;
+  font-size: .9rem;
+  padding: .4rem .9rem;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.distro-tabs button[aria-selected="true"] { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 1px 3px rgba(0, 0, 0, .15); }
+.distro[hidden] { display: none; }
+.distro-name { font-size: 1.5rem; margin: 2rem 0 0; }
+.distro-tabs:not([hidden]) ~ main .distro-name { display: none; }
 
 code { font-family: ui-monospace, "Fira Code", monospace; font-size: .85em; }
 p code, dd code, td code, .note code {
@@ -202,6 +230,8 @@ footer a { color: inherit; }
   body { padding: 1.25rem .75rem; }
   header h1 { font-size: 1.5rem; padding-right: 0; }
   .theme-toggle { position: static; width: max-content; margin-bottom: 1rem; }
+  .distro-tabs { width: 100%; }
+  .distro-tabs button { flex: 1 1 auto; }
   section { padding: 1rem .85rem 1.1rem; }
   .facts { grid-template-columns: 1fr; gap: 0; }
   .facts dd { margin-bottom: .6rem; }

@@ -41,7 +41,7 @@ describe ::PackmanNova::Cli::Run do
 
   before do
     ::PackmanNova::Utils::JsonFile.write(
-      ::File.join(root, 'state', 'last-build.json'),
+      ::File.join(root, 'opensuse_tumbleweed', 'state', 'last-build.json'),
       { 'run' => 4, 'release' => '1699.4.nova.1', 'built' => %w[fdk-aac vlc],
         'packages' => { 'fdk-aac' => { 'code' => 'succeeded' }, 'vlc' => { 'code' => 'failed' }, 'x265' => { 'code' => 'succeeded' } } }
     )
@@ -61,8 +61,14 @@ describe ::PackmanNova::Cli::Run do
     assert_equal 1, run_command(provider: 's3')
     assert_equal [{}], sync.calls
     assert_equal [{ sync: false }], build.calls
-    assert_equal [{ provider: 's3' }], publisher.calls
+    assert_equal [{ provider: 's3', site: true }], publisher.calls
     assert_equal 'run 4, release 1699.4.nova.1: built 2 of 3, 1 failed (vlc); published 2 added, 0 replaced, 1 removed', summary
+  end
+
+  it 'passes --no-site to publish' do
+    run_command(site: false)
+
+    assert_equal [{ provider: nil, site: false }], publisher.calls
   end
 
   it 'skips publishing on request' do

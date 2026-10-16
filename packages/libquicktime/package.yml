@@ -1,6 +1,7 @@
 name: libquicktime
 kind: obs-link
 enabled: true
+distros: [opensuse_tumbleweed]
 tier: 3
 tags: [codec]
 origin:

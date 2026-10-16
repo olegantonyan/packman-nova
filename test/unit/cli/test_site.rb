@@ -10,8 +10,8 @@ describe ::PackmanNova::Cli::Site, :site do
     [code, out.string]
   end
 
-  def publish_state(repo_dir)
-    dir = ::File.join(repo_dir, 'opensuse_tumbleweed', 'essentials')
+  def publish_state(repo_dir, distro = 'opensuse_tumbleweed')
+    dir = ::File.join(repo_dir, distro, 'essentials')
     ::FileUtils.mkdir_p(dir)
     ::FileUtils.cp(fixture_path('site', 'state.json'), ::File.join(dir, 'state.json'))
   end
@@ -22,8 +22,35 @@ describe ::PackmanNova::Cli::Site, :site do
       code, out = run_site(dir)
 
       assert_equal 0, code
-      assert_equal "#{::File.join(dir, 'index.html')}\n#{::File.join(dir, 'packages.json')}\n", out
+      assert_equal "#{::File.join(dir, 'index.html')}\n", out
       assert_includes ::File.read(::File.join(dir, 'index.html')), 'libx264:x264'
+    end
+  end
+
+  it 'renders every distro with a published state' do
+    with_tmpdir do |dir|
+      publish_state(dir)
+      publish_state(dir, 'opensuse_leap_16.1')
+      run_site(dir)
+      html = ::File.read(::File.join(dir, 'index.html'))
+
+      assert_includes html, 'id="opensuse_leap_16.1-pkg-vlc"'
+      assert_includes html, 'id="opensuse_tumbleweed-pkg-vlc"'
+      assert_includes html, 'Not published yet.'
+    end
+  end
+
+  it 'uploads only index.html through a provider' do
+    with_tmpdir do |dir|
+      publish_state(dir)
+      provider = ::PackmanNova::Repo::Providers::Localfs.new(root: dir, logger: null_logger)
+      uploaded = []
+      provider.define_singleton_method(:publish_root_files!) { |keys| uploaded.concat(keys) }
+      command = ::PackmanNova::Cli::Site.new(config: site_config('PACKMAN_NOVA_REPO_PATH' => dir), logger: null_logger, options: { provider: 'localfs' }, out: ::StringIO.new)
+      command.define_singleton_method(:provider) { provider }
+      command.call
+
+      assert_equal ['index.html'], uploaded
     end
   end
 
@@ -42,7 +69,7 @@ describe ::PackmanNova::Cli::Site, :site do
     with_tmpdir do |dir|
       error = assert_raises(::PackmanNova::Error) { run_site(dir) }
 
-      assert_includes error.message, "repo state not found: #{::File.join(dir, 'opensuse_tumbleweed', 'essentials', 'state.json')}"
+      assert_includes error.message, "no published repo state for any of opensuse_tumbleweed, opensuse_leap_16.0, opensuse_leap_16.1 under #{dir}"
     end
   end
 end

@@ -179,7 +179,7 @@ describe ::PackmanNova::Sync, :sync do
 
   it 'flags rebuild_all_required when the local config changes' do
     sync.call
-    ::File.write(config.prjconf.local, "Prefer: bar\n")
+    ::File.write(config.prjconf.local.first, "Prefer: bar\n")
     report = sync.call
 
     assert report.rebuild_all_required
@@ -188,7 +188,7 @@ describe ::PackmanNova::Sync, :sync do
 
   it 'does not flag rebuild_all_required for onlybuild changes' do
     sync.call
-    ::File.write(config.prjconf.local, "#{::File.read(config.prjconf.local)}BuildFlags: onlybuild:hello\n")
+    ::File.write(config.prjconf.local.first, "#{::File.read(config.prjconf.local.first)}BuildFlags: onlybuild:hello\n")
 
     refute sync.call.rebuild_all_required
   end

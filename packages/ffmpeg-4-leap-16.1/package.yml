@@ -1,0 +1,14 @@
+name: ffmpeg-4-leap-16.1
+kind: obs-link
+enabled: true
+distros: [opensuse_leap_16.1]
+tier: 2
+tags: [codec]
+origin:
+  project: openSUSE:Backports:SLE-16.1
+  package: ffmpeg-4
+  pin: null
+link:
+  delete: [_multibuild, ffmpeg-4.changes]
+  patches: [ffmpeg-4-libv4l2-ioctl-type.patch]
+notes: "PMBS A_16.1-ffmpeg-4. Patch: Leap libv4l 1.30 declares v4l2_ioctl(int, int, ...), which GCC 15 rejects."

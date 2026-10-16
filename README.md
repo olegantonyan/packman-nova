@@ -1,34 +1,41 @@
 # packman-nova
 
-Independent rebuild of Packman `Essentials` (http://packman.links2linux.org) for openSUSE Tumbleweed: same packages, same sources, our build
-infrastructure and signing key. Packman shuts down on 2026-12-31 unless a successor appears.
+Independent rebuild of Packman `Essentials` (http://packman.links2linux.org) for openSUSE Tumbleweed, Leap 16.0 and Leap 16.1: same
+packages, same sources, our build infrastructure and signing key. Packman shuts down on 2026-12-31 unless a successor appears.
 Published at https://packman.omnipackage.org.
 
 ## Install
 
 ```
-sudo zypper ar -f -p 80 https://packman.omnipackage.org/opensuse_tumbleweed/essentials/packman-nova.repo
+sudo zypper ar -f -p 80 https://packman.omnipackage.org/<distro>/essentials/packman-nova.repo
 sudo zypper --gpg-auto-import-keys ref
 sudo zypper dup --from packman-nova-essentials --allow-vendor-change
 ```
 
+`<distro>` is `opensuse_tumbleweed`, `opensuse_leap_16.0` or `opensuse_leap_16.1`.
+
 ## How it works
 
-A GitHub Actions job (`.github/workflows/build-publish.yml`) runs every night (cron 19:17 UTC; GitHub starts it ~6 h late)
-and normally needs no attention:
+A GitHub Actions workflow (`.github/workflows/build-publish.yml`) runs every night (cron 19:17 UTC; GitHub starts it ~6 h late)
+and normally needs no attention. Each distro builds in its own job, in parallel; a final job renders the site from all of them.
+Per distro:
 
 1. **Restore.** `state pull` downloads yesterday's pbuild results and `state/` from the R2 bucket, so pbuild knows
    what is already built.
-2. **Sync.** For every enabled `packages/<name>/package.yml`: `obs-link` packages take Factory's current sources
-   from the OBS API; `native` packages use the spec in this repo plus tarballs from upstream (fallback: our source
-   archive in the bucket). Checksums are verified. The current Factory prjconf and Tumbleweed snapshot id are recorded too.
+2. **Sync.** For every enabled `packages/<name>/package.yml` built for the distro: `obs-link` packages take their origin's
+   current sources (Factory, or SLFO/Backports for Leap, like PMBS) from the OBS API; `native` packages use the spec in this
+   repo plus tarballs from upstream (fallback: our source archive in the bucket). Checksums are verified. The base prjconf
+   and distro snapshot id are recorded too.
 3. **Build.** pbuild runs in the builder container and rebuilds only packages whose sources or build dependencies
-   changed. An i586 pass then makes the `-32bit` packages. Release `1699.<run>.nova.1` is higher than Factory's,
-   so our packages win on users' systems.
+   changed. On Tumbleweed an i586 pass then makes the `-32bit` packages (Leap 16 has no 32-bit). Release
+   `1699.<run>.nova.1` (Leap: `160000.`/`160100.<run>.nova.1`) is higher than the distro's, so our packages win on users'
+   systems.
 4. **Publish.** New rpms are signed, repodata is regenerated and signed, changed files are uploaded to R2, stale
-   ones deleted, the Cloudflare cache purged, and the site at packman.omnipackage.org updated. New source tarballs
+   ones deleted, and the Cloudflare cache purged. New source tarballs
    are archived under `_sources/`, so a later build doesn't need Packman or a vanished upstream.
 5. **Save.** `state push` uploads the updated pbuild state for the next night.
+
+Then `site --provider s3` renders packman.omnipackage.org: one page, a tab per distro.
 
 If nothing changed upstream, the night builds and publishes nothing. Users get updates with
 `zypper ref && zypper dup`.
@@ -65,6 +72,7 @@ cp .env.example .env && chmod 600 .env       # workdir, GPG_PRIVATE_KEY_BASE64, 
 bundle exec exe/packman-nova image build     # builder container
 bundle exec exe/packman-nova check
 bundle exec exe/packman-nova run --provider s3   # sync + build + sign + publish; a cold build takes hours
+bundle exec exe/packman-nova -d opensuse_leap_16.0 run --provider s3   # another distro (default: Tumbleweed)
 ```
 
 Tests: `bundle exec rake`. CLI reference: `docs/12-tool.md`.
@@ -93,9 +101,9 @@ with the new key; users accept it on the next `zypper ref`.
 
 ## Layout
 
-- `lib/`, `exe/` the `packman-nova` CLI; `config/packman-nova.yml` defaults, secrets from `.env`.
+- `lib/`, `exe/` the `packman-nova` CLI; `config/packman-nova.yml` defaults, `config/distros/<id>.yml` per distro, secrets from `.env`.
 - `packages/<name>/` package manifests and vendored specs (tarballs are downloaded by `sync`, versions bumped by `update`).
-- `prjconf/` Factory config fallback and the Packman macro set.
+- `prjconf/` base config fallbacks (Factory, obs-build's Leap configs) and the Packman macro sets.
 - `container/` builder image (Tumbleweed + pbuild).
 - `docs/` Packman build config findings, replacement plan, CLI reference.
 - `.github/workflows/` tests, and build-publish (nightly, or manual trigger).

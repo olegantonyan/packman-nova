@@ -22,7 +22,7 @@ describe ::PackmanNova::Publish do
   let(:manifests) { [PublishFakes.manifest('fdk-aac'), PublishFakes.manifest('ffmpeg-8', kind: 'obs-link')] }
   let(:fdk) { ['libfdk-aac2-2.0.3-1699.1.nova.1.x86_64.rpm', 'fdk-aac-2.0.3-1699.1.nova.1.src.rpm'] }
   let(:ffmpeg) { ['libavcodec62-8.1.2-1699.1.nova.1.x86_64.rpm', 'ffmpeg-8-8.1.2-1699.1.nova.1.src.rpm'] }
-  let(:results) { ::File.join(workdir, 'project', '_build.tumbleweed.x86_64') }
+  let(:results) { ::File.join(workdir, 'opensuse_tumbleweed', 'project', '_build.tumbleweed.x86_64') }
   let(:essentials) { ::File.join(repo, 'opensuse_tumbleweed', 'essentials') }
 
   after { ::FileUtils.rm_rf(tmp) }
@@ -33,7 +33,7 @@ describe ::PackmanNova::Publish do
   end
 
   def write_record(record)
-    ::PackmanNova::Utils::JsonFile.write(::File.join(workdir, 'state', 'last-build.json'), record)
+    ::PackmanNova::Utils::JsonFile.write(::File.join(workdir, 'opensuse_tumbleweed', 'state', 'last-build.json'), record)
   end
 
   def publisher(**)
@@ -68,7 +68,7 @@ describe ::PackmanNova::Publish do
     assert_equal({ 'id' => PublishFakes::KEY_ID, 'fingerprint' => PublishFakes::FINGERPRINT }, state['key'])
     assert_equal %w[fdk-aac ffmpeg-8], state['packages'].keys
     assert_equal ['8.1.2', '1699.1.nova.1', 'openSUSE:Factory/ffmpeg-8'], state['packages']['ffmpeg-8'].values_at('version', 'release', 'origin')
-    assert_equal state['packages'], ::PackmanNova::Utils::JsonFile.read(::File.join(repo, 'packages.json'))['packages']
+    assert_equal state['packages'], ::PackmanNova::Utils::JsonFile.read(::File.join(essentials, 'packages.json'))['packages']
 
     before = ::File.read(::File.join(essentials, 'state.json'))
     calls = toolbox.calls.size
@@ -123,7 +123,7 @@ describe ::PackmanNova::Publish do
   end
 
   it 'publishes the i586 log when the baselibs pass failed' do
-    i586 = ::File.join(workdir, 'project', '_build.tumbleweed.i586', 'fdk-aac')
+    i586 = ::File.join(workdir, 'opensuse_tumbleweed', 'project', '_build.tumbleweed.i586', 'fdk-aac')
     ::FileUtils.mkdir_p(i586)
     ::File.write(::File.join(i586, '_log'), "i586 error\n")
     record = PublishFakes.record('fdk-aac' => ['failed', fdk], 'ffmpeg-8' => ['succeeded', ffmpeg])
@@ -167,21 +167,34 @@ describe ::PackmanNova::Publish do
   end
 
   it 'refuses to publish without a build record' do
-    ::File.delete(::File.join(workdir, 'state', 'last-build.json'))
+    ::File.delete(::File.join(workdir, 'opensuse_tumbleweed', 'state', 'last-build.json'))
 
     assert_raises(::PackmanNova::PublishError) { publisher.call }
   end
 
-  it 'hands the state hash to the site generator' do
+  it 'hands every distro state to the site generator' do
     generated = []
     generator = ::Class.new do
-      define_method(:initialize) { |config:, state:, logger:| generated << [config, state, logger] }
-      define_method(:write) { |dir, index:| generated << [dir, index] }
+      define_singleton_method(:write_packages) { |path, state| generated << [:packages, path, state] }
+      define_method(:initialize) { |config:, states:, logger:| generated << [config, states, logger] }
+      define_method(:write_index) { |dir| generated << [:index, dir] }
     end
     publisher(site_generator: generator).call
 
-    assert_equal config, generated.first.first
-    assert_equal state, generated.first[1]
-    assert_equal [repo, true], generated.last
+    assert_equal [:packages, ::File.join(essentials, 'packages.json'), state], generated.first
+    assert_equal config, generated[1].first
+    assert_equal({ 'opensuse_tumbleweed' => state, 'opensuse_leap_16.0' => nil, 'opensuse_leap_16.1' => nil }, generated[1][1])
+    assert_equal [:index, repo], generated.last
+  end
+
+  it 'reads the other distros from the repo for the index' do
+    leap = ::File.join(repo, 'opensuse_leap_16.0', 'essentials', 'state.json')
+    ::PackmanNova::Utils::JsonFile.write(leap, ::PackmanNova::Repo::State.empty.to_h.merge('run' => 9))
+    publisher.call
+
+    html = ::File.read(::File.join(repo, 'index.html'))
+
+    assert_includes html, 'data-distro="opensuse_leap_16.0"'
+    assert_includes html, 'https://packman.omnipackage.org/opensuse_leap_16.0/essentials/packman-nova.repo'.sub('https://packman.omnipackage.org', "file://#{repo}")
   end
 end

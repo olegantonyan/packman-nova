@@ -1,0 +1,13 @@
+name: libquicktime-leap
+kind: obs-link
+enabled: true
+distros: [opensuse_leap_16.0, opensuse_leap_16.1]
+tier: 3
+tags: [codec]
+origin:
+  project: SUSE:SLFO:1.2
+  package: libquicktime
+  pin: null
+link:
+  patches: [fix-gcc15-build.patch]
+notes: "PMBS A_16.0-libquicktime, which PMBS builds for 16.0 and 16.1. fix-gcc15-build.patch is Factory's, missing in SLFO:1.2."

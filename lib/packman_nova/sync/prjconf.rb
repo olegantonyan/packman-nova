@@ -30,7 +30,7 @@ module PackmanNova
       end
 
       def local_content
-        ::File.read(config.resolve(config.prjconf.local)).lines.grep_v(RELEASE_LINE).join
+        config.prjconf.local.map { |file| ::File.read(config.resolve(file)) }.join.lines.grep_v(RELEASE_LINE).join
       end
 
       private
@@ -39,11 +39,15 @@ module PackmanNova
 
       def factory_content(refresh)
         fetched = fetch if refresh && !downloader.offline?
-        fetched || offline_content
+        base_prefix + (fetched || offline_content)
+      end
+
+      def base_prefix
+        @base_prefix ||= config.prjconf.base_prepend.map { |file| ::File.read(config.resolve(file)) }.join
       end
 
       def offline_content
-        return ::File.read(factory_path) if ::File.file?(factory_path)
+        return ::File.read(factory_path).delete_prefix(base_prefix) if ::File.file?(factory_path)
 
         fallback = config.resolve(config.prjconf.base_fallback)
         logger.warn("using fallback prjconf #{fallback}")

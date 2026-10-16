@@ -26,8 +26,9 @@ describe 'CLI commands' do
 
   describe ::PackmanNova::Cli::Status do
     before do
-      write_json('state/sync.json', { 'schema' => 1, 'packages' => { 'fdk-aac' => { 'kind' => 'native', 'srcmd5' => '0123456789abcdef' }, 'libx264' => { 'kind' => 'native' } } })
-      write_json('state/last-build.json', {
+      write_json('opensuse_tumbleweed/state/sync.json',
+                 { 'schema' => 1, 'packages' => { 'fdk-aac' => { 'kind' => 'native', 'srcmd5' => '0123456789abcdef' }, 'libx264' => { 'kind' => 'native' } } })
+      write_json('opensuse_tumbleweed/state/last-build.json', {
                    'schema' => 1, 'run' => 2, 'release' => '1699.2.nova.1', 'started_at' => 's', 'finished_at' => '2026-09-29T12:00:00Z',
                    'packages' => {
                      'fdk-aac' => { 'code' => 'succeeded', 'rpms' => %w[libfdk-aac2-2.0.3-1699.2.nova.1.x86_64.rpm fdk-aac-devel-2.0.3-1699.2.nova.1.x86_64.rpm],
@@ -68,29 +69,29 @@ describe 'CLI commands' do
 
   describe ::PackmanNova::Cli::Clean do
     before do
-      ::FileUtils.mkdir_p(::File.join(root, 'project', '_build.tumbleweed.x86_64', 'fdk-aac'))
-      ::FileUtils.mkdir_p(::File.join(root, 'project', 'fdk-aac'))
-      ::FileUtils.mkdir_p(::File.join(root, 'cache', 'blobs'))
+      ::FileUtils.mkdir_p(::File.join(root, 'opensuse_tumbleweed', 'project', '_build.tumbleweed.x86_64', 'fdk-aac'))
+      ::FileUtils.mkdir_p(::File.join(root, 'opensuse_tumbleweed', 'project', 'fdk-aac'))
+      ::FileUtils.mkdir_p(::File.join(root, 'opensuse_tumbleweed', 'cache', 'blobs'))
     end
 
     it 'removes results with --yes' do
       assert_equal 0, command(::PackmanNova::Cli::Clean, results: true, yes: true).call
 
-      refute_path_exists ::File.join(root, 'project', '_build.tumbleweed.x86_64')
-      assert_path_exists ::File.join(root, 'project', 'fdk-aac')
-      assert_path_exists ::File.join(root, 'cache')
+      refute_path_exists ::File.join(root, 'opensuse_tumbleweed', 'project', '_build.tumbleweed.x86_64')
+      assert_path_exists ::File.join(root, 'opensuse_tumbleweed', 'project', 'fdk-aac')
+      assert_path_exists ::File.join(root, 'opensuse_tumbleweed', 'cache')
     end
 
     it 'asks before removing' do
       clean = ::PackmanNova::Cli::Clean.new(config:, logger: null_logger, options: { cache: true }, out:, input: ::StringIO.new("n\n"))
 
       assert_equal 0, clean.call
-      assert_path_exists ::File.join(root, 'cache')
-      assert_includes out.string, "remove #{root}/cache? [y/N]"
+      assert_path_exists ::File.join(root, 'opensuse_tumbleweed', 'cache')
+      assert_includes out.string, "remove #{root}/opensuse_tumbleweed/cache? [y/N]"
 
       ::PackmanNova::Cli::Clean.new(config:, logger: null_logger, options: { cache: true }, out:, input: ::StringIO.new("y\n")).call
 
-      refute_path_exists ::File.join(root, 'cache')
+      refute_path_exists ::File.join(root, 'opensuse_tumbleweed', 'cache')
     end
 
     it 'requires a target' do

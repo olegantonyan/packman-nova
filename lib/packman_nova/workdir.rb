@@ -6,7 +6,7 @@ require 'tmpdir'
 
 module PackmanNova
   class Workdir
-    TOP_LEVEL_DIRS = %w[project build-root cache state logs tmp repo].freeze
+    TOP_LEVEL_DIRS = %w[project build-root cache state logs tmp].freeze
     LOG_TIMESTAMP_FORMAT = '%Y%m%d-%H%M%S'
 
     attr_reader :root
@@ -35,7 +35,6 @@ module PackmanNova
     def builds_dir = ::File.join(state_dir, 'builds')
     def build_record_file(run) = ::File.join(builds_dir, "#{run}.json")
     def last_build_file = state_file('last-build.json')
-    def repo_dir = join('repo')
     def repo_mirror_dir = join('repo-mirror')
     def logs_dir = join('logs')
     def tmp_dir = join('tmp')

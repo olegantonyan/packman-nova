@@ -1,6 +1,7 @@
 name: gstreamer-plugins-bad-codecs
 kind: native
 enabled: true
+distros: [opensuse_tumbleweed, opensuse_leap_16.1]
 tier: 3
 tags: [codec]
 sources:

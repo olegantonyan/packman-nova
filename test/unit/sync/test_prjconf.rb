@@ -19,6 +19,38 @@ describe ::PackmanNova::Sync::Prjconf, :sync do
     ::FileUtils.rm_rf(dir)
   end
 
+  it 'concatenates every local file in order' do
+    extra = ::File.join(dir, 'fixup.conf')
+    ::File.write(extra, "%define suse_version 1610\n")
+    listed = load_config(path: ::File.join(dir, 'config.yml'), env: { 'PACKMAN_NOVA_WORKDIR' => nil }, overrides: { prjconf: { local: [extra, *config.prjconf.local] } })
+    local = ::PackmanNova::Sync::Prjconf.new(config: listed, workdir:, downloader: nil, logger: null_logger).local_content
+
+    assert_equal "%define suse_version 1610\nPrefer: foo\n", local
+  end
+
+  it 'prepends base_prepend files to the fetched and the kept base config once' do
+    head = ::File.join(dir, 'head.conf')
+    ::File.write(head, "%define bootstrap_stage 0\n")
+    overrides = { prjconf: { base_prepend: [head], local: config.prjconf.local } }
+    prepended = load_config(path: ::File.join(dir, 'config.yml'), env: { 'PACKMAN_NOVA_WORKDIR' => nil }, overrides:)
+    build = lambda do |offline|
+      http = ::PackmanNova::Utils::Http.new(logger: null_logger, timeout_sec: 5, retries: 0, offline:)
+      ::PackmanNova::Sync::Prjconf.new(config: prepended, workdir:, downloader: ::PackmanNova::Sources::Downloader.new(http:, logger: null_logger), logger: null_logger)
+    end
+    server.on('/prjconf', body: ::SyncSpec::FACTORY_PRJCONF)
+    build.call(false).call
+    build.call(true).call
+
+    assert_equal "%define bootstrap_stage 0\n#{::SyncSpec::FACTORY_PRJCONF}", ::File.read(prjconf.factory_path)
+  end
+
+  it 'keeps the Tumbleweed macros byte for byte' do
+    tumbleweed = load_config(env: { 'PACKMAN_NOVA_WORKDIR' => dir })
+    local = ::PackmanNova::Sync::Prjconf.new(config: tumbleweed, workdir:, downloader: nil, logger: null_logger).local_content
+
+    assert_equal ::File.read(tumbleweed.resolve('prjconf/packman-nova-macros.conf')).lines.grep_v(/\A\s*Release\s*:/i).join, local
+  end
+
   it 'writes the Factory config and the local macros without Release lines' do
     server.on('/prjconf', body: ::SyncSpec::FACTORY_PRJCONF)
     result = prjconf.call

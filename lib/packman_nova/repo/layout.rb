@@ -9,7 +9,7 @@ module PackmanNova
       PACKAGES_FILE = 'packages.json'
       PUBLIC_KEY_FILE = 'packman-nova.key'
       REPO_FILE = 'packman-nova.repo'
-      ROOT_FILES = [INDEX_FILE, PACKAGES_FILE, PUBLIC_KEY_FILE].freeze
+      ROOT_FILES = [INDEX_FILE, PUBLIC_KEY_FILE].freeze
       REPODATA = 'repodata'
       LOGS = 'logs'
 
@@ -20,7 +20,7 @@ module PackmanNova
 
         def localfs_root(config)
           path = config.repository.localfs.path.strip
-          path.empty? ? config.workdir.repo_dir : ::File.expand_path(path)
+          path.empty? ? config.shared_repo_dir : ::File.expand_path(path)
         end
       end
 
@@ -35,6 +35,8 @@ module PackmanNova
       def repo_dir = ::File.join(root, path)
       def src_dir = ::File.join(repo_dir, SRC)
       def state_file = ::File.join(repo_dir, STATE_FILE)
+      def packages_file = ::File.join(repo_dir, PACKAGES_FILE)
+      def index_file = ::File.join(root, INDEX_FILE)
       def repo_file = ::File.join(repo_dir, REPO_FILE)
       def public_key_file = ::File.join(root, PUBLIC_KEY_FILE)
       def logs_dir = ::File.join(repo_dir, LOGS)

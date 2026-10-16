@@ -53,7 +53,7 @@ module PackmanNova
     end
 
     def select_manifests(options)
-      loader = ::PackmanNova::Manifest::Loader.new(packages_dir:, require_checksums: !options.fetch(:update_checksums))
+      loader = ::PackmanNova::Manifest::Loader.new(packages_dir:, distro: config.distro.id, require_checksums: !options.fetch(:update_checksums))
       names = options[:packages]
       names ? names.uniq.map { |name| loader.find(name) } : loader.all
     end

@@ -8,16 +8,20 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: packman-nova-tumbleweed-x86_64
-  cancel-in-progress: false
-
 jobs:
   build-publish:
     runs-on: ubuntu-26.04
     timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        distro: [opensuse_tumbleweed, opensuse_leap_16.0, opensuse_leap_16.1]
+    concurrency:
+      group: packman-nova-${{ matrix.distro }}-x86_64
+      cancel-in-progress: false
     env:
       PACKMAN_NOVA_WORKDIR: ${{ github.workspace }}/../workdir
+      PACKMAN_NOVA_DISTRO: ${{ matrix.distro }}
     steps:
       - uses: actions/checkout@v7
       - uses: ruby/setup-ruby@v1
@@ -28,6 +32,24 @@ jobs:
       - run: bundle exec exe/packman-nova image build
       - run: bundle exec exe/packman-nova state pull --allow-missing
       - id: run
-        run: bundle exec exe/packman-nova run --provider s3
+        run: bundle exec exe/packman-nova run --provider s3 --no-site
       - if: always() && steps.run.outcome != 'skipped'
         run: bundle exec exe/packman-nova state push
+
+  site:
+    needs: build-publish
+    if: always()
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    concurrency:
+      group: packman-nova-site
+      cancel-in-progress: false
+    env:
+      PACKMAN_NOVA_WORKDIR: ${{ github.workspace }}/../workdir
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - run: echo "${{ secrets.PACKMAN_NOVA_DOTENV }}" > .env
+      - run: bundle exec exe/packman-nova site --provider s3

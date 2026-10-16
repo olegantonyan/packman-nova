@@ -1,6 +1,7 @@
 name: pipewire-aptx
 kind: native
 enabled: false
+distros: [opensuse_tumbleweed]
 tier: 1
 tags: [codec, bluetooth]
 sources:

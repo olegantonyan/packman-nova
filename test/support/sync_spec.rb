@@ -30,7 +30,7 @@ class SyncSpec < ::PackmanNovaSpec
       'distro' => { 'snapshot_url' => server.url('/media') },
       'prjconf' => {
         'base_url' => server.url('/prjconf'), 'base_fallback' => write_file(::File.join(dir, 'fallback.conf'), "Repotype: rpm-md\n"),
-        'local' => write_file(::File.join(dir, 'macros.conf'), "Release: %{suse_version}.<CI_CNT>\nPrefer: foo\n")
+        'local' => [write_file(::File.join(dir, 'macros.conf'), "Release: %{suse_version}.<CI_CNT>\nPrefer: foo\n")]
       },
       'sources' => source_settings(server),
       'repository' => { 'public_url' => server.url('/pub') }

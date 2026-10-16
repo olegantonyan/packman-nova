@@ -17,7 +17,7 @@ describe ::PackmanNova::Cli::Check, :sync do
     check = ::PackmanNova::Cli::Check.new(config: sync_config(dir, server), logger: null_logger, out:)
 
     assert_equal 1, check.call
-    assert_match(%r{^ok    obs api    http://.*/prjconf HTTP 200$}, out.string)
-    assert_match(/^fail  tw repo    .*HTTP 503/, out.string)
+    assert_match(%r{^ok    prjconf    http://.*/prjconf HTTP 200$}, out.string)
+    assert_match(/^fail  snapshot   .*HTTP 503/, out.string)
   end
 end

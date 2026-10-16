@@ -113,6 +113,14 @@ describe ::PackmanNova::Manifest do
       end
     end
 
+    it 'defaults an obs-link spec to the origin package' do
+      with_tmpdir do |dir|
+        path = write_manifest(dir, 'pkg-leap', "name: pkg-leap\nkind: obs-link\norigin:\n  package: pkg\n")
+
+        assert_equal 'pkg.spec', ::PackmanNova::Manifest.load_file(path).spec_name
+      end
+    end
+
     it 'rejects unknown kinds' do
       assert_match(/package pkg: kind: must be one of obs-link, native/, manifest_error("name: pkg\nkind: git\n").message)
     end
@@ -227,6 +235,22 @@ describe ::PackmanNova::Manifest::Loader do
   it 'finds by name or raises' do
     assert_equal 'ffmpeg-8', loader.find('ffmpeg-8').name
     assert_raises(::PackmanNova::ManifestError) { loader.find('nope') }
+  end
+
+  it 'filters by distro and explains packages of another distro' do
+    with_tmpdir do |dir|
+      ::FileUtils.mkdir_p(::File.join(dir, 'tw-only'))
+      ::File.write(::File.join(dir, 'tw-only', 'package.yml'), "name: tw-only\nkind: obs-link\ndistros: [opensuse_tumbleweed]\n")
+      ::FileUtils.mkdir_p(::File.join(dir, 'shared'))
+      ::File.write(::File.join(dir, 'shared', 'package.yml'), "name: shared\nkind: obs-link\n")
+      leap = ::PackmanNova::Manifest::Loader.new(packages_dir: dir, distro: 'opensuse_leap_16.0')
+
+      assert_equal %w[shared], leap.all.map(&:name)
+      assert_equal %w[shared tw-only], ::PackmanNova::Manifest::Loader.new(packages_dir: dir, distro: 'opensuse_tumbleweed').all.map(&:name)
+      assert_equal %w[shared tw-only], ::PackmanNova::Manifest::Loader.new(packages_dir: dir).all.map(&:name)
+      assert_match(/tw-only is not built for opensuse_leap_16.0 \(distros: opensuse_tumbleweed\)/, assert_raises(::PackmanNova::ManifestError) { leap.find('tw-only') }.message)
+      assert_equal({ 'tw-only' => ['opensuse_tumbleweed'] }, leap.unknown_distros(['opensuse_leap_16.0']))
+    end
   end
 
   it 'collects errors and raises the first from all' do

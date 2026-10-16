@@ -95,6 +95,7 @@ module PackmanNova
 
     def define_location_options(parser)
       parser.on('-c', '--config FILE', 'config file merged over the defaults (default: ./packman-nova.yml)') { |value| global[:config] = value }
+      parser.on('-d', '--distro ID', 'distro to work on (overrides PACKMAN_NOVA_DISTRO; default: first of distros)') { |value| global[:distro] = value }
       parser.on('-w', '--workdir DIR', 'workdir (overrides PACKMAN_NOVA_WORKDIR)') { |value| global[:workdir] = value }
       parser.on('--offline', 'no network, caches only') { global[:offline] = true }
     end
@@ -115,7 +116,7 @@ module PackmanNova
 
     def load_config(command_class)
       overrides = { workdir: global[:workdir] && ::File.expand_path(global[:workdir]), offline: global[:offline] }.compact
-      [::PackmanNova::Config.load(path: global[:config], overrides:), nil]
+      [::PackmanNova::Config.load(path: global[:config], overrides:, distro: global[:distro]), nil]
     rescue ::PackmanNova::ConfigError => e
       raise unless command_class.tolerates_config_error?
 

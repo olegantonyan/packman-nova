@@ -30,6 +30,15 @@ module PackmanNova
           []
         end
 
+        def fetch(key)
+          path = ::File.join(root, key)
+          ::File.file?(path) ? path : nil
+        end
+
+        def publish_root_files!(keys)
+          keys
+        end
+
         private
 
         attr_reader :logger

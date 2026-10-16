@@ -79,7 +79,8 @@ module PackmanNova
       versions = ::PackmanNova::Repo::Apply.new(config:, workdir:, toolbox:).call(diff:, layout:, arch:, run: record['run'], key:)
       @uninstallable = install_problems(diff, layout, arch)
       new_state = build_state(state, record, diff, layout, versions:, key:)
-      write_outputs(layout, state, new_state, key, site)
+      persisted = write_outputs(layout, state, new_state, key)
+      write_site(provider, layout, persisted) if site
       provider.sync!(layout:)
       provider.archive_sources!(::PackmanNova::Repo::SourceArchive.new(manifests:, workdir:, logger:))
       diff
@@ -101,10 +102,16 @@ module PackmanNova
       encoded
     end
 
-    def write_outputs(layout, previous, state, key, site)
+    def write_outputs(layout, previous, state, key)
       state = persist_state(layout, previous, state)
       write_repo_files(layout, key)
-      site_generator.new(config:, state: state.to_h, logger:).write(layout.root, index: site)
+      site_generator.write_packages(layout.packages_file, state.to_h)
+      state
+    end
+
+    def write_site(provider, layout, state)
+      states = ::PackmanNova::Site::States.new(config:, provider:).call(own: state.to_h)
+      site_generator.new(config:, states:, logger:).write_index(layout.root)
     end
 
     def write_repo_files(layout, key)
@@ -213,7 +220,7 @@ module PackmanNova
     end
 
     def manifests
-      @manifests ||= ::PackmanNova::Manifest::Loader.new(packages_dir: config.packages_dir, require_checksums: false).all
+      @manifests ||= ::PackmanNova::Manifest::Loader.new(packages_dir: config.packages_dir, distro: config.distro.id, require_checksums: false).all
     end
 
     def workdir

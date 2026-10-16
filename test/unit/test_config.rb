@@ -16,6 +16,41 @@ describe ::PackmanNova::Config do
     assert_equal 'https://api.opensuse.org/public', config.sources.obs_api
   end
 
+  it 'selects the first listed distro by default' do
+    config = load_config(env: blank_env.merge('PACKMAN_NOVA_DISTRO' => nil, 'PACKMAN_NOVA_WORKDIR' => '/srv/nova'))
+
+    assert_equal %w[opensuse_tumbleweed opensuse_leap_16.0 opensuse_leap_16.1], config.distros
+    assert_equal 'opensuse_tumbleweed', config.distro.id
+    assert_equal ['prjconf/packman-nova-macros.conf'], config.prjconf.local
+    assert_equal '/srv/nova/repo', config.shared_repo_dir
+  end
+
+  it 'layers the distro overlay chosen by argument or PACKMAN_NOVA_DISTRO' do
+    leap = load_config(env: blank_env.merge('PACKMAN_NOVA_DISTRO' => 'opensuse_leap_16.0', 'PACKMAN_NOVA_WORKDIR' => '/srv/nova'))
+
+    assert_equal [1600, '160000.%{run}.nova.1', 'leap-16.0', 'opensuse_leap_16.0/essentials', ''],
+                 [leap.distro.suse_version, leap.release.template, leap.pbuild.reponame, leap.repository.path, leap.distro.baselibs.arch]
+    assert_equal '/srv/nova/opensuse_leap_16.0', leap.workdir.root
+    assert_equal 1610, load_config(env: blank_env.merge('PACKMAN_NOVA_DISTRO' => 'opensuse_leap_16.0'), distro: 'opensuse_leap_16.1').distro.suse_version
+    assert_includes leap.files, ::PackmanNova::Config.distro_file('opensuse_leap_16.0')
+  end
+
+  it 'rejects an unknown distro' do
+    error = assert_raises(::PackmanNova::ConfigError) { load_config(env: blank_env, distro: 'opensuse_leap_42.3') }
+
+    assert_includes error.message, 'unknown distro "opensuse_leap_42.3" (known: opensuse_tumbleweed, opensuse_leap_16.0, opensuse_leap_16.1)'
+  end
+
+  it 'loads sibling distros with the same layers' do
+    config = load_config(env: blank_env.merge('PACKMAN_NOVA_WORKDIR' => '/srv/nova'), overrides: { offline: true })
+    leap = config.for_distro('opensuse_leap_16.1')
+
+    assert_same config, config.for_distro('opensuse_tumbleweed')
+    assert_equal ['opensuse_leap_16.1', true, '/srv/nova/opensuse_leap_16.1'], [leap.distro.id, leap.offline?, leap.workdir.root]
+    assert_equal(config.distros, config.siblings.map { |sibling| sibling.distro.id })
+    assert_raises(::PackmanNova::ConfigError) { config.for_distro('nope') }
+  end
+
   it 'exposes booleans, lists and deeply nested values' do
     config = load_config(env: blank_env)
 
@@ -34,7 +69,7 @@ describe ::PackmanNova::Config do
   it 'expands ${VAR} from the process environment' do
     config = load_config(env: blank_env.merge('PACKMAN_NOVA_WORKDIR' => '/srv/nova', 'CLOUDFLARE_R2_ENDPOINT' => 'https://r2.example'))
 
-    assert_equal '/srv/nova', config.workdir.root
+    assert_equal '/srv/nova/opensuse_tumbleweed', config.workdir.root
     assert_equal 'https://r2.example', config.repository.s3.endpoint
   end
 
@@ -96,14 +131,14 @@ describe ::PackmanNova::Config do
       ::File.write(::File.join(dir, 'packman-nova.yml'), "workdir: /from/file\n")
       config = load_config(env: blank_env.merge('PACKMAN_NOVA_WORKDIR' => '/from/env'), cwd: dir)
 
-      assert_equal '/from/env', config.workdir.root
+      assert_equal '/from/env/opensuse_tumbleweed', config.workdir.root
     end
   end
 
   it 'applies CLI overrides last' do
     config = load_config(env: blank_env.merge('PACKMAN_NOVA_WORKDIR' => '/from/env'), overrides: { workdir: '/from/cli', offline: true })
 
-    assert_equal '/from/cli', config.workdir.root
+    assert_equal '/from/cli/opensuse_tumbleweed', config.workdir.root
     assert_predicate config, :offline?
   end
 
