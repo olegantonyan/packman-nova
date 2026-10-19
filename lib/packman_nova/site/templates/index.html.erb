@@ -23,6 +23,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
   <h1><%= h title %></h1>
   <p><%= h description %> Not affiliated with Packman or openSUSE.</p>
   <p>Packman <a href="https://lists.links2linux.de/pipermail/packman/2026-August/018314.html">shuts down</a> on 2026-12-31. This repo keeps the packages going.</p>
+  <p>All builds run on <% if source_url %><a href="<%= h source_url %>/actions">GitHub Actions</a><% else %>GitHub Actions<% end %>; the repo is hosted on Cloudflare R2.</p>
 <%- if pipeline_api_url -%>
   <p id="pipeline" class="pipeline" data-api="<%= h pipeline_api_url %>" hidden></p>
 <%- end -%>
@@ -56,7 +57,8 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
 </section>
 
 <section id="<%= h distro.id %>-repository">
-  <h3>Repo</h3>
+  <details class="collapsible">
+  <summary><h3>Repo</h3></summary>
 <%- if distro.published -%>
   <dl class="facts">
     <dt>Repo file</dt><dd><a href="<%= h distro.repo_file_url %>"><%= h distro.repo_file_url %></a></dd>
@@ -73,11 +75,13 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
 <%- else -%>
   <p>Not published yet.</p>
 <%- end -%>
+  </details>
 </section>
 
 <%- if distro.published -%>
 <section id="<%= h distro.id %>-packages">
-  <h3>Packages</h3>
+  <details class="collapsible">
+  <summary><h3>Packages</h3></summary>
   <table>
     <thead>
       <tr><th>Package</th><th>Version</th><th>Origin</th><th>Status</th><th>Built</th><th>Files</th></tr>
@@ -100,6 +104,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
 <%- end -%>
     </tbody>
   </table>
+  </details>
 </section>
 <%- end -%>
 </div>
@@ -120,7 +125,6 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
 </main>
 
 <footer>
-  <p>Some codecs may be patented where you live. Check your local laws.</p>
 <%- if source_url -%>
   <p>Source: <a href="<%= h source_url %>"><%= h source_url %></a></p>
 <%- end -%>
@@ -175,6 +179,12 @@ var distroOf = function (id) {
   var panel = target && target.closest('.distro');
   return panel ? panel.id : null;
 };
+var reveal = function (id) {
+  var target = id && document.getElementById(id);
+  var details = target && target.closest('details.collapsible');
+  if (details) details.open = true;
+  return target;
+};
 var hashTarget = function () {
   try { return decodeURIComponent(location.hash.slice(1)); } catch (e) { return ''; }
 };
@@ -183,7 +193,7 @@ try { storedDistro = localStorage.getItem('distro'); } catch (e) {}
 if (distroPanels.length) {
   var initialTarget = hashTarget();
   selectDistro(distroOf(initialTarget) || distroOf(storedDistro) || distroPanels[0].id);
-  if (initialTarget && distroOf(initialTarget)) document.getElementById(initialTarget).scrollIntoView();
+  if (initialTarget && distroOf(initialTarget)) reveal(initialTarget).scrollIntoView();
   distroTabs.hidden = false;
   distroTabs.addEventListener('click', function (event) {
     var button = event.target.closest('button');
@@ -193,8 +203,10 @@ if (distroPanels.length) {
     try { localStorage.setItem('distro', button.dataset.distro); } catch (e) {}
   });
   window.addEventListener('hashchange', function () {
-    var id = distroOf(hashTarget());
+    var target = hashTarget();
+    var id = distroOf(target);
     if (id) selectDistro(id);
+    reveal(target);
   });
 }
 var themeToggle = document.getElementById('theme-toggle');
