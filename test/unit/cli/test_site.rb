@@ -22,7 +22,7 @@ describe ::PackmanNova::Cli::Site, :site do
       code, out = run_site(dir)
 
       assert_equal 0, code
-      assert_equal "#{::File.join(dir, 'index.html')}\n", out
+      assert_equal(%w[favicon.svg robots.txt sitemap.xml index.html].map { |name| "#{::File.join(dir, name)}\n" }.join, out)
       assert_includes ::File.read(::File.join(dir, 'index.html')), 'libx264:x264'
     end
   end
@@ -40,7 +40,7 @@ describe ::PackmanNova::Cli::Site, :site do
     end
   end
 
-  it 'uploads only index.html through a provider' do
+  it 'uploads only the site files through a provider' do
     with_tmpdir do |dir|
       publish_state(dir)
       provider = ::PackmanNova::Repo::Providers::Localfs.new(root: dir, logger: null_logger)
@@ -50,7 +50,7 @@ describe ::PackmanNova::Cli::Site, :site do
       command.define_singleton_method(:provider) { provider }
       command.call
 
-      assert_equal ['index.html'], uploaded
+      assert_equal %w[favicon.svg robots.txt sitemap.xml index.html], uploaded
     end
   end
 

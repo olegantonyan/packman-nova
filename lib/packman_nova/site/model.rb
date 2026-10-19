@@ -45,17 +45,33 @@ module PackmanNova
         ordered_states.filter_map { |state| state['generated_at'] }.max
       end
 
+      def site_url
+        "#{public_url}/"
+      end
+
+      def structured_data
+        data = {
+          '@context' => 'https://schema.org', '@type' => 'SoftwareSourceCode', 'name' => page_text['name'], 'description' => page_text['description'],
+          'url' => site_url, 'codeRepository' => source_url, 'dateModified' => generated_at_iso
+        }.compact
+        ::JSON.generate(data).gsub(/[<>&]/) { |char| format('\\u%04x', char.ord) }
+      end
+
       def to_h
-        {
-          'title' => config.site.title, 'description' => config.site.description, 'public_url' => public_url, 'key_url' => key_url, 'key' => key,
-          'source_url' => source_url, 'pipeline_api_url' => pipeline_api_url, 'distros' => distros.map(&:to_h),
+        page_text.merge(
+          'public_url' => public_url, 'site_url' => site_url, 'key_url' => key_url, 'key' => key, 'source_url' => source_url, 'pipeline_api_url' => pipeline_api_url,
+          'structured_data' => structured_data, 'distros' => distros.map(&:to_h),
           'generated_at' => ::PackmanNova::Site::Format.time(generated_at_iso), 'generated_at_iso' => generated_at_iso
-        }
+        )
       end
 
       private
 
       attr_reader :config, :states
+
+      def page_text
+        { 'name' => config.site.name, 'title' => config.site.title, 'description' => config.site.description }
+      end
 
       def ordered_states
         [states[config.distro.id], *states.values].compact

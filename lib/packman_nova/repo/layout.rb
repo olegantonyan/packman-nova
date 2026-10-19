@@ -9,7 +9,11 @@ module PackmanNova
       PACKAGES_FILE = 'packages.json'
       PUBLIC_KEY_FILE = 'packman-nova.key'
       REPO_FILE = 'packman-nova.repo'
-      ROOT_FILES = [INDEX_FILE, PUBLIC_KEY_FILE].freeze
+      SITEMAP_FILE = 'sitemap.xml'
+      ROBOTS_FILE = 'robots.txt'
+      FAVICON_FILE = 'favicon.svg'
+      SITE_FILES = [FAVICON_FILE, ROBOTS_FILE, SITEMAP_FILE, INDEX_FILE].freeze
+      ROOT_FILES = [*SITE_FILES, PUBLIC_KEY_FILE].freeze
       REPODATA = 'repodata'
       LOGS = 'logs'
 

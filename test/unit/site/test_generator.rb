@@ -7,9 +7,9 @@ describe ::PackmanNova::Site::Generator, :site do
   let(:generator) { ::PackmanNova::Site::Generator.new(config: site_config, states: { 'opensuse_tumbleweed' => state }, logger: null_logger) }
 
   def render(page_state)
-    ::PackmanNova::Site::Generator.new(config: site_config, states: { 'opensuse_tumbleweed' => page_state }, logger: null_logger).render_index
+    ::PackmanNova::Site::Generator.new(config: site_config, states: { 'opensuse_tumbleweed' => page_state }, logger: null_logger).render('index.html')
   end
-  let(:html) { generator.render_index }
+  let(:html) { generator.render('index.html') }
 
   it 'renders the install commands' do
     assert_includes html, 'sudo zypper ar -f -p 80 https://packman.example.org/opensuse_tumbleweed/essentials/packman-nova.repo'
@@ -22,7 +22,7 @@ describe ::PackmanNova::Site::Generator, :site do
     assert_includes html, 'C6D7 E8F9 3F1C 2A9B'
     assert_includes html, 'https://packman.example.org/packman-nova.key'
     assert_includes html, '20260927'
-    assert_includes html, '<title>packman-nova Essentials for openSUSE</title>'
+    assert_includes html, '<title>packman-nova: Packman Essentials for openSUSE Tumbleweed and Leap 16</title>'
     assert_includes html, '<a href="https://github.com/olegantonyan/packman-nova">GitHub</a>'
     assert_includes html, 'data-api="https://api.github.com/repos/olegantonyan/packman-nova/actions/workflows/build-publish.yml/runs?per_page=1"'
     assert_includes html, 'Inspired by <a href="https://omnipackage.org">omnipackage.org</a>.'
@@ -71,10 +71,38 @@ describe ::PackmanNova::Site::Generator, :site do
     assert_includes html, '&quot;&#39;&gt;&lt;script&gt;alert(1)&lt;/script&gt;&lt;%= 7 * 7 %&gt;'
   end
 
+  it 'renders search and social metadata' do
+    assert_includes html, '<link rel="canonical" href="https://packman.example.org/">'
+    assert_includes html, '<meta property="og:url" content="https://packman.example.org/">'
+    assert_includes html, '<meta property="og:site_name" content="packman-nova">'
+    assert_includes html, '<link rel="icon" href="favicon.svg" type="image/svg+xml">'
+    data = ::JSON.parse(html[%r{<script type="application/ld\+json">(.*?)</script>}, 1])
+
+    assert_equal 'SoftwareSourceCode', data['@type']
+    assert_equal 'https://github.com/olegantonyan/packman-nova', data['codeRepository']
+    assert_equal '2026-09-29T08:15:42Z', data['dateModified']
+  end
+
+  it 'escapes markup in the structured data' do
+    page = ::PackmanNova::Site::Generator.new(config: site_config, states: { 'opensuse_tumbleweed' => state.merge('generated_at' => '</script><b>') }, logger: null_logger)
+                                         .render('index.html')
+
+    refute_includes page, '</script><b>'
+    assert_includes page, '\u003c/script\u003e\u003cb\u003e'
+  end
+
+  it 'renders the sitemap and robots.txt' do
+    sitemap = generator.render('sitemap.xml')
+
+    assert_includes sitemap, '<loc>https://packman.example.org/</loc>'
+    assert_includes sitemap, '<lastmod>2026-09-29T08:15:42Z</lastmod>'
+    assert_includes generator.render('robots.txt'), 'Sitemap: https://packman.example.org/sitemap.xml'
+  end
+
   it 'is self-contained' do
     assert_includes html, 'light-dark('
     assert_includes html, 'id="theme-toggle"'
-    refute_match(/<link |<script src/, html)
+    refute_match(/<link rel="stylesheet"|<script src/, html)
     refute_match(/<!--/, html)
   end
 
@@ -93,12 +121,13 @@ describe ::PackmanNova::Site::Generator, :site do
     assert_includes html, 'href="https://packman.example.org/opensuse_tumbleweed/essentials/packages.json"'
   end
 
-  it 'writes index.html' do
+  it 'writes every site file' do
     with_tmpdir do |dir|
-      path = generator.write_index(dir)
+      paths = generator.write(dir)
 
-      assert_equal ::File.join(dir, 'index.html'), path
-      assert_equal html, ::File.read(path)
+      assert_equal(%w[favicon.svg robots.txt sitemap.xml index.html].map { |name| ::File.join(dir, name) }, paths)
+      assert_equal html, ::File.read(::File.join(dir, 'index.html'))
+      assert_includes ::File.read(::File.join(dir, 'favicon.svg')), '<svg'
     end
   end
 

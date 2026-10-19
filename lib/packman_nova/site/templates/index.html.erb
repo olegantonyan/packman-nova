@@ -6,6 +6,15 @@
 <meta name="color-scheme" content="light dark">
 <meta name="description" content="<%= h description %>">
 <title><%= h title %></title>
+<link rel="canonical" href="<%= h site_url %>">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="<%= h name %>">
+<meta property="og:title" content="<%= h title %>">
+<meta property="og:description" content="<%= h description %>">
+<meta property="og:url" content="<%= h site_url %>">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json"><%= structured_data %></script>
 <script>
 try { document.documentElement.dataset.theme = localStorage.getItem('theme') || ''; } catch (e) {}
 </script>
@@ -109,6 +118,16 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
 <%- end -%>
 </div>
 <%- end -%>
+
+<section id="about">
+  <h2>Why</h2>
+  <p>openSUSE ships ffmpeg, GStreamer and VLC with patent-encumbered codecs removed, and its openh264 repo adds only H.264.
+  Packman Essentials filled the gap: full ffmpeg 4 to 9, x264, x265, fdk-aac, the GStreamer bad and ugly codecs, VLC codecs, libdvdcss and more.
+  packman-nova builds the same packages for Tumbleweed and Leap 16 with its own signing key.</p>
+  <h2>Migrating from Packman</h2>
+  <p>Find the Packman repo alias with <code>zypper lr</code>, remove it with <code>sudo zypper rr &lt;alias&gt;</code>, then follow the install steps above.
+  Step 3 moves installed Packman packages to these builds.</p>
+</section>
 
 <section id="signing-key">
   <h2>Key</h2>

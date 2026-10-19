@@ -76,6 +76,8 @@ section {
   border-radius: 8px;
 }
 section h2, section h3 { font-size: 1.25rem; margin: 0 0 1rem; }
+#about p { max-width: 70ch; margin: 0; }
+#about p + h2 { margin-top: 1.5rem; }
 .collapsible > summary { cursor: pointer; width: fit-content; }
 .collapsible > summary h3 { display: inline; margin: 0; }
 .collapsible[open] > summary { margin-bottom: 1rem; }

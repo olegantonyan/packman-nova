@@ -5,11 +5,11 @@ module PackmanNova
     class Site < ::PackmanNova::Cli::Command
       class << self
         def summary
-          'regenerate index.html from the repo state of every distro'
+          'regenerate the site (index.html, sitemap, robots.txt, favicon) from the repo state of every distro'
         end
 
         def options(parser, options)
-          parser.on('--provider NAME', %w[localfs s3], 'read states from and upload index.html to localfs or s3') { |value| options[:provider] = value }
+          parser.on('--provider NAME', %w[localfs s3], 'read states from and upload the site to localfs or s3') { |value| options[:provider] = value }
           parser.on('--output DIR', 'write into DIR instead of the repo root (never uploads)') { |dir| options[:output] = dir }
         end
 
@@ -19,8 +19,8 @@ module PackmanNova
       end
 
       def call
-        out.puts(::PackmanNova::Site::Generator.new(config:, states:, logger:).write_index(::PackmanNova::Utils::Path.mkpath(output_dir)))
-        provider.publish_root_files!([::PackmanNova::Repo::Layout::INDEX_FILE]) if upload?
+        out.puts(::PackmanNova::Site::Generator.new(config:, states:, logger:).write(::PackmanNova::Utils::Path.mkpath(output_dir)))
+        provider.publish_root_files!(::PackmanNova::Repo::Layout::SITE_FILES) if upload?
         0
       end
 

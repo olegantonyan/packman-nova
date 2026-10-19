@@ -44,6 +44,7 @@ repository:
     cloudflare_zone_id: ${CLOUDFLARE_ZONE_ID}
     cloudflare_api_token: ${CLOUDFLARE_API_TOKEN}
 site:
-  title: packman-nova Essentials for openSUSE
-  description: Packman Essentials, rebuilt from public sources.
+  name: packman-nova
+  title: 'packman-nova: Packman Essentials for openSUSE Tumbleweed and Leap 16'
+  description: 'Replacement for the Packman Essentials repo: full ffmpeg, x264, x265, VLC and GStreamer codecs, rebuilt from the same sources and signed nightly.'
   source_url: https://github.com/olegantonyan/packman-nova

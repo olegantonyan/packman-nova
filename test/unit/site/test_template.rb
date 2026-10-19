@@ -39,11 +39,11 @@ describe ::PackmanNova::Site::Template do
     assert_raises(::PackmanNova::Error) { render('<%= ) %>') }
   end
 
-  it 'escapes every output in the index template except the stylesheet' do
-    outputs = ::PackmanNova::Site::Template.read(::PackmanNova::Site::Generator::INDEX_TEMPLATE).scan(/<%=\s*(.*?)\s*-?%>/).flatten
+  it 'escapes every output in the markup templates except the stylesheet and the structured data' do
+    outputs = %w[index.html.erb sitemap.xml.erb].flat_map { |name| ::PackmanNova::Site::Template.read(name).scan(/<%=\s*(.*?)\s*-?%>/).flatten }
 
     refute_empty outputs
-    assert_empty(outputs.reject { |expression| expression == 'style' || expression.start_with?('h ') })
+    assert_empty(outputs.reject { |expression| %w[style structured_data].include?(expression) || expression.start_with?('h ') })
   end
 
   it 'loads bundled templates' do

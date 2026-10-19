@@ -11,7 +11,6 @@ require 'packman_nova/site/states'
 module PackmanNova
   module Site
     class Generator
-      INDEX_TEMPLATE = 'index.html.erb'
       STYLESHEET = 'style.css'
 
       class << self
@@ -26,20 +25,25 @@ module PackmanNova
         @logger = logger
       end
 
-      def render_index
-        assigns = ::PackmanNova::Site::Model.new(config:, states:).to_h.merge('style' => ::PackmanNova::Site::Template.read(STYLESHEET))
-        ::PackmanNova::Site::Template.load(INDEX_TEMPLATE).render(assigns)
+      def render(name)
+        ::PackmanNova::Site::Template.load("#{name}.erb").render(assigns)
       end
 
-      def write_index(root)
-        path = ::PackmanNova::Utils::Path.atomic_write(::File.join(root, ::PackmanNova::Repo::Layout::INDEX_FILE), render_index)
-        logger.debug("site: wrote #{path}")
-        path
+      def write(root)
+        ::PackmanNova::Repo::Layout::SITE_FILES.map do |name|
+          path = ::PackmanNova::Utils::Path.atomic_write(::File.join(root, name), render(name))
+          logger.debug("site: wrote #{path}")
+          path
+        end
       end
 
       private
 
       attr_reader :config, :states, :logger
+
+      def assigns
+        @assigns ||= ::PackmanNova::Site::Model.new(config:, states:).to_h.merge('style' => ::PackmanNova::Site::Template.read(STYLESHEET))
+      end
     end
   end
 end

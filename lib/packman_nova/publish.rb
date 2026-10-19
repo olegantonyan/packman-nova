@@ -111,7 +111,7 @@ module PackmanNova
 
     def write_site(provider, layout, state)
       states = ::PackmanNova::Site::States.new(config:, provider:).call(own: state.to_h)
-      site_generator.new(config:, states:, logger:).write_index(layout.root)
+      site_generator.new(config:, states:, logger:).write(layout.root)
     end
 
     def write_repo_files(layout, key)

@@ -177,14 +177,14 @@ describe ::PackmanNova::Publish do
     generator = ::Class.new do
       define_singleton_method(:write_packages) { |path, state| generated << [:packages, path, state] }
       define_method(:initialize) { |config:, states:, logger:| generated << [config, states, logger] }
-      define_method(:write_index) { |dir| generated << [:index, dir] }
+      define_method(:write) { |dir| generated << [:site, dir] }
     end
     publisher(site_generator: generator).call
 
     assert_equal [:packages, ::File.join(essentials, 'packages.json'), state], generated.first
     assert_equal config, generated[1].first
     assert_equal({ 'opensuse_tumbleweed' => state, 'opensuse_leap_16.0' => nil, 'opensuse_leap_16.1' => nil }, generated[1][1])
-    assert_equal [:index, repo], generated.last
+    assert_equal [:site, repo], generated.last
   end
 
   it 'reads the other distros from the repo for the index' do

@@ -40,7 +40,7 @@ module PackmanNova
           cloudflare_zone_id: ::String, cloudflare_api_token: ::String
         }
       },
-      site: { title: ::String, description: ::String, source_url: ::String }
+      site: { name: ::String, title: ::String, description: ::String, source_url: ::String }
     }.freeze
 
     class << self
