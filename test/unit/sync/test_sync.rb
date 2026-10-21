@@ -157,6 +157,52 @@ describe ::PackmanNova::Sync, :sync do
     assert_equal %w[demo hello], report.changed.map(&:name).sort
   end
 
+  describe 'snapshot sources' do
+    let(:config) { sync_config(dir, server, source_repo: server.url('/src-oss/')) }
+    let(:snapshot_md5) { 'c' * 32 }
+    let(:src_rpm) { ::SrcRpmFixture.src_rpm("obs://build.opensuse.org/openSUSE:Factory/standard/#{snapshot_md5}-demo") }
+
+    def stub_snapshot(packages)
+      primary = ::SrcRpmFixture.primary(packages.to_h { |name| [name, ['src/demo-1.0-1.1.src.rpm', src_rpm.last]] })
+      server.on('/src-oss/repodata/repomd.xml', body: ::SrcRpmFixture.repomd('repodata/x-primary.xml.gz'))
+      server.on('/src-oss/repodata/x-primary.xml.gz', body: ::SrcRpmFixture.gzip(primary))
+      server.on('/src-oss/src/demo-1.0-1.1.src.rpm', body: src_rpm.first)
+    end
+
+    def requested_paths
+      ::Array.new(server.requests.size) { server.requests.pop.last }
+    end
+
+    it 'pins Factory links to the srcmd5 the snapshot was built from' do
+      stub_snapshot(['demo'])
+      stub_obs_package(server, project: 'openSUSE:Factory', package: 'demo', srcmd5: snapshot_md5, files: link_files, rev: snapshot_md5)
+      report = sync.call
+
+      assert_includes report.changed.map(&:name), 'demo'
+      assert_includes requested_paths, "/obs/source/openSUSE:Factory/demo?expand=1&rev=#{snapshot_md5}"
+      assert_equal snapshot_md5, ::PackmanNova::Sync::State.new(workdir:).load.dig('packages', 'demo', 'srcmd5')
+    end
+
+    it 'leaves pinned and non-Factory origins alone' do
+      write_package(packages_dir, { 'name' => 'demo', 'kind' => 'obs-link', 'origin' => { 'project' => 'openSUSE:Factory', 'package' => 'demo', 'pin' => 'd' * 32 } })
+      write_package(packages_dir, { 'name' => 'xine', 'kind' => 'obs-link', 'origin' => { 'project' => 'multimedia:xine', 'package' => 'xine' } })
+      stub_obs_package(server, project: 'openSUSE:Factory', package: 'demo', srcmd5: 'd' * 32, files: link_files, rev: 'd' * 32)
+      stub_obs_package(server, project: 'multimedia:xine', package: 'xine', srcmd5: 'e' * 32, files: { 'xine.spec' => "Name: xine\n" })
+      report = sync.call
+
+      assert_empty report.failed
+      refute(requested_paths.any? { |path| path.start_with?('/src-oss/') })
+    end
+
+    it 'fails only a package missing from the snapshot' do
+      stub_snapshot(['other'])
+      report = sync.call
+
+      assert_match(/demo: no src\.rpm/, report.failed.fetch('demo'))
+      assert_includes report.changed.map(&:name), 'hello'
+    end
+  end
+
   def sync_keyring(private_key)
     gpg = ::Object.new
     gpg.define_singleton_method(:public_key_from_private) { |encoded| "public of #{encoded}\n" }

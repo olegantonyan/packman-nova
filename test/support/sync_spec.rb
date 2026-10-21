@@ -19,15 +19,15 @@ class SyncSpec < ::PackmanNovaSpec
     ::PackmanNova::Utils::Digest.md5_string(content)
   end
 
-  def sync_config(dir, server)
-    path = write_file(::File.join(dir, 'config.yml'), ::YAML.dump(sync_settings(dir, server)))
+  def sync_config(dir, server, source_repo: '')
+    path = write_file(::File.join(dir, 'config.yml'), ::YAML.dump(sync_settings(dir, server, source_repo:)))
     load_config(path:, env: { 'PACKMAN_NOVA_WORKDIR' => nil, 'PACKMAN_NOVA_CONTAINER_RUNTIME' => nil })
   end
 
-  def sync_settings(dir, server)
+  def sync_settings(dir, server, source_repo: '')
     {
       'workdir' => ::File.join(dir, 'wd'),
-      'distro' => { 'snapshot_url' => server.url('/media') },
+      'distro' => { 'snapshot_url' => server.url('/media'), 'source_snapshot' => { 'repo' => source_repo } },
       'prjconf' => {
         'base_url' => server.url('/prjconf'), 'base_fallback' => write_file(::File.join(dir, 'fallback.conf'), "Repotype: rpm-md\n"),
         'local' => [write_file(::File.join(dir, 'macros.conf'), "Release: %{suse_version}.<CI_CNT>\nPrefer: foo\n")]
@@ -62,8 +62,8 @@ class SyncSpec < ::PackmanNovaSpec
     %(<directory name="x" srcmd5="#{srcmd5}">\n#{entries.join("\n")}\n</directory>\n)
   end
 
-  def stub_obs_package(server, project:, package:, srcmd5:, files:)
-    server.on("/obs/source/#{project}/#{package}?expand=1", body: obs_listing(srcmd5, files))
+  def stub_obs_package(server, project:, package:, srcmd5:, files:, rev: nil)
+    server.on("/obs/source/#{project}/#{package}?expand=1#{"&rev=#{rev}" if rev}", body: obs_listing(srcmd5, files))
     files.each { |name, content| server.on("/obs/source/#{project}/#{package}/#{name}?rev=#{srcmd5}", body: content) }
   end
 

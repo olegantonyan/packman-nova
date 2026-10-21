@@ -116,7 +116,13 @@ module PackmanNova
         return report(:skip, 'network', 'offline') if config.offline?
 
         http = ::PackmanNova::Utils::Http.new(logger:, timeout_sec: PROBE_TIMEOUT_SEC, retries: 0)
-        [['prjconf', config.prjconf.base_url], ['snapshot', config.distro.snapshot_url]].each { |name, url| probe(http, name, url) }
+        network_probes.each { |name, url| probe(http, name, url) }
+      end
+
+      def network_probes
+        source_repo = config.distro.source_snapshot.repo
+        probes = [['prjconf', config.prjconf.base_url], ['snapshot', config.distro.snapshot_url]]
+        source_repo.empty? ? probes : probes + [['sources', "#{source_repo.delete_suffix('/')}/repodata/repomd.xml"]]
       end
 
       def probe(http, name, url)

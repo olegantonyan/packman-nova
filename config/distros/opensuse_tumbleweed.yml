@@ -6,6 +6,9 @@ distro:
   repos:
     - https://download.opensuse.org/tumbleweed/repo/oss/
   snapshot_url: https://download.opensuse.org/tumbleweed/repo/oss/media.1/media
+  source_snapshot:
+    repo: https://download.opensuse.org/tumbleweed/repo/src-oss/
+    project: openSUSE:Factory
   baselibs:
     arch: i586
     repos:

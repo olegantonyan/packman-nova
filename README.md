@@ -23,9 +23,9 @@ Per distro:
 1. **Restore.** `state pull` downloads yesterday's pbuild results and `state/` from the R2 bucket, so pbuild knows
    what is already built.
 2. **Sync.** For every enabled `packages/<name>/package.yml` built for the distro: `obs-link` packages take their origin's
-   current sources (Factory, or SLFO/Backports for Leap, like PMBS) from the OBS API; `native` packages use the spec in this
-   repo plus tarballs from upstream (fallback: our source archive in the bucket). Checksums are verified. The base prjconf
-   and distro snapshot id are recorded too.
+   sources from the OBS API (Tumbleweed: the Factory revision the current snapshot was built from; Leap: SLFO/Backports
+   head, like PMBS); `native` packages use the spec in this repo plus tarballs from upstream (fallback: our source archive
+   in the bucket). Checksums are verified. The base prjconf and distro snapshot id are recorded too.
 3. **Build.** pbuild runs in the builder container and rebuilds only packages whose sources or build dependencies
    changed. On Tumbleweed an i586 pass then makes the `-32bit` packages (Leap 16 has no 32-bit). Release
    `1699.<run>.nova.1` (Leap: `160000.`/`160100.<run>.nova.1`) is higher than the distro's, so our packages win on users'
@@ -49,8 +49,9 @@ manual dispatch) builds and publishes it.
 
 ## Updating native packages
 
-`obs-link` packages follow Factory by themselves. `native` packages change only when bumped, which `update` automates
-for those with a `watch:` block in `package.yml` (an upstream page, git tags or a git branch):
+`obs-link` packages follow the Tumbleweed snapshot (Leap: their origin) by themselves. `native` packages change only
+when bumped, which `update` automates for those with a `watch:` block in `package.yml` (an upstream page, git tags or a
+git branch):
 
 ```
 bundle exec exe/packman-nova update --check                 # list packages with a newer upstream version

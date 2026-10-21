@@ -26,6 +26,11 @@ module PackmanNova
         http.get(url)
       end
 
+      def get_range(url, range)
+        logger.debug("GET #{url} bytes #{range}")
+        http.get_range(url, range)
+      end
+
       def download(url, path)
         logger.info("download #{url}")
         http.get_to_file(url, path)

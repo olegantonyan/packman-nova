@@ -14,6 +14,7 @@ describe ::PackmanNova::Config do
     assert_equal 1699, config.distro.suse_version
     assert_equal 2, config.pbuild.buildjobs
     assert_equal 'https://api.opensuse.org/public', config.sources.obs_api
+    assert_equal 'openSUSE:Factory', config.distro.source_snapshot.project
   end
 
   it 'selects the first listed distro by default' do
@@ -31,6 +32,7 @@ describe ::PackmanNova::Config do
     assert_equal [1600, '160000.%{run}.nova.1', 'leap-16.0', 'opensuse_leap_16.0/essentials', ''],
                  [leap.distro.suse_version, leap.release.template, leap.pbuild.reponame, leap.repository.path, leap.distro.baselibs.arch]
     assert_equal '/srv/nova/opensuse_leap_16.0', leap.workdir.root
+    assert_empty leap.distro.source_snapshot.repo
     assert_equal 1610, load_config(env: blank_env.merge('PACKMAN_NOVA_DISTRO' => 'opensuse_leap_16.0'), distro: 'opensuse_leap_16.1').distro.suse_version
     assert_includes leap.files, ::PackmanNova::Config.distro_file('opensuse_leap_16.0')
   end

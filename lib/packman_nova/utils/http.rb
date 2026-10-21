@@ -38,6 +38,13 @@ module PackmanNova
         request(:head, url) { |response| response }
       end
 
+      def get_range(url, range)
+        request(:get, url, headers: { 'Range' => "bytes=#{range.min}-#{range.max}" }) do |response|
+          body = response.read_body
+          response.is_a?(::Net::HTTPPartialContent) ? body : body.byteslice(range)
+        end
+      end
+
       def get_to_file(url, path)
         part = "#{path}.part"
         ::FileUtils.mkdir_p(::File.dirname(path))
@@ -54,13 +61,13 @@ module PackmanNova
 
       attr_reader :logger, :timeout_sec, :retries, :offline, :sleeper
 
-      def request(method, url, &)
+      def request(method, url, headers: {}, &)
         raise ::PackmanNova::DownloadError, "offline, not fetching #{url}" if offline
 
         attempt = 0
         loop do
           attempt += 1
-          outcome, value = perform_once(method, url, &)
+          outcome, value = perform_once(method, url, headers, &)
           return value if outcome == :ok
           raise ::PackmanNova::DownloadError, "#{url}: #{value}" if outcome == :fail || attempt > retries
 
@@ -68,25 +75,25 @@ module PackmanNova
         end
       end
 
-      def perform_once(method, url, &)
-        follow(method, url, MAX_REDIRECTS, &)
+      def perform_once(method, url, headers, &)
+        follow(method, url, headers, MAX_REDIRECTS, &)
       rescue *NETWORK_ERRORS => e
         [:retry, "#{e.class}: #{e.message}"]
       end
 
-      def follow(method, url, redirects_left, &)
-        outcome, value = fetch(method, parse_uri(url), &)
+      def follow(method, url, headers, redirects_left, &)
+        outcome, value = fetch(method, parse_uri(url), headers, &)
         return [outcome, value] unless outcome == :redirect
         return [:fail, "too many redirects (#{MAX_REDIRECTS})"] if redirects_left.zero?
 
         logger.debug("redirect #{url} -> #{value}")
-        follow(method, value, redirects_left - 1, &)
+        follow(method, value, headers, redirects_left - 1, &)
       end
 
-      def fetch(method, uri, &)
+      def fetch(method, uri, headers, &)
         result = nil
         ::Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https', open_timeout: OPEN_TIMEOUT_SEC, read_timeout: timeout_sec) do |http|
-          http.request(build_request(method, uri)) { |response| result = classify(response, uri, &) }
+          http.request(build_request(method, uri, headers)) { |response| result = classify(response, uri, &) }
         end
         result
       end
@@ -100,9 +107,10 @@ module PackmanNova
         end
       end
 
-      def build_request(method, uri)
+      def build_request(method, uri, headers)
         request = REQUEST_CLASSES.fetch(method).new(uri)
         request['User-Agent'] = "packman-nova/#{::PackmanNova::VERSION}"
+        headers.each { |name, value| request[name] = value }
         request
       end
 

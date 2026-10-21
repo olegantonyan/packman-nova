@@ -10,6 +10,7 @@ require 'tmpdir'
 
 require 'support/http_stub_server'
 require 'support/git_fixture'
+require 'support/src_rpm_fixture'
 
 class PackmanNovaSpec < ::Minitest::Spec
   FIXTURES_DIR = ::File.expand_path('fixtures', __dir__)

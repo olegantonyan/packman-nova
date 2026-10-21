@@ -43,6 +43,18 @@ describe ::PackmanNova::Utils::Http do
     assert_empty delays
   end
 
+  it 'fetches a byte range' do
+    server.on('/rpm', body: '0123456789')
+
+    assert_equal '345', http.get_range(server.url('/rpm'), 3...6)
+  end
+
+  it 'slices the range when the server ignores it' do
+    server.on('/rpm', body: '0123456789', ranges: false)
+
+    assert_equal '345', http.get_range(server.url('/rpm'), 3...6)
+  end
+
   it 'streams downloads through a .part file' do
     server.on('/blob', body: 'x' * 100_000)
     with_tmpdir do |dir|

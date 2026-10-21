@@ -13,7 +13,7 @@ module PackmanNova
       end
 
       def call(previous:, check_only: false)
-        listing = fetch_listing
+        listing = fetch_listing(previous)
         files = expected_files(listing)
         detail = change_detail(previous, listing, files)
         return outcome(:unchanged, listing, files, previous:) unless detail
@@ -32,8 +32,17 @@ module PackmanNova
         manifest.origin
       end
 
-      def fetch_listing
-        services.obs.directory(project: origin.project, package: origin.package, rev: origin.pin)
+      def fetch_listing(previous)
+        services.obs.directory(project: origin.project, package: origin.package, rev: revision(previous))
+      end
+
+      def revision(previous)
+        snapshot = services.snapshot
+        return origin.pin if origin.pin
+        return unless snapshot&.covers?(origin.project)
+        return previous&.fetch('srcmd5', nil) if services.downloader.offline?
+
+        snapshot.srcmd5(origin.package)
       end
 
       def package_dir

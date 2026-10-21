@@ -7,6 +7,4 @@ origin:
   project: openSUSE:Factory
   package: openapv
   pin: null
-link:
-  add: [baselibs.conf]
-notes: "Factory's openapv with a baselibs.conf: our BUILD_ORIG ffmpeg-8/9 enable the liboapv encoder, so libavcodec6x-32bit needs liboapv1-32bit, which Tumbleweed does not ship. Not in PMBS Essentials."
+notes: "Our BUILD_ORIG ffmpeg-8/9 enable the liboapv encoder; Factory's baselibs.conf gives liboapvN-32bit. Not in PMBS Essentials."

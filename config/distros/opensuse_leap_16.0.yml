@@ -6,6 +6,9 @@ distro:
   repos:
     - https://download.opensuse.org/distribution/leap/16.0/repo/oss/
   snapshot_url: https://download.opensuse.org/distribution/leap/16.0/repo/oss/media.1/media
+  source_snapshot:
+    repo: ""
+    project: ""
   baselibs:
     arch: ""
     repos: []

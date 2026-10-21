@@ -4,6 +4,8 @@ require 'packman_nova/sources/downloader'
 require 'packman_nova/sources/download_cache'
 require 'packman_nova/sources/obs_client'
 require 'packman_nova/sources/archive'
+require 'packman_nova/sources/rpm_header'
+require 'packman_nova/sources/snapshot_revisions'
 
 require 'packman_nova/sync/expected_file'
 require 'packman_nova/sync/package_dir'

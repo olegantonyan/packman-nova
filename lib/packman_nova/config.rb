@@ -16,7 +16,7 @@ module PackmanNova
       distros: STRINGS,
       distro: {
         id: ::String, name: ::String, suse_version: ::Integer, arches: STRINGS, repos: STRINGS, snapshot_url: ::String,
-        baselibs: { arch: ::String, repos: STRINGS }
+        source_snapshot: { repo: ::String, project: ::String }, baselibs: { arch: ::String, repos: STRINGS }
       },
       release: { template: ::String },
       prjconf: { base_url: ::String, base_fallback: ::String, base_prepend: STRINGS, local: STRINGS },

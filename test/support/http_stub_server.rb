@@ -3,7 +3,8 @@
 require 'socket'
 
 class HttpStubServer
-  Response = ::Data.define(:status, :headers, :body)
+  Response = ::Data.define(:status, :headers, :body, :ranges)
+  RANGE = /\ARange:\s*bytes=(\d+)-(\d+)/i
 
   attr_reader :requests
 
@@ -18,8 +19,8 @@ class HttpStubServer
     "http://127.0.0.1:#{server.addr[1]}#{path}"
   end
 
-  def on(path, status: 200, headers: {}, body: '')
-    routes[path] << Response.new(status:, headers:, body:)
+  def on(path, status: 200, headers: {}, body: '', ranges: true)
+    routes[path] << Response.new(status:, headers:, body:, ranges:)
     self
   end
 
@@ -43,14 +44,29 @@ class HttpStubServer
 
   def handle(client)
     method, path = client.gets.to_s.split
-    nil until client.gets.to_s.strip.empty?
+    range = read_range(client)
     requests << [method, path]
-    client.write(render(next_response(path), method))
+    client.write(render(partial(next_response(path), range), method))
+  end
+
+  def read_range(client)
+    range = nil
+    while (line = client.gets.to_s.strip) && !line.empty?
+      first, last = line.match(RANGE)&.captures&.map(&:to_i)
+      range = first..last if first
+    end
+    range
+  end
+
+  def partial(response, range)
+    return response unless range && response.ranges && response.status == 200
+
+    response.with(status: 206, body: response.body.byteslice(range))
   end
 
   def next_response(path)
     queue = routes[path]
-    return Response.new(status: 404, headers: {}, body: 'not found') if queue.empty?
+    return Response.new(status: 404, headers: {}, body: 'not found', ranges: false) if queue.empty?
 
     queue.size > 1 ? queue.shift : queue.first
   end

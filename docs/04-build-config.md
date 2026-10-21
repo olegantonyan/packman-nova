@@ -2,7 +2,7 @@
 
 ## Core finding
 Packman's ffmpeg, vlc, libheif, libquicktime, xine-lib, shairplay are **unmodified openSUSE sources**.
-The `_link` files contain no patches (ffmpeg links only delete Factory's `_multibuild` and `.changes`). Ours match; `link.patches` exists for fixes Factory lacks (none currently). `openapv` is linked from Factory with an added `baselibs.conf`: BUILD_ORIG ffmpeg links liboapv, and Tumbleweed has no `liboapv1-32bit`.
+The `_link` files contain no patches (ffmpeg links only delete Factory's `_multibuild` and `.changes`). Ours match, except that on TW we pin each Factory link to the revision the current snapshot was built from (PMBS follows head); `link.patches` exists for fixes Factory lacks (none currently). `openapv` (not in PMBS) is linked from Factory because BUILD_ORIG ffmpeg links liboapv.
 All codec differences come from the Essentials project config, which is inherited by every project below it.
 
 Raw evidence (`reference/`: PMBS `Essentials._config`, Factory specs, Essentials source snapshot) was removed; see `git show c4ee8c6:reference/...`.
