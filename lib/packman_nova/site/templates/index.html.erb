@@ -40,10 +40,6 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
   <p><%= h description %> Not affiliated with Packman or openSUSE.</p>
   <p>Packman <a href="https://lists.links2linux.de/pipermail/packman/2026-August/018314.html">shuts down</a> on 2026-12-31. This repo keeps the packages going.</p>
   <p>All builds run on <% if source_url %><a href="<%= h source_url %>/actions">GitHub Actions</a><% else %>GitHub Actions<% end %>; the repo is hosted on Cloudflare R2.</p>
-<%- if pipeline_api_url -%>
-  <p id="pipeline" class="pipeline" data-api="<%= h pipeline_api_url %>" hidden></p>
-<%- end -%>
-  <nav><a href="#signing-key">Key</a><% if source_url %><a href="<%= h source_url %>">GitHub</a><% end %></nav>
 </header>
 
 <div class="distro-tabs" id="distro-tabs" role="tablist" aria-label="Distribution" hidden>
@@ -151,13 +147,55 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
 </main>
 
 <footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <img src="favicon.svg" alt="" width="40" height="40">
+      <div>
+        <strong><%= h name %></strong>
+        <p>Packman Essentials codecs for openSUSE, rebuilt from the same sources and signed nightly.</p>
+      </div>
+    </div>
+    <div>
+      <p class="footer-heading">Repositories</p>
+      <ul>
+<%- distros.each do |distro| -%>
+<%- if distro.published -%>
+        <li><a href="<%= h distro.repo_file_url %>"><%= h distro.name %></a></li>
+<%- else -%>
+        <li><%= h distro.name %> <span class="footer-soon">soon</span></li>
+<%- end -%>
+<%- end -%>
+        <li><a href="<%= h key_url %>">Signing key</a></li>
+      </ul>
+    </div>
 <%- if source_url -%>
-  <p>Source: <a href="<%= h source_url %>"><%= h source_url %></a></p>
+    <div>
+      <p class="footer-heading">Project</p>
+      <ul>
+        <li><a href="<%= h source_url %>">Source code</a></li>
+        <li><a href="<%= h source_url %>/actions">Build pipeline</a></li>
+        <li><a href="<%= h source_url %>/issues">Report an issue</a></li>
+      </ul>
+    </div>
 <%- end -%>
-  <p>Inspired by <a href="https://omnipackage.org">omnipackage.org</a>.</p>
-<%- if generated_at -%>
-  <p>Updated <%= h generated_at %>.</p>
+    <div>
+      <p class="footer-heading">More</p>
+      <ul>
+        <li><a href="#about">Migrating from Packman</a></li>
+        <li><a href="https://lists.links2linux.de/pipermail/packman/2026-August/018314.html">Packman shutdown notice</a></li>
+        <li><a href="https://omnipackage.org">omnipackage.org</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-meta">
+<%- if pipeline_api_url -%>
+      <p id="pipeline" class="pipeline" data-api="<%= h pipeline_api_url %>" hidden></p>
 <%- end -%>
+      <p>Not affiliated with Packman or openSUSE.<% if generated_at %> Updated <%= h generated_at %>.<% end %></p>
+    </div>
+    <a href="#">Back to top ↑</a>
+  </div>
 </footer>
 </div>
 <script>

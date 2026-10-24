@@ -23,9 +23,12 @@ describe ::PackmanNova::Site::Generator, :site do
     assert_includes html, 'https://packman.example.org/packman-nova.key'
     assert_includes html, '20260927'
     assert_includes html, '<title>packman-nova: Packman Essentials for openSUSE Tumbleweed and Leap 16</title>'
-    assert_includes html, '<a href="https://github.com/olegantonyan/packman-nova">GitHub</a>'
+    assert_includes html, '<li><a href="https://github.com/olegantonyan/packman-nova">Source code</a></li>'
     assert_includes html, 'data-api="https://api.github.com/repos/olegantonyan/packman-nova/actions/workflows/build-publish.yml/runs?per_page=1"'
-    assert_includes html, 'Inspired by <a href="https://omnipackage.org">omnipackage.org</a>.'
+    assert_includes html, '<li><a href="https://omnipackage.org">omnipackage.org</a></li>'
+    assert_includes html, '<li><a href="https://github.com/olegantonyan/packman-nova/issues">Report an issue</a></li>'
+    assert_includes html, '<li><a href="https://packman.example.org/opensuse_tumbleweed/essentials/packman-nova.repo">openSUSE Tumbleweed</a></li>'
+    assert_includes html, '<li>openSUSE Leap 16.0 <span class="footer-soon">soon</span></li>'
   end
 
   it 'renders every package with its version' do
