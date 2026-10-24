@@ -5,7 +5,7 @@ module PackmanNova
     class Site < ::PackmanNova::Cli::Command
       class << self
         def summary
-          'regenerate the site (index.html, sitemap, robots.txt, manifest, icons) from the repo state of every distro'
+          'regenerate the site (index.html, sitemap, robots.txt, llms.txt, manifest, icons) from the repo state of every distro'
         end
 
         def options(parser, options)

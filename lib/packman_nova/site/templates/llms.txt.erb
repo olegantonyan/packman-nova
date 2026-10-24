@@ -1,0 +1,26 @@
+# <%= name %>
+
+> <%= description %>
+
+Not affiliated with Packman or openSUSE. Packman shuts down on 2026-12-31. Codecs only: no drivers, firmware, DVD or Blu-ray decryption.
+
+## Install
+
+<%- distros.select(&:published).each do |distro| -%>
+- [<%= distro.name %>](<%= distro.repo_file_url %>): <%= distro.commands.map { |command| "`#{command.text}`" }.join(', then ') %>
+<%- end -%>
+
+## Docs
+
+- [Full text](<%= site_url %>llms-full.txt): install, migration, packages and versions per distro
+<%- if source_url -%>
+- [Source code](<%= source_url %>): build tool, package specs, docs
+<%- end -%>
+<%- distros.select(&:published).each do |distro| -%>
+- [<%= distro.name %> packages.json](<%= distro.packages_url %>): build state of every package
+<%- end -%>
+
+## Optional
+
+- [Signing key](<%= key_url %>)
+- [Packman shutdown notice](https://lists.links2linux.de/pipermail/packman/2026-August/018314.html)

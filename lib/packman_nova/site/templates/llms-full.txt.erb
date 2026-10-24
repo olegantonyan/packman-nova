@@ -1,0 +1,69 @@
+# <%= title %>
+
+> <%= description %>
+
+Not affiliated with Packman or openSUSE. Packman shuts down on 2026-12-31. This repo keeps its codecs going.
+
+- Site: <%= site_url %>
+<%- if source_url -%>
+- Source code: <%= source_url %>
+<%- end -%>
+
+## Why
+
+openSUSE removes patent-encumbered codecs from ffmpeg, GStreamer and VLC. Its openh264 repo adds only H.264.
+Packman Essentials added the missing codecs.
+
+packman-nova is not a full copy of Packman Essentials. It builds only the codecs: full ffmpeg, x264, x265, libde265, fdk-aac, libheif,
+and codec plugins for GStreamer, VLC, xine-lib and libquicktime. No drivers, firmware, DVD or Blu-ray decryption.
+The sources are the same as Packman's. The signing key is our own.
+
+## Migrating from Packman
+
+Find the Packman repo alias with `zypper lr`, remove it with `sudo zypper rr <alias>`, then follow the install steps of your distro.
+Step 3 moves your Packman codec packages to these builds.
+Other Packman packages stay installed, but get no more updates. List them with `zypper packages --orphaned`.
+<%- distros.each do |distro| -%>
+
+## <%= distro.name %>
+
+<%- if distro.published -%>
+- Repo file: <%= distro.repo_file_url %>
+- <%= distro.name %> snapshot: <%= distro.distro_snapshot || 'unknown' %>
+- Updated: <%= distro.generated_at || 'unknown' %>
+<%- if distro.release -%>
+- Release: <%= distro.release %>
+<%- end -%>
+- Packages JSON: <%= distro.packages_url %>
+
+### Install
+
+```
+<%- distro.commands.each do |command| -%>
+<%= command.text %>
+<%- end -%>
+```
+
+Step 3 replaces openSUSE and Packman builds with these.
+
+### Packages (<%= distro.totals.succeeded %> of <%= distro.totals.packages %> built)
+
+| Package | Version | Status | Origin |
+| --- | --- | --- | --- |
+<%- distro.packages.each do |package| -%>
+| <%= package.name %> | <%= package.evr || 'unknown' %> | <%= package.status %> | <% if package.origin_url %>[<%= package.origin_label %>](<%= package.origin_url %>)<% else %><%= package.origin_label %><% end %> |
+<%- end -%>
+<%- else -%>
+Not published yet.
+<%- end -%>
+<%- end -%>
+
+## Key
+
+<%- if key -%>
+- Key ID: <%= key.id %>
+- Fingerprint: <%= key.fingerprint %>
+- File: <%= key_url %>
+<%- else -%>
+No signing key recorded. File: <%= key_url %>
+<%- end -%>

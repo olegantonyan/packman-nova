@@ -106,6 +106,30 @@ describe ::PackmanNova::Site::Generator, :site do
     assert_includes generator.render('robots.txt'), 'Sitemap: https://packman.example.org/sitemap.xml'
   end
 
+  it 'renders llms.txt' do
+    llms = generator.render('llms.txt')
+
+    assert llms.start_with?("# packman-nova\n\n> Full multimedia codecs")
+    assert_includes llms, '- [openSUSE Tumbleweed](https://packman.example.org/opensuse_tumbleweed/essentials/packman-nova.repo): `sudo zypper ar -f -p 80 '
+    assert_includes llms, '- [Full text](https://packman.example.org/llms-full.txt)'
+    assert_includes llms, '- [Source code](https://github.com/olegantonyan/packman-nova)'
+    refute_includes llms, 'Leap'
+  end
+
+  it 'renders llms-full.txt' do
+    full = generator.render('llms-full.txt')
+
+    assert full.start_with?('# packman-nova: Packman codecs for openSUSE Tumbleweed and Leap 16')
+    assert_includes full, "```\nsudo zypper ar -f -p 80 "
+    assert_includes full, 'sudo zypper dup --from packman-nova-essentials --allow-vendor-change'
+    state.fetch('packages').each do |name, entry|
+      assert_includes full, "| #{name} | #{entry.fetch('version')}-#{entry.fetch('release')} |"
+    end
+    assert_includes full, '[openSUSE:Factory/vlc](https://build.opensuse.org/package/show/openSUSE:Factory/vlc)'
+    assert_includes full, 'Fingerprint: 0A1B 2C3D 4E5F 6071 8293 A4B5 C6D7 E8F9 3F1C 2A9B'
+    assert_equal 2, full.scan('Not published yet.').size
+  end
+
   it 'is self-contained' do
     assert_includes html, 'light-dark('
     assert_includes html, 'id="theme-toggle"'
@@ -132,7 +156,7 @@ describe ::PackmanNova::Site::Generator, :site do
     with_tmpdir do |dir|
       paths = generator.write(dir)
 
-      names = %w[favicon.svg favicon.ico apple-touch-icon.png icon-192.png icon-512.png og-image.png site.webmanifest robots.txt sitemap.xml index.html]
+      names = %w[favicon.svg favicon.ico apple-touch-icon.png icon-192.png icon-512.png og-image.png site.webmanifest robots.txt sitemap.xml llms.txt llms-full.txt index.html]
 
       assert_equal(names.map { |name| ::File.join(dir, name) }, paths)
       assert_equal html, ::File.read(::File.join(dir, 'index.html'))

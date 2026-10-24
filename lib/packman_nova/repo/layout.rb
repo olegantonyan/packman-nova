@@ -12,8 +12,10 @@ module PackmanNova
       SITEMAP_FILE = 'sitemap.xml'
       ROBOTS_FILE = 'robots.txt'
       MANIFEST_FILE = 'site.webmanifest'
+      LLMS_FILE = 'llms.txt'
+      LLMS_FULL_FILE = 'llms-full.txt'
       SITE_ASSETS = %w[favicon.svg favicon.ico apple-touch-icon.png icon-192.png icon-512.png og-image.png].freeze
-      SITE_FILES = [*SITE_ASSETS, MANIFEST_FILE, ROBOTS_FILE, SITEMAP_FILE, INDEX_FILE].freeze
+      SITE_FILES = [*SITE_ASSETS, MANIFEST_FILE, ROBOTS_FILE, SITEMAP_FILE, LLMS_FILE, LLMS_FULL_FILE, INDEX_FILE].freeze
       ROOT_FILES = [*SITE_FILES, PUBLIC_KEY_FILE].freeze
       REPODATA = 'repodata'
       LOGS = 'logs'
