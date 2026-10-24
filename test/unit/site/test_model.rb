@@ -38,7 +38,9 @@ describe ::PackmanNova::Site::Model, :site do
   end
 
   it 'exposes every template variable' do
-    assert_equal %w[description distros generated_at generated_at_iso key key_url name pipeline_api_url public_url site_url source_url structured_data title], model.to_h.keys.sort
+    assert_equal %w[
+      description distros generated_at generated_at_iso key key_url manifest name og_image_url pipeline_api_url public_url site_url source_url structured_data title
+    ], model.to_h.keys.sort
     assert_equal 'https://github.com/olegantonyan/packman-nova', model.to_h.fetch('source_url')
     assert_equal 'https://api.github.com/repos/olegantonyan/packman-nova/actions/workflows/build-publish.yml/runs?per_page=1', model.pipeline_api_url
   end

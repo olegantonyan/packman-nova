@@ -76,6 +76,10 @@ describe ::PackmanNova::Site::Generator, :site do
     assert_includes html, '<meta property="og:url" content="https://packman.example.org/">'
     assert_includes html, '<meta property="og:site_name" content="packman-nova">'
     assert_includes html, '<link rel="icon" href="favicon.svg" type="image/svg+xml">'
+    assert_includes html, '<link rel="apple-touch-icon" href="apple-touch-icon.png">'
+    assert_includes html, '<link rel="manifest" href="site.webmanifest">'
+    assert_includes html, '<meta property="og:image" content="https://packman.example.org/og-image.png">'
+    assert_includes html, '<meta name="twitter:card" content="summary_large_image">'
     data = ::JSON.parse(html[%r{<script type="application/ld\+json">(.*?)</script>}, 1])
 
     assert_equal 'SoftwareSourceCode', data['@type']
@@ -125,9 +129,26 @@ describe ::PackmanNova::Site::Generator, :site do
     with_tmpdir do |dir|
       paths = generator.write(dir)
 
-      assert_equal(%w[favicon.svg robots.txt sitemap.xml index.html].map { |name| ::File.join(dir, name) }, paths)
+      names = %w[favicon.svg favicon.ico apple-touch-icon.png icon-192.png icon-512.png og-image.png site.webmanifest robots.txt sitemap.xml index.html]
+
+      assert_equal(names.map { |name| ::File.join(dir, name) }, paths)
       assert_equal html, ::File.read(::File.join(dir, 'index.html'))
       assert_includes ::File.read(::File.join(dir, 'favicon.svg')), '<svg'
+      assert_equal ::File.binread(::File.join(::PackmanNova::Site::Generator::ASSETS_DIR, 'og-image.png')), ::File.binread(::File.join(dir, 'og-image.png'))
+    end
+  end
+
+  it 'renders the web manifest' do
+    manifest = ::JSON.parse(generator.render('site.webmanifest'))
+
+    assert_equal 'packman-nova', manifest['short_name']
+    assert_equal 'https://packman.example.org/', manifest['start_url']
+    assert_equal(%w[icon-192.png icon-512.png], manifest['icons'].map { |icon| icon['src'] })
+  end
+
+  it 'ships every site asset' do
+    ::PackmanNova::Repo::Layout::SITE_ASSETS.each do |name|
+      assert_path_exists ::File.join(::PackmanNova::Site::Generator::ASSETS_DIR, name)
     end
   end
 

@@ -22,7 +22,7 @@ describe ::PackmanNova::Cli::Site, :site do
       code, out = run_site(dir)
 
       assert_equal 0, code
-      assert_equal(%w[favicon.svg robots.txt sitemap.xml index.html].map { |name| "#{::File.join(dir, name)}\n" }.join, out)
+      assert_equal(::PackmanNova::Repo::Layout::SITE_FILES.map { |name| "#{::File.join(dir, name)}\n" }.join, out)
       assert_includes ::File.read(::File.join(dir, 'index.html')), 'libx264:x264'
     end
   end
@@ -50,7 +50,7 @@ describe ::PackmanNova::Cli::Site, :site do
       command.define_singleton_method(:provider) { provider }
       command.call
 
-      assert_equal %w[favicon.svg robots.txt sitemap.xml index.html], uploaded
+      assert_equal ::PackmanNova::Repo::Layout::SITE_FILES, uploaded
     end
   end
 

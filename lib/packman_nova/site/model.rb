@@ -6,6 +6,9 @@ module PackmanNova
       KEY_FILE_NAME = ::PackmanNova::Repo::Layout::PUBLIC_KEY_FILE
       GITHUB_REPO = %r{\Ahttps://github\.com/([^/]+/[^/]+?)/?\z}
       WORKFLOW_FILE = 'build-publish.yml'
+      OG_IMAGE_FILE = 'og-image.png'
+      THEME_COLOR = '#73ba25'
+      BACKGROUND_COLOR = '#0f1117'
 
       def initialize(config:, states:)
         @config = config
@@ -57,10 +60,18 @@ module PackmanNova
         ::JSON.generate(data).gsub(/[<>&]/) { |char| format('\\u%04x', char.ord) }
       end
 
+      def manifest
+        icons = [192, 512].map { |size| { 'src' => "icon-#{size}.png", 'sizes' => "#{size}x#{size}", 'type' => 'image/png' } }
+        ::JSON.pretty_generate(
+          'name' => page_text['title'], 'short_name' => page_text['name'], 'description' => page_text['description'], 'start_url' => site_url,
+          'display' => 'browser', 'theme_color' => THEME_COLOR, 'background_color' => BACKGROUND_COLOR, 'icons' => icons
+        )
+      end
+
       def to_h
         page_text.merge(
           'public_url' => public_url, 'site_url' => site_url, 'key_url' => key_url, 'key' => key, 'source_url' => source_url, 'pipeline_api_url' => pipeline_api_url,
-          'structured_data' => structured_data, 'distros' => distros.map(&:to_h),
+          'structured_data' => structured_data, 'manifest' => manifest, 'og_image_url' => "#{site_url}#{OG_IMAGE_FILE}", 'distros' => distros.map(&:to_h),
           'generated_at' => ::PackmanNova::Site::Format.time(generated_at_iso), 'generated_at_iso' => generated_at_iso
         )
       end

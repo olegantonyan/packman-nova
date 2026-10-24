@@ -11,7 +11,7 @@ module PackmanNova
         '.rpm' => 'application/x-rpm', '.xml' => 'application/xml', '.gz' => 'application/gzip', '.zst' => 'application/zstd',
         '.xz' => 'application/x-xz', '.bz2' => 'application/x-bzip2', '.sqlite' => 'application/vnd.sqlite3',
         '.asc' => TEXT, '.key' => TEXT, '.repo' => TEXT, '.log' => TEXT, '.json' => 'application/json', '.html' => 'text/html; charset=utf-8',
-        '.txt' => TEXT, '.svg' => 'image/svg+xml'
+        '.txt' => TEXT, '.svg' => 'image/svg+xml', '.png' => 'image/png', '.ico' => 'image/x-icon', '.webmanifest' => 'application/manifest+json'
       }.freeze
 
       attr_reader :name, :prefix

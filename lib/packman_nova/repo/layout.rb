@@ -11,8 +11,9 @@ module PackmanNova
       REPO_FILE = 'packman-nova.repo'
       SITEMAP_FILE = 'sitemap.xml'
       ROBOTS_FILE = 'robots.txt'
-      FAVICON_FILE = 'favicon.svg'
-      SITE_FILES = [FAVICON_FILE, ROBOTS_FILE, SITEMAP_FILE, INDEX_FILE].freeze
+      MANIFEST_FILE = 'site.webmanifest'
+      SITE_ASSETS = %w[favicon.svg favicon.ico apple-touch-icon.png icon-192.png icon-512.png og-image.png].freeze
+      SITE_FILES = [*SITE_ASSETS, MANIFEST_FILE, ROBOTS_FILE, SITEMAP_FILE, INDEX_FILE].freeze
       ROOT_FILES = [*SITE_FILES, PUBLIC_KEY_FILE].freeze
       REPODATA = 'repodata'
       LOGS = 'logs'
