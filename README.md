@@ -60,7 +60,7 @@ bundle exec exe/packman-nova update --package faac --version 1.50   # pin an exa
 ```
 
 An update rewrites the spec `Version:`, the `package.yml` sources and checksums, and adds a `.changes` entry by
-`packager` (config). Git snapshots (libx264, x265, faac, rtmpdump, ffmpeg-6) are regenerated with `git archive`, no
+`packager` (config). Git snapshots (libx264, x265, faac, ffmpeg-6) are regenerated with `git archive`, no
 osc or `_service` involved. New tarballs are uploaded to the source archive, so CI can fetch them. Nothing is built:
 review `git diff packages/`, run `build --package <name>`, then push.
 A new upstream version may still need patch work.

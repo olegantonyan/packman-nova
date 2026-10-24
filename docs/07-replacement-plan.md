@@ -7,13 +7,13 @@ Tumbleweed `Essentials` equivalent: same packages, same sources, same macro set,
 - Target arches: x86_64 and aarch64. Drop i586 and armv7hl unless demand appears. (GitHub has native arm64 runners; armv7 would need QEMU.) x86_64 ships Packman's `-32bit` packages, built by an i586 baselibs pass (2026-10-05, `docs/12-tool.md`).
 - New signing key and our own `rpmkey-<name>` package. Never reuse Packman's key or vendor string.
 - Do not depend on PMBS staying up: vendor the expanded sources of every native package into this repo; linked packages are `obs-link` manifests re-fetched from api.opensuse.org.
-- Drop dead weight from day one: flash-player, lightspark, gpg-offline, ffmpeg-3, preinstallimage-base, psi+-iconsets. Review: chromium-plugin-widevinecdm, A_tw-cmake, A_tw-SVT-AV1, python-Cython/docutils helpers.
+- Drop dead weight from day one: flash-player, lightspark, gpg-offline, ffmpeg-3, preinstallimage-base, psi+-iconsets. Dropped 2026-10-24 (legal risk or redundant): chromium-plugin-widevinecdm, libdvdcss2, rtmpdump, b43legacy-firmware, rtl8761b-firmware, dcadec. Review: A_tw-cmake, A_tw-SVT-AV1, python-Cython/docutils helpers.
 
 ## Pipeline
 As built: `packman-nova` CLI (`docs/12-tool.md`) runs sync, pbuild in the builder container and a signed publish to R2, served at https://packman.omnipackage.org. Local results shadow Tumbleweed in build roots, so no per-tier staging repos. src.rpms are published, debuginfo is not (`repository.publish_debuginfo`).
 
 ## Open questions
-- Legal: hosting HEVC/AAC/AMR encoders and DVD/Blu-ray decryption libs. Packman is operated from Germany. Decide jurisdiction and whether to exclude libdvdcss/libaacs/libbdplus and the proprietary blobs (widevine, broadcom firmware) in phase 1.
+- Legal: hosting HEVC/AAC/AMR encoders and DVD/Blu-ray decryption libs. Packman is operated from Germany. Decide jurisdiction; still open: libaacs/libbdplus and the libfprint-tod blobs.
 - build-compare: implement "skip publish if unchanged" or accept churn.
 - Coordination: the community successor (computersalat + seife + manfred-h) may keep PMBS alive. Decide whether to mirror their output, contribute, or run fully independent. Independent is the stated goal; still watch the list.
 

@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Sat Oct 24 12:00:00 UTC 2026 - Oleg Antonyan <oleg@aytm.com>
+
+- Stop building rtmp support (rtmpdump dropped), drop
+  pkgconfig(librtmp) BuildRequires.
+
+-------------------------------------------------------------------
 Tue Dec 30 09:51:15 UTC 2025 - Bjørn Lie <zaitor@opensuse.org>
 
 - Update to version 1.26.10
