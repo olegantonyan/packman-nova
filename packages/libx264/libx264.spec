@@ -19,16 +19,7 @@
 
 # remember to adjust baselibs.conf
 %define sover   165
-%bcond_with     gpac
-
-%define build_flavor @BUILD_FLAVOR@%{nil}
-%define tag libx264
-%if "%{build_flavor}" == ""
-%define pkg %{tag}
-%else
-%define pkg %{tag}-%{build_flavor}
-%endif
-Name:           %{pkg}
+Name:           libx264
 Version:        20250608.b35605ac
 Release:        0
 Summary:        A free h264/avc encoder
@@ -40,20 +31,6 @@ Source1:        baselibs.conf
 BuildRequires:  nasm >= 2.13
 BuildRequires:  pkgconfig
 BuildRequires:  yasm >= 1.2.0
-%if "%{build_flavor}" == "x264"
-BuildRequires:  pkgconfig(x264) == %{version}
-%if %{with gpac}
-BuildRequires:  pkgconfig(gpac)
-%else
-BuildRequires:  pkgconfig(liblsmash)
-%endif
-BuildRequires:  pkgconfig(ffms2)
-BuildRequires:  pkgconfig(libavcodec)
-BuildRequires:  pkgconfig(libavformat)
-BuildRequires:  pkgconfig(libavutil)
-BuildRequires:  pkgconfig(libswscale)
-BuildRequires:  pkgconfig(zlib)
-%endif
 
 %description
 x264 is a free library for encoding next-generation H264/AVC video
@@ -61,9 +38,7 @@ streams. The code is written from scratch by Laurent Aimar, Loren
 Merritt, Eric Petit (OS X), Min Chen (vfw/asm), Justin Clay (vfw), Mans
 Rullgard, Radek Czyz, Christian Heine (asm), Alex Izvorski (asm), and
 Alex Wright. It is released under the terms of the GPL license. This
-package contains a shared library and a commandline tool for encoding
-H264 streams. This library is needed for mplayer/mencoder for H264
-encoding support.
+package contains the shared library.
 
 Encoder features:
 - CAVLC/CABAC
@@ -87,12 +62,6 @@ Group:          System/Libraries
 %description %{sover}
 x264 is a free library for encoding next-generation H264/AVC video streams.
 
-%package -n x264
-Summary:        Utility for x264 streams conversions
-
-%description -n x264
-x264 is command line utility for H264/AVC video streams.
-
 %package devel
 Summary:        Libraries and include file for the %{name} encoder
 Group:          Development/Libraries/C and C++
@@ -110,28 +79,15 @@ x264 is a free library for encoding next-generation H264/AVC video streams.
 %configure \
   --disable-opencl \
   --enable-shared \
-%if "%{build_flavor}" == "x264"
-  --system-libx264 \
-%if %{with gpac}
-  --disable-lsmash \
-%else
-  --disable-gpac \
-%endif
-%else
   --disable-cli \
   --disable-swscale \
   --disable-lavf \
   --disable-ffms \
-%endif
   --enable-lto \
   --enable-pic
 %make_build
 
 %install
-%if "%{build_flavor}" == "x264"
-rm -fv doc/regression_test.txt x264/doc/standards.txt
-install -Dm 755 x264 %{buildroot}/%{_bindir}/x264
-%else
 %make_install
 
 rm -f %{buildroot}%{_libdir}/%{name}.so
@@ -140,13 +96,6 @@ ln -s %{name}.so.%{sover} %{buildroot}%{_libdir}/%{name}.so
 
 # fix pkg-config version
 sed -i 's/Version:.*/Version: %{version}/' %{buildroot}%{_libdir}/pkgconfig/x264.pc
-%endif
-
-%if "%{build_flavor}" == "x264"
-%files -n x264
-%doc doc/*.txt
-%attr(0755,root,root) %{_bindir}/x264
-%else
 
 %post -n %{name}-%{sover} -p /sbin/ldconfig
 %postun -n %{name}-%{sover} -p /sbin/ldconfig
@@ -159,6 +108,5 @@ sed -i 's/Version:.*/Version: %{version}/' %{buildroot}%{_libdir}/pkgconfig/x264
 %{_includedir}/x264_config.h
 %{_libdir}/pkgconfig/x264.pc
 %{_libdir}/%{name}.so
-%endif
 
 %changelog

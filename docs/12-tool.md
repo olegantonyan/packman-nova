@@ -166,7 +166,6 @@ Source endpoints verified 2026-09-29: OBS serves link packages' files with `?rev
 - Packman shuts down 2026-12-31. Archive-only sources (git snapshots, dead hosts) exist only on PMBS and in our `_sources/sha256/`; confirm the archive holds all of them before then.
 - Factory runs days ahead of the TW snapshot; building head linked libraries users don't have yet (openapv 1.1.3 `liboapv.so.11`, 2026-10-20), hence the snapshot pin. Sync fetches listing and files at one `rev`. No upstream webhooks: the nightly run is the change detector for obs-link packages; native packages change only through `update` (`update --check` reports).
 - GitHub-hosted runners guarantee only 14 GB of disk; the warm workdir (see Disk) must stay under it.
-- Proprietary blobs are tagged `proprietary`; legal exposure is controlled per package with `enabled`.
 
 ## GitHub Actions
 

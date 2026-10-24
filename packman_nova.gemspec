@@ -8,7 +8,7 @@ require_relative 'lib/packman_nova/version'
   spec.authors = ['Oleg Antonyan']
   spec.email = ['oleg.b.antonyan@gmail.com']
 
-  spec.summary = 'Rebuilds Packman Essentials for openSUSE Tumbleweed with pbuild and publishes a signed rpm-md repo'
+  spec.summary = 'Rebuilds the Packman Essentials codecs for openSUSE with pbuild and publishes a signed rpm-md repo'
   spec.homepage = 'https://packman.omnipackage.org'
   spec.license = 'MIT'
   spec.required_ruby_version = '>= 4.0'

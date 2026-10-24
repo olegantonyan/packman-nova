@@ -1,5 +1,10 @@
 -------------------------------------------------------------------
-Sun Oct 11 12:00:00 UTC 2026 - Oleg Antonyan <oleg@aytm.com>
+Sat Oct 24 12:00:00 UTC 2026 - Oleg Antonyan <oleg.b.antonyan@gmail.com>
+
+- Stop building faac (faac dropped), drop faac-devel BuildRequires.
+
+-------------------------------------------------------------------
+Sun Oct 11 12:00:00 UTC 2026 - Oleg Antonyan <oleg.b.antonyan@gmail.com>
 
 - Stop building openaptx: Factory gstreamer-plugins-bad ships
   libgstopenaptx.so (libfreeaptx) since 1.28.7-2.1, causing a

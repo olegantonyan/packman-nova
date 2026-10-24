@@ -14,4 +14,4 @@ sources:
 watch:
   url: https://gstreamer.freedesktop.org/src/gst-plugins-bad/
   pattern: 'gst-plugins-bad-(1\.26\.\d+)\.tar\.xz'
-notes: "Leap 16.0 ships gstreamer 1.26, the TW package needs 1.28. Spec and patch from Packman's openSUSE_Leap_16.0 src.rpm (1.26.10); ext/{faac,de265,x265,openaptx}: Leap 16.0 gst-plugins-bad lacks openaptx, unlike Factory; rtmp dropped with rtmpdump."
+notes: "Leap 16.0 ships gstreamer 1.26, the TW package needs 1.28. Spec and patch from Packman's openSUSE_Leap_16.0 src.rpm (1.26.10); builds ext/{de265,x265} only."

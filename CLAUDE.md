@@ -1,6 +1,6 @@
 # packman-nova
 
-Independent rebuild of Packman Essentials for Tumbleweed. `README.md` is the index; `docs/` holds findings and the
+Independent rebuild of the Packman Essentials codecs (codecs only) for Tumbleweed and Leap 16. `README.md` is the index; `docs/` holds findings and the
 tool docs. Before proposing packaging changes read `docs/04` and `docs/07`; before touching the CLI read
 `docs/12-tool.md`. Facts in `docs/` were verified against live PMBS, openSUSE OBS and mirror data in 2026-09;
 re-verify anything time-sensitive (Packman deadline, successor status) before relying on it. Keep docs terse; record

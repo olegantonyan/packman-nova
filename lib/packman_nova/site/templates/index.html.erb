@@ -38,7 +38,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
   </div>
   <h1><%= h title %></h1>
   <p><%= h description %> Not affiliated with Packman or openSUSE.</p>
-  <p>Packman <a href="https://lists.links2linux.de/pipermail/packman/2026-August/018314.html">shuts down</a> on 2026-12-31. This repo keeps the packages going.</p>
+  <p>Packman <a href="https://lists.links2linux.de/pipermail/packman/2026-August/018314.html">shuts down</a> on 2026-12-31. This repo keeps its codecs going.</p>
   <p>All builds run on <% if source_url %><a href="<%= h source_url %>/actions">GitHub Actions</a><% else %>GitHub Actions<% end %>; the repo is hosted on Cloudflare R2.</p>
 </header>
 
@@ -124,12 +124,15 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
 
 <section id="about">
   <h2>Why</h2>
-  <p>openSUSE ships ffmpeg, GStreamer and VLC with patent-encumbered codecs removed, and its openh264 repo adds only H.264.
-  Packman Essentials filled the gap: full ffmpeg 4 to 9, x264, x265, fdk-aac, the GStreamer bad and ugly codecs, VLC codecs and more.
-  packman-nova builds the same packages for Tumbleweed and Leap 16 with its own signing key.</p>
+  <p>openSUSE removes patent-encumbered codecs from ffmpeg, GStreamer and VLC. Its openh264 repo adds only H.264.
+  Packman Essentials added the missing codecs.</p>
+  <p>packman-nova is not a full copy of Packman Essentials. It builds only the codecs: full ffmpeg, x264, x265, libde265, fdk-aac, libheif,
+  and codec plugins for GStreamer, VLC, xine-lib and libquicktime. No drivers, firmware, DVD or Blu-ray decryption.
+  The sources are the same as Packman's. The signing key is our own.</p>
   <h2>Migrating from Packman</h2>
   <p>Find the Packman repo alias with <code>zypper lr</code>, remove it with <code>sudo zypper rr &lt;alias&gt;</code>, then follow the install steps above.
-  Step 3 moves installed Packman packages to these builds.</p>
+  Step 3 moves your Packman codec packages to these builds.
+  Other Packman packages stay installed, but get no more updates. List them with <code>zypper packages --orphaned</code>.</p>
 </section>
 
 <section id="signing-key">
@@ -152,7 +155,7 @@ try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 
       <img src="favicon.svg" alt="" width="40" height="40">
       <div>
         <strong><%= h name %></strong>
-        <p>Packman Essentials codecs for openSUSE, rebuilt from the same sources and signed nightly.</p>
+        <p>Packman codecs for openSUSE. Same sources, signed every night.</p>
       </div>
     </div>
     <div>

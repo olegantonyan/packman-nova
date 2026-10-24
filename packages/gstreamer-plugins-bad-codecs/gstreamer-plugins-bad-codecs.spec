@@ -18,7 +18,6 @@ Source99:       baselibs.conf
 Patch:          build_what_we_need_only.patch
 
 BuildRequires:  c++_compiler
-BuildRequires:  faac-devel
 BuildRequires:  fdupes
 BuildRequires:  meson
 BuildRequires:  orc >= 0.4.11
@@ -60,7 +59,6 @@ plug-ins.
 	-Dlibde265=enabled \
 	-Dgpl=enabled \
 	-Dorc=enabled \
-	-Dfaac=enabled \
 	-Dx265=enabled \
 	%{nil}
 %meson_build
@@ -74,7 +72,6 @@ rm -rv %{buildroot}%{_libdir}/pkgconfig/
 %files
 %license COPYING
 %{_libdir}/gstreamer-%{gst_branch}/libgstde265.so
-%{_libdir}/gstreamer-%{gst_branch}/libgstfaac.so
 %{_libdir}/gstreamer-%{gst_branch}/libgstx265.so
 
 %changelog

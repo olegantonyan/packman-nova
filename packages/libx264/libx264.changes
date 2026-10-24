@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Sat Oct 24 12:00:00 UTC 2026 - Oleg Antonyan <oleg.b.antonyan@gmail.com>
+
+- Drop the x264 CLI flavor (_multibuild): build the library only.
+
+-------------------------------------------------------------------
 Fri Jan 16 00:00:00 UTC 2026 - olaf@aepfle.de
 
 - Update to version 20250608.b35605ac

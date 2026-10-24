@@ -22,7 +22,7 @@ describe ::PackmanNova::Site::Generator, :site do
     assert_includes html, 'C6D7 E8F9 3F1C 2A9B'
     assert_includes html, 'https://packman.example.org/packman-nova.key'
     assert_includes html, '20260927'
-    assert_includes html, '<title>packman-nova: Packman Essentials for openSUSE Tumbleweed and Leap 16</title>'
+    assert_includes html, '<title>packman-nova: Packman codecs for openSUSE Tumbleweed and Leap 16</title>'
     assert_includes html, '<li><a href="https://github.com/olegantonyan/packman-nova">Source code</a></li>'
     assert_includes html, 'data-api="https://api.github.com/repos/olegantonyan/packman-nova/actions/workflows/build-publish.yml/runs?per_page=1"'
     assert_includes html, '<li><a href="https://omnipackage.org">omnipackage.org</a></li>'
