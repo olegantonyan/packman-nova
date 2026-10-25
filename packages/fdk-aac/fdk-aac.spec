@@ -17,6 +17,7 @@
 
 
 %define _sover  2
+%define _xhe_sover 0
 Name:           fdk-aac
 Version:        3.0.0
 Release:        0
@@ -45,9 +46,16 @@ A standalone library of the Fraunhofer FDK AAC code from Android
 For further information, read:
 wiki.hydrogenaud.io/Fraunhofer_FDK_AAC
 
+%package -n libfdk-xhe-aac%{_xhe_sover}
+Summary:        Fraunhofer FDK xHE-AAC encoder library
+
+%description -n libfdk-xhe-aac%{_xhe_sover}
+A standalone library of the Fraunhofer FDK xHE-AAC encoder
+
 %package devel
 Summary:        Development headers for Fraunhofer FDK AAC
 Requires:       libfdk-aac%{_sover} = %{version}
+Requires:       libfdk-xhe-aac%{_xhe_sover} = %{version}
 
 %description devel
 This package provides development headers for Fraunhofer FDK AAC code
@@ -55,8 +63,7 @@ This package provides development headers for Fraunhofer FDK AAC code
 %prep
 %autosetup -p1
 # Remove DATE/TIME, make build more reproducible
-sed -i "s/__DATE__/\"\"/g" lib*/src/{*.cpp,*version.h}
-sed -i "s/__TIME__/\"\"/g" lib*/src/{*.cpp,*version.h}
+grep -rlZ -e __DATE__ -e __TIME__ cpp xhe-aac | xargs -0 sed -i -e 's/__DATE__/""/g' -e 's/__TIME__/""/g'
 
 %build
 NOCONFIGURE=1 ./autogen.sh
@@ -69,15 +76,23 @@ NOCONFIGURE=1 ./autogen.sh
 find %{buildroot} -type f -name "*.la" -delete -print
 
 %ldconfig_scriptlets -n libfdk-aac%{_sover}
+%ldconfig_scriptlets -n libfdk-xhe-aac%{_xhe_sover}
 
 %files -n libfdk-aac%{_sover}
 %license NOTICE
 %{_libdir}/libfdk-aac.so.*
 
+%files -n libfdk-xhe-aac%{_xhe_sover}
+%license NOTICE
+%{_libdir}/libfdk-xhe-aac.so.*
+
 %files devel
 %doc ChangeLog
 %{_includedir}/fdk-aac
+%{_includedir}/fdk-xhe-aac
 %{_libdir}/libfdk-aac.so
+%{_libdir}/libfdk-xhe-aac.so
 %{_libdir}/pkgconfig/fdk-aac.pc
+%{_libdir}/pkgconfig/fdk-xhe-aac.pc
 
 %changelog
