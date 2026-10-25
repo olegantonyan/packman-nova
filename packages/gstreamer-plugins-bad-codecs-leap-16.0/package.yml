@@ -6,11 +6,11 @@ tier: 3
 tags: [codec]
 spec: gstreamer-plugins-bad-codecs.spec
 sources:
-  - file: gst-plugins-bad-1.26.10.tar.xz
+  - file: gst-plugins-bad-1.26.11.tar.xz
     urls:
-      - https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-1.26.10.tar.xz
-    sha256: fec973dff512b507d9dcb5a828e04e061e52188f4d5989e953aed6a41beda437
-    size: 7790752
+      - https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-1.26.11.tar.xz
+    sha256: 110fb82795f0e569b1e27b12ab9699d35c7762e1ff4db95335d6ac8d1442af3d
+    size: 7798064
 watch:
   url: https://gstreamer.freedesktop.org/src/gst-plugins-bad/
   pattern: 'gst-plugins-bad-(1\.26\.\d+)\.tar\.xz'

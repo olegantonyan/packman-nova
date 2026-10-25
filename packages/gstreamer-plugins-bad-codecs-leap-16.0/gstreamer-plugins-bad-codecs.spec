@@ -7,7 +7,7 @@
 %define _version 1.26.0
 
 Name:           gstreamer-plugins-bad-codecs
-Version:        1.26.10
+Version:        1.26.11
 Release:        0
 Summary:        Codecs/plugins for gstreamer-plugins-bad
 License:        LGPL-2.1-or-later

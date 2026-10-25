@@ -7,7 +7,7 @@
 %define _version 1.28.0
 
 Name:           gstreamer-plugins-ugly-codecs
-Version:        1.28.7
+Version:        1.28.8
 Release:        0
 Summary:        Codecs/plugins for gstreamer-plugins-ugly
 License:        LGPL-2.1-or-later

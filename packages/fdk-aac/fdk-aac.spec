@@ -18,7 +18,7 @@
 
 %define _sover  2
 Name:           fdk-aac
-Version:        2.0.3
+Version:        3.0.0
 Release:        0
 Summary:        A standalone library of the Fraunhofer FDK AAC code from Android
 License:        NonFree
