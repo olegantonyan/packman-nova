@@ -4,12 +4,12 @@ enabled: true
 tier: 0
 tags: [codec]
 sources:
-  - file: fdk-aac-3.0.0.tar.gz
+  - file: fdk-aac-2.0.3.tar.gz
     urls:
-      - https://github.com/mstorsjo/fdk-aac/archive/v3.0.0.tar.gz
-    sha256: 8538ea8f0f9915e460c106a13e1866a9e13c7ee48c1b67d0b2cf7b4e8159bd1a
-    size: 4702285
+      - https://github.com/mstorsjo/fdk-aac/archive/v2.0.3.tar.gz
+    sha256: e25671cd96b10bad896aa42ab91a695a9e573395262baed4e4a2ff178d6a3a78
+    size: 2518649
 watch:
   git: https://github.com/mstorsjo/fdk-aac.git
   tags: '^v(\d+(?:\.\d+)+)$'
-notes: "Factory also ships libfdk-aac2; local-first precedence makes ours win in build roots."
+notes: "Factory also ships libfdk-aac2; local-first precedence makes ours win in build roots. 3.0.0 blocked: new libfdk-xhe-aac uses SSE intrinsics (_mm_getcsr), i586 baselibs build fails; tree moved to cpp/ + xhe-aac/."

@@ -18,12 +18,12 @@
 
 
 # add previous sover to weakremover() list below
-%define sover   216
+%define sover   215
 %define libname lib%name
 %define libsoname %{libname}-%{sover}
 %define uver    %{lua:print((string.gsub(rpm.expand("%{version}"), "%.", "_")))}
 Name:           x265
-Version:        4.2
+Version:        4.1
 Release:        0
 Summary:        A free h265/HEVC encoder - encoder binary
 License:        GPL-2.0-or-later
@@ -52,7 +52,6 @@ streams.
 
 %package -n %{libsoname}
 Summary:        A free H265/HEVC encoder - encoder binary
-Provides:       weakremover(libx265-215)
 Provides:       weakremover(libx265-209)
 Provides:       weakremover(libx265-199)
 Provides:       weakremover(libx265-192)

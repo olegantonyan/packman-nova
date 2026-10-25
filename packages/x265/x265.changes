@@ -1,10 +1,4 @@
 -------------------------------------------------------------------
-Sun Oct 25 07:24:44 UTC 2026 - Oleg Antonyan <oleg.b.antonyan@gmail.com>
-
-- Update to version 4.2
-  * Drop x265.patch CMakeLists hunk, upstream removed CMP0025/CMP0054
-
--------------------------------------------------------------------
 Mon Mar  3 03:03:03 UTC 2025 - olaf@aepfle.de
 
 - Update to version 4.1
