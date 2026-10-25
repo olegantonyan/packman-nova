@@ -104,6 +104,18 @@ describe ::PackmanNova::Repo::Diff do
     assert_equal ['src/fdk-aac-2.0.3-1.src.rpm', 'x86_64/libfdk-aac2-2.0.3-1.x86_64.rpm'], result.to_remove
   end
 
+  it 'drops flavors missing from a build record that has their base package' do
+    flavor = ['x264-1-1.x86_64.rpm', 'libx264-x264-1-1.src.rpm']
+    state = publish(diff(PublishFakes.record('libx264:x264' => ['succeeded', flavor])))
+
+    assert_equal ['libx264:x264'], diff(PublishFakes.record({}), state:).retained_packages
+
+    result = diff(PublishFakes.record('libx264' => ['failed', []]), state:)
+
+    assert_empty result.retained_packages
+    assert_equal ['src/libx264-x264-1-1.src.rpm', 'x86_64/x264-1-1.x86_64.rpm'], result.to_remove
+  end
+
   it 'ignores succeeded packages that are not enabled' do
     enabled.delete('fdk-aac')
     result = diff(PublishFakes.record('fdk-aac' => ['succeeded', fdk]))

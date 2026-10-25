@@ -29,7 +29,7 @@ module PackmanNova
       end
 
       def retained?(name)
-        enabled?(name) && build_packages.dig(name, 'code') != SUCCEEDED
+        enabled?(name) && build_packages.dig(name, 'code') != SUCCEEDED && !dropped_flavor?(name)
       end
 
       def entries
@@ -56,6 +56,11 @@ module PackmanNova
 
       def enabled?(name)
         enabled.include?(::PackmanNova::Manifest.base_name(name))
+      end
+
+      def dropped_flavor?(name)
+        base = ::PackmanNova::Manifest.base_name(name)
+        base != name && !build_packages.key?(name) && build_packages.key?(base)
       end
 
       def claim!(acc, relative, name)
