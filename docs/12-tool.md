@@ -170,7 +170,7 @@ Source endpoints verified 2026-09-29: OBS serves link packages' files with `?rev
 ## GitHub Actions
 
 - `.github/workflows/ci.yml`: on push and pull request, Ruby from `.ruby-version`, `bundle exec rake`.
-- `.github/workflows/build-publish.yml`: nightly at 19:17 UTC (GitHub starts it ~6 h late, ~01:20 UTC) plus manual `workflow_dispatch`, ubuntu-26.04.
+- `.github/workflows/build-publish.yml`: nightly at 19:17 UTC (GitHub starts it ~6 h late, ~01:20 UTC) plus manual `workflow_dispatch` (`bundle exec rake dispatch [REF=<branch>]`, via `gh`), ubuntu-26.04.
   - Job `build-publish` is a matrix over the distros (`fail-fast: false`): one runner per distro, in parallel, `PACKMAN_NOVA_DISTRO` from the matrix. Installs podman and zstd, writes `.env` from secret `PACKMAN_NOVA_DOTENV` (the full local `.env`; the job sets `PACKMAN_NOVA_WORKDIR`, which wins over `.env`), then `image build`, `state pull --allow-missing`, `run --provider s3 --no-site`, `state push` (also after a failed run). pbuild uses the config defaults (2 builders x 8 jobs). Concurrency group per distro without cancel; timeout 350 min.
   - Job `site` runs after all of them (also when one failed): `site --provider s3` renders the site from every distro's `state.json` and uploads it. Only this job writes the site, so the parallel jobs never race on it.
 - Before the first dispatch of a distro: set the secret, seed `_state/<distro.id>.tar.zst` with `--distro <id> state push` from a local full build (a cold full build does not fit 350 min on a 4-core runner), verify `state pull` + `run` on a dispatch.

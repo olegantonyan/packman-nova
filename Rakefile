@@ -19,3 +19,8 @@ require 'rubocop/rake_task'
 ::RuboCop::RakeTask.new
 
 task default: %i[test rubocop]
+
+desc 'Dispatch the build-publish workflow on GitHub Actions (REF defaults to master)'
+task :dispatch do
+  sh 'gh', 'workflow', 'run', 'build-publish.yml', '--ref', ::ENV.fetch('REF', 'master')
+end
