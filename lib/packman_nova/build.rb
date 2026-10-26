@@ -24,14 +24,18 @@ require 'packman_nova/pbuild/environment'
 module PackmanNova
   class Build
     FAILURE_LOG_LINES = 100
+    DOWNLOAD_FAILED = /download of \S+ failed.*/
+    DOWNLOAD_RETRIES = 3
+    RETRY_DELAY_SEC = 60
 
-    def initialize(config:, logger:, out: $stdout, environment: nil, sync: nil, clock: -> { ::Time.now.utc })
+    def initialize(config:, logger:, out: $stdout, environment: nil, sync: nil, clock: -> { ::Time.now.utc }, sleeper: ->(seconds) { sleep(seconds) })
       @config = config
       @logger = logger
       @out = out
       @environment = environment || ::PackmanNova::Pbuild::Environment.new(config:, logger:)
       @sync = sync
       @clock = clock
+      @sleeper = sleeper
     end
 
     def call(packages: [], rebuild: false, single: nil, buildjobs: nil, jobs: nil, checks: nil, debuginfo: nil, repo_refresh: nil,
@@ -46,7 +50,7 @@ module PackmanNova
 
     private
 
-    attr_reader :config, :logger, :out, :environment, :clock
+    attr_reader :config, :logger, :out, :environment, :clock, :sleeper
 
     def workdir = environment.workdir
     def project_dir = environment.project_dir
@@ -98,7 +102,20 @@ module PackmanNova
     end
 
     def execute(command)
-      executor.run(command.argv, timeout_sec: config.pbuild.timeout_sec)
+      (1..).each do |attempt|
+        status, failure = execute_once(command)
+        return status if status.success? || failure.nil? || attempt > DOWNLOAD_RETRIES
+
+        delay = RETRY_DELAY_SEC * attempt
+        logger.warn("pbuild --arch #{command.arch}: #{failure}; retry #{attempt}/#{DOWNLOAD_RETRIES} in #{delay}s")
+        sleeper.call(delay)
+      end
+    end
+
+    def execute_once(command)
+      failure = nil
+      status = executor.run(command.argv, timeout_sec: config.pbuild.timeout_sec) { |line| failure ||= line[DOWNLOAD_FAILED] }
+      [status, failure]
     end
 
     def stale_binaries_removed?(command)

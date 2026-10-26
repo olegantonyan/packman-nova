@@ -16,18 +16,20 @@ module BuildFakes
   class Subprocess
     attr_reader :executed, :captured
 
-    def initialize(status:, result_text:, &on_execute)
-      @status = ::BuildFakes::Status.new(status)
+    def initialize(status:, result_text:, output: ->(_argv) { [] }, &on_execute)
+      @status = status
       @result_text = result_text
+      @output = output
       @on_execute = on_execute
       @executed = []
       @captured = []
     end
 
-    def execute(argv, **)
+    def execute(argv, **, &line_block)
       executed << argv
       @on_execute&.call(argv)
-      @status
+      @output.call(argv).each { |line| line_block&.call(line) }
+      ::BuildFakes::Status.new(@status.respond_to?(:call) ? @status.call(argv) : @status)
     end
 
     def capture(argv, **)

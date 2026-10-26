@@ -12,6 +12,7 @@ describe ::PackmanNova::Build do
   let(:started) { ::Time.at(::Time.now.to_i - 60).utc }
   let(:sync_calls) { [] }
   let(:sync) { -> { (sync_calls << :sync) && ::PackmanNova::Sync::Report.new } }
+  let(:sleeps) { [] }
 
   after { ::FileUtils.rm_rf(root) }
 
@@ -43,8 +44,8 @@ describe ::PackmanNova::Build do
     argv[argv.index('--arch') + 1]
   end
 
-  def subprocess(status: 0, result_text: "succeeded: 1\n    fdk-aac\n", &)
-    ::BuildFakes::Subprocess.new(status:, result_text:, &)
+  def subprocess(status: 0, result_text: "succeeded: 1\n    fdk-aac\n", output: ->(_argv) { [] }, &)
+    ::BuildFakes::Subprocess.new(status:, result_text:, output:, &)
   end
 
   def build(subprocess, at: started, logger: null_logger)
@@ -52,7 +53,7 @@ describe ::PackmanNova::Build do
       config:, logger: null_logger, subprocess:, runtime: ::PackmanNova::Container::Runtime.new(executable: 'podman'),
       image: ::BuildFakes::Image.new(config.container.image)
     )
-    ::PackmanNova::Build.new(config:, logger:, out:, environment:, sync:, clock: -> { at })
+    ::PackmanNova::Build.new(config:, logger:, out:, environment:, sync:, clock: -> { at }, sleeper: ->(seconds) { sleeps << seconds })
   end
 
   def pbuild_argv(subprocess)
@@ -197,9 +198,44 @@ describe ::PackmanNova::Build do
 
   it 'raises when pbuild fails without a failed package' do
     materialize('fdk-aac')
+    fake = subprocess(status: 2, result_text: '')
 
-    assert_raises(::PackmanNova::BuildError) { build(subprocess(status: 2, result_text: '')).call(sync: false) }
+    assert_raises(::PackmanNova::BuildError) { build(fake).call(sync: false) }
     assert_path_exists ::File.join(root, 'opensuse_tumbleweed', 'state', 'last-build.json')
+    assert_equal(%w[x86_64 i586], fake.executed.map { |argv| arch_of(argv) })
+    assert_empty sleeps
+  end
+
+  describe 'when pbuild cannot download a binary' do
+    let(:download_failed) { "download of https://download.opensuse.org/x.rpm failed: 500 Server closed connection\n" }
+
+    it 'reruns the pass' do
+      materialize('fdk-aac')
+      runs = []
+      output = ->(argv) { runs.count(arch_of(argv)) == 1 && arch_of(argv) == 'x86_64' ? [download_failed] : [] }
+      status = ->(argv) { output.call(argv).empty? ? 0 : 255 }
+      fake = subprocess(status:, output:) do |argv|
+        runs << arch_of(argv)
+        write_result('fdk-aac', release: '1699.1.nova.1')
+      end
+      logger, io = string_logger
+
+      assert_equal 0, build(fake, logger:).call(sync: false)
+      assert_equal %w[x86_64 x86_64 i586], runs
+      assert_equal [60], sleeps
+      assert_match(%r{\[W\] pbuild --arch x86_64: download of https://download.opensuse.org/x.rpm failed: 500 Server closed connection; retry 1/3 in 60s}, io.string)
+    end
+
+    it 'gives up after the retries' do
+      materialize('fdk-aac')
+      fake = subprocess(status: 255, result_text: '', output: ->(_argv) { [download_failed] })
+
+      error = assert_raises(::PackmanNova::BuildError) { build(fake).call(sync: false) }
+
+      assert_match(/pbuild --arch x86_64 exited with 255/, error.message)
+      assert_equal 8, fake.executed.size
+      assert_equal [60, 120, 180, 60, 120, 180], sleeps
+    end
   end
 
   it 'falls back to the result files when the result query fails' do
