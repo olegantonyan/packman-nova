@@ -143,6 +143,29 @@ describe ::PackmanNova::Build do
     assert_path_exists ::File.join(results, 'vlc', 'vlc-3.0-1699.0.nova.1.x86_64.rpm')
   end
 
+  it 'drops own binaries that need a library the distro dropped and retries the pass once' do
+    materialize('ffmpeg-4', 'ffmpeg-8')
+    i586 = ::File.join(project, '_build.tumbleweed.i586')
+    stale = %w[libavfilter11-8.1-1699.0.nova.1.i586.rpm libavfilter11-32bit-8.1-1699.0.nova.1.x86_64.rpm]
+    write_result('ffmpeg-8', release: '1699.0.nova.1', dir: ::File.join(i586, 'ffmpeg-8'), rpms: stale)
+    write_result('ffmpeg-4', release: '1699.0.nova.1', dir: ::File.join(i586, 'ffmpeg-4'), rpms: %w[libavfilter7_110-4.4-1699.0.nova.1.i586.rpm])
+    blocked = "unresolvable: 2\n    ffmpeg-4 (nothing provides libplacebo.so.360 needed by libavfilter11)\n    " \
+              "ffmpeg-8 (nothing provides libplacebo.so.360 needed by libavfilter11)\n"
+    runs = []
+    fake = subprocess(result_text: ->(argv) { arch_of(argv) == 'i586' && runs.count('i586') < 2 ? blocked : "succeeded: 2\n    ffmpeg-4\n    ffmpeg-8\n" }) do |argv|
+      runs << arch_of(argv[argv.index('pbuild')..])
+      next unless runs.last == 'x86_64'
+
+      write_result('ffmpeg-4', release: '1699.1.nova.1')
+      write_result('ffmpeg-8', release: '1699.1.nova.1')
+    end
+    build(fake).call(sync: false)
+
+    assert_equal %w[x86_64 i586 i586], runs
+    refute_path_exists ::File.join(i586, 'ffmpeg-8', 'libavfilter11-8.1-1699.0.nova.1.i586.rpm')
+    assert_path_exists ::File.join(i586, 'ffmpeg-4', 'libavfilter7_110-4.4-1699.0.nova.1.i586.rpm')
+  end
+
   it 'fails a package whose baselibs build failed and skips excluded ones' do
     materialize('fdk-aac', 'vlc')
     codes = ->(argv) { arch_of(argv) == 'i586' ? "failed: 1\n    fdk-aac\nexcluded: 1\n    vlc\n" : "succeeded: 2\n    fdk-aac\n    vlc\n" }

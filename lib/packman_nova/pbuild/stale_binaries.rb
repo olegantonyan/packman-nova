@@ -7,6 +7,7 @@ module PackmanNova
     class StaleBinaries
       UNRESOLVABLE = 'unresolvable'
       MISSING_LIBRARY = /nothing provides (lib[\w+.-]+?)\.so\.([\d.]+)/
+      NEEDED_BY = /needed by ([\w+-]+(?:\.[\w+-]+)*)/
       RPM = /\A(.+)-[^-]+-[^-]+\.[^.]+\.rpm\z/
 
       def initialize(results_dir:, logger:)
@@ -31,13 +32,14 @@ module PackmanNova
         parser.codes.filter_map do |key, code|
           next unless code == UNRESOLVABLE
 
-          blocking = library_packages(parser.details[key].to_s) & own_packages(key)
+          blocking = suspects(parser.details[key].to_s) & own_packages(key)
           [key, blocking] unless blocking.empty?
         end.to_h
       end
 
-      def library_packages(details)
-        details.scan(MISSING_LIBRARY).map { |name, version| "#{name}#{version.tr('.', '_')}" }.uniq
+      def suspects(details)
+        libraries = details.scan(MISSING_LIBRARY).map { |name, version| "#{name}#{version.tr('.', '_')}" }
+        (libraries + details.scan(NEEDED_BY).flatten).uniq
       end
 
       def own_packages(key)
